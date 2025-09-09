@@ -3,220 +3,211 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Email Metrics Mini App</title>
+  <title>WandLead — Дашборд рассылки</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
-    :root { --card: #ffffff; --muted:#6b7280; --ring:#e5e7eb; --ok:#10b981; --blue:#29a3b3; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#f7f7f8; color:#111827; }
-    .container { max-width:980px; margin:0 auto; padding:16px; }
-    .grid { display:grid; gap:16px; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); }
-    .card { background:var(--card); border-radius:18px; box-shadow:0 1px 4px rgba(0,0,0,.06); padding:18px; }
-    .title { font-size:18px; font-weight:700; margin:0 0 8px; }
-    .row { display:flex; gap:12px; align-items:center; }
-    .input { flex:1; display:flex; flex-direction:column; }
-    .input label { font-size:12px; color:var(--muted); margin-bottom:6px; }
-    .input input { padding:10px 12px; border-radius:12px; border:1px solid var(--ring); outline:none; font-size:14px; }
-    .switch { display:flex; gap:10px; flex-wrap:wrap; margin:12px 0 4px; }
-    .switch label { padding:8px 10px; border:1px solid var(--ring); border-radius:12px; cursor:pointer; font-size:12px; }
-    .switch input { margin-right:6px; }
-    .charts { display:grid; gap:14px; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); }
-    .metric { background:var(--card); border-radius:18px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.06); text-align:center; }
-    .metric h4 { margin:0 0 4px; color:var(--muted); font-weight:600; font-size:13px; }
-    .metric .value { font-size:22px; font-weight:800; margin-bottom:6px; }
-    .footer { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
-    button { border:none; background:#111827; color:white; padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:700; }
-    canvas { max-width:220px; margin:0 auto; }
+    :root{
+      --bg:#0b0b0f; --card:#12121a; --muted:#a1a1aa; --text:#fafafa; --ring:#1f1f2a;
+      --accent:#6d5cff; --green:#22c55e; --teal:#2bb3c1; --danger:#ef4444; --sky:#38bdf8;
+      --shadow:0 8px 24px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:1100px;margin:28px auto;padding:0 16px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .pill{background:rgba(109,92,255,.15);color:#c9c5ff;border:1px solid rgba(109,92,255,.35);padding:6px 10px;border-radius:999px;font-size:12px}
+    h1{font-size:28px;margin:8px 0 0}
+    .grid{display:grid;gap:16px}
+    .grid.cards{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+    .card{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+    .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:10px}
+    .kpi{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+    .kpi .label{font-size:12px;color:var(--muted);margin-bottom:6px}
+    .kpi .value{font-size:24px;font-weight:800}
+    .metric{ text-align:center }
+    .metric h4{margin:0 0 6px;color:var(--muted);font-weight:600}
+    .metric .value{font-size:20px;font-weight:800;margin-bottom:6px}
+    canvas{max-width:220px;margin:0 auto}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:14px}
+    .badge-up{color:#10b981;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);padding:2px 8px;border-radius:999px;font-size:12px}
+    .footer{margin-top:16px;color:var(--muted);font-size:12px;display:flex;gap:10px;align-items:center}
+    .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+    .legend{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:6px}
   </style>
 </head>
 <body>
-<div class="container">
-  <div class="card">
-    <h3 class="title">Данные рассылки</h3>
-    <div class="grid">
-      <div class="input">
-        <label>Разослано / доставлено (опционально, для расчёта %)</label>
-        <input id="delivered" type="number" min="0" placeholder="например, 63000" />
-      </div>
-      <div class="input">
-        <label>Открытия</label>
-        <input id="opens" type="number" min="0" placeholder="например, 26880" required />
-      </div>
-      <div class="input">
-        <label>Переходы</label>
-        <input id="clicks" type="number" min="0" placeholder="например, 13060" required />
-      </div>
-      <div class="input">
-        <label>Отписалось</label>
-        <input id="unsubs" type="number" min="0" placeholder="например, 519" required />
-      </div>
-    </div>
-
-    <div class="switch">
-      <label><input type="radio" name="base" value="delivered" checked />Проценты от «разослано»</label>
-      <label><input type="radio" name="base" value="opens" />CTR от «открытий» для «переходов»</label>
-    </div>
-
-    <div class="footer">
-      <button id="build">Построить графики</button>
-      <button id="share">Поделиться в чат</button>
-      <button id="reset" style="background:#e11d48">Сброс</button>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <span class="pill">Волшебная палочка для B2B-продаж</span>
     </div>
   </div>
 
-  <div class="charts" style="margin-top:16px">
-    <div class="metric">
-      <h4>открытий</h4>
-      <div class="value" id="opensValue">—</div>
-      <canvas id="opensChart" width="240" height="240"></canvas>
+  <div class="card">
+    <h1>WandLead: Включаем AI — закрываем сделки.</h1>
+    <div class="kpis">
+      <div class="kpi">
+        <div class="label">Отправлено</div>
+        <div class="value" id="sentKpi">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Доставлено</div>
+        <div class="value" id="deliveredKpi">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Открытия</div>
+        <div class="value" id="opensKpi">—</div>
+      </div>
     </div>
-    <div class="metric">
-      <h4>переходов</h4>
-      <div class="value" id="clicksValue">—</div>
-      <canvas id="clicksChart" width="240" height="240"></canvas>
+
+    <div class="stat-grid">
+      <div class="metric card">
+        <h4>открытий</h4>
+        <div class="value" id="opensVal">—</div>
+        <canvas id="opensChart" width="240" height="240"></canvas>
+        <div class="legend"><span class="dot" style="background:var(--teal)"></span><small>от доставлено</small></div>
+      </div>
+      <div class="metric card">
+        <h4>переходов</h4>
+        <div class="value" id="clicksVal">—</div>
+        <canvas id="clicksChart" width="240" height="240"></canvas>
+        <div class="legend"><span class="dot" style="background:var(--green)"></span><small>от открытий (CTOR)</small></div>
+      </div>
+      <div class="metric card">
+        <h4>отписались</h4>
+        <div class="value" id="unsubsVal">—</div>
+        <canvas id="unsubsChart" width="240" height="240"></canvas>
+        <div class="legend"><span class="dot" style="background:var(--sky)"></span><small>от доставлено</small></div>
+      </div>
+      <div class="metric card">
+        <h4>ошибки</h4>
+        <div class="value" id="errorsVal">—</div>
+        <canvas id="errorsChart" width="240" height="240"></canvas>
+        <div class="legend"><span class="dot" style="background:var(--danger)"></span><small>от отправлено</small></div>
+      </div>
     </div>
-    <div class="metric">
-      <h4>отписалось</h4>
-      <div class="value" id="unsubsValue">—</div>
-      <canvas id="unsubsChart" width="240" height="240"></canvas>
+
+    <div class="footer">
+      <span id="updatedInfo">Обновление: —</span>
     </div>
   </div>
 </div>
 
 <script>
-  // Инициализация WebApp (красивые цвета под тему Telegram)
-  const tg = window.Telegram?.WebApp;
-  if (tg) {
-    tg.expand();
-    document.body.style.background = tg.backgroundColor || '#f7f7f8';
-  }
+  const tg = window.Telegram?.WebApp; if (tg) tg.expand();
 
-  // Плагин для процентов по центру пончика
+  // Плагин для процентов в центре пончика
   const centerText = {
-    id: 'centerText',
-    afterDraw(chart, args, pluginOptions) {
-      const {ctx, chartArea: {width, height}} = chart;
-      if (!pluginOptions?.text) return;
+    id:'centerText',
+    afterDraw(chart, args, opts){
+      const {ctx, chartArea:{width,height}} = chart;
+      if(!opts?.text) return;
       ctx.save();
-      ctx.font = pluginOptions.font || '700 28px system-ui';
-      ctx.fillStyle = pluginOptions.color || '#111827';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(pluginOptions.text, width / 2, height / 2);
+      ctx.font = opts.font || '700 28px Inter, system-ui';
+      ctx.fillStyle = opts.color || '#fafafa';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(opts.text, width/2, height/2);
       ctx.restore();
     }
   };
   Chart.register(centerText);
 
-  // Вспомогалки
-  const fmtNum = n => (n >= 1000 ? (Math.round(n/10)/100).toLocaleString('ru-RU')+'K' : n.toLocaleString('ru-RU'));
-  const pct = (part, total) => {
-    if (!total || total <= 0 || !isFinite(total)) return 0;
-    return Math.max(0, Math.min(100, (part / total) * 100));
-  };
+  const fmtNum = n => n==null ? '—' : (n>=1000 ? (Math.round(n/10)/100).toLocaleString('ru-RU')+'K' : n.toLocaleString('ru-RU'));
+  const clampPct = v => Math.max(0, Math.min(100, v));
 
-  let opensChart, clicksChart, unsubsChart;
-
-  function drawDonut(canvasId, value, percent, colorHex) {
-    const canvas = document.getElementById(canvasId);
-    const existing = Chart.getChart(canvas);
-    if (existing) existing.destroy();
-    return new Chart(canvas, {
-      type: 'doughnut',
-      data: {
-        labels: ['value', 'rest'],
-        datasets: [{
-          data: [Math.max(0, percent), 100 - Math.max(0, percent)],
-          borderWidth: 0,
-          hoverOffset: 0,
-          cutout: '70%',
-          backgroundColor: [colorHex, '#e5e7eb']
+  function donut(canvasId, percent, color){
+    const el = document.getElementById(canvasId);
+    const ex = Chart.getChart(el); if (ex) ex.destroy();
+    return new Chart(el, {
+      type:'doughnut',
+      data:{
+        labels:['val','rest'],
+        datasets:[{
+          data:[clampPct(percent), 100-clampPct(percent)],
+          borderWidth:0, hoverOffset:0, cutout:'70%',
+          backgroundColor:[color, '#1f1f2a']
         }]
       },
-      options: {
-        plugins: {
-          legend: { display:false },
-          tooltip: { enabled:false },
-          centerText: { text: `${percent.toFixed(1)}%`, color:'#111827' }
-        }
+      options:{
+        plugins:{ legend:{display:false}, tooltip:{enabled:false}, centerText:{ text: percent.toFixed(1)+'%' } }
       }
     });
   }
 
-  function build() {
-    const delivered = Number(document.getElementById('delivered').value || 0);
-    const opens = Number(document.getElementById('opens').value || 0);
-    const clicks = Number(document.getElementById('clicks').value || 0);
-    const unsubs = Number(document.getElementById('unsubs').value || 0);
-    const base = document.querySelector('input[name="base"]:checked').value;
-
-    // Проценты
-    const pOpens = pct(opens, delivered || opens); // если «разослано» пусто — 100%
-    const pClicks = base === 'opens' ? pct(clicks, opens) : pct(clicks, delivered || clicks);
-    const pUnsubs = pct(unsubs, delivered || unsubs);
-
-    // Подписи-значения
-    document.getElementById('opensValue').textContent = fmtNum(opens);
-    document.getElementById('clicksValue').textContent = fmtNum(clicks);
-    document.getElementById('unsubsValue').textContent = fmtNum(unsubs);
-
-    // Рисуем
-    opensChart = drawDonut('opensChart', opens, pOpens, '#29a3b3');      // бирюзовый как на скрине
-    clicksChart = drawDonut('clicksChart', clicks, pClicks, '#10b981');  // зелёный
-    unsubsChart = drawDonut('unsubsChart', unsubs, '#0ea5e9');           // синий/голубой
-
-    // Сохраняем состояние
-    localStorage.setItem('metrics', JSON.stringify({ delivered, opens, clicks, unsubs, base }));
+  function parseTxt(txt){
+    // формат key=value построчно
+    const out = {};
+    txt.split(/\r?\n/).forEach(line=>{
+      const m = line.trim().match(/^(\w+)\s*=\s*(.+)$/);
+      if(m){ out[m[1]] = isNaN(+m[2]) ? m[2] : Number(m[2]); }
+    });
+    // автоподстановка errors
+    if(out.errors == null && out.sent != null && out.delivered != null){
+      out.errors = Math.max(0, out.sent - out.delivered);
+    }
+    return out;
   }
 
-  function restore() {
-    const data = JSON.parse(localStorage.getItem('metrics') || '{}');
-    if (data.delivered != null) document.getElementById('delivered').value = data.delivered;
-    if (data.opens != null) document.getElementById('opens').value = data.opens;
-    if (data.clicks != null) document.getElementById('clicks').value = data.clicks;
-    if (data.unsubs != null) document.getElementById('unsubs').value = data.unsubs;
-    if (data.base) {
-      const el = document.querySelector(`input[name="base"][value="${data.base}"]`);
-      if (el) el.checked = true;
-    }
-    build();
+  async function loadData(){
+    // data.txt должен лежать рядом с index.html
+    const url = new URL('data.txt', location.href).toString();
+    const res = await fetch(url, { cache:'no-store' });
+    if(!res.ok) throw new Error('Не удалось загрузить data.txt');
+    const text = await res.text();
+    return parseTxt(text);
   }
 
-  document.getElementById('build').onclick = build;
-  document.getElementById('reset').onclick = () => {
-    localStorage.removeItem('metrics');
-    document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
-    document.querySelector('input[name="base"][value="delivered"]').checked = true;
-    build();
-  };
+  let timerset;
+  async function render(){
+    try{
+      const d = await loadData();
 
-  document.getElementById('share').onclick = () => {
-    const delivered = Number(document.getElementById('delivered').value || 0);
-    const opens = Number(document.getElementById('opens').value || 0);
-    const clicks = Number(document.getElementById('clicks').value || 0);
-    const unsubs = Number(document.getElementById('unsubs').value || 0);
-    const base = document.querySelector('input[name="base"]:checked').value;
+      const sent = +d.sent || 0;
+      const delivered = +d.delivered || 0;
+      const opens = +d.opens || 0;
+      const clicks = +d.clicks || 0;
+      const unsubs = +d.unsubs || 0;
+      const errors = +d.errors || 0;
 
-    const p = (n) => (Math.round(n * 10) / 10).toFixed(1) + '%';
-    const pOpens = pct(opens, delivered || opens);
-    const pClicks = base === 'opens' ? pct(clicks, opens) : pct(clicks, delivered || clicks);
-    const pUnsubs = pct(unsubs, delivered || unsubs);
+      // KPI
+      document.getElementById('sentKpi').textContent = fmtNum(sent);
+      document.getElementById('deliveredKpi').textContent = fmtNum(delivered);
+      document.getElementById('opensKpi').textContent = fmtNum(opens);
 
-    const text =
-`Сводка рассылки:
-• Открытий: ${opens.toLocaleString('ru-RU')} (${p(pOpens)})
-• Переходов: ${clicks.toLocaleString('ru-RU')} (${p(pClicks)} ${base==='opens' ? 'от открытий' : 'от разослано'})
-• Отписалось: ${unsubs.toLocaleString('ru-RU')} (${p(pUnsubs)})`;
+      // Значения под заголовками метрик
+      document.getElementById('opensVal').textContent = fmtNum(opens);
+      document.getElementById('clicksVal').textContent = fmtNum(clicks);
+      document.getElementById('unsubsVal').textContent = fmtNum(unsubs);
+      document.getElementById('errorsVal').textContent = fmtNum(errors);
 
-    if (tg?.sendData) {
-      tg.sendData(text); // отправится как callback-данные вашему боту
-    } else {
-      alert(text);
+      // Проценты
+      const pOpens  = delivered ? (opens/delivered)*100 : 0;
+      const pClicks = opens ? (clicks/opens)*100 : 0;     // CTOR
+      const pUnsubs = delivered ? (unsubs/delivered)*100 : 0;
+      const pErrors = sent ? (errors/sent)*100 : 0;
+
+      donut('opensChart',  pOpens,  getComputedStyle(document.documentElement).getPropertyValue('--teal').trim());
+      donut('clicksChart', pClicks, getComputedStyle(document.documentElement).getPropertyValue('--green').trim());
+      donut('unsubsChart', pUnsubs, getComputedStyle(document.documentElement).getPropertyValue('--sky').trim());
+      donut('errorsChart', pErrors, getComputedStyle(document.documentElement).getPropertyValue('--danger').trim());
+
+      // Обновление
+      const upd = d.updated ? new Date(d.updated) : new Date();
+      const fmt = upd.toLocaleString('ru-RU');
+      document.getElementById('updatedInfo').textContent = 'Обновление: ' + fmt;
+    }catch(e){
+      document.getElementById('updatedInfo').textContent = 'Ошибка загрузки data.txt';
+      console.error(e);
+    }finally{
+      clearTimeout(timerset);
+      timerset = setTimeout(render, 30000); // автообновление каждые 30с
     }
-  };
+  }
 
-  // первый рендер
-  restore();
+  render();
 </script>
 </body>
 </html>
