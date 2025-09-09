@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Email Metrics Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root { --card: #ffffff; --muted:#6b7280; --ring:#e5e7eb; --ok:#10b981; --blue:#29a3b3; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#f7f7f8; color:#111827; }
+    .container { max-width:980px; margin:0 auto; padding:16px; }
+    .grid { display:grid; gap:16px; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); }
+    .card { background:var(--card); border-radius:18px; box-shadow:0 1px 4px rgba(0,0,0,.06); padding:18px; }
+    .title { font-size:18px; font-weight:700; margin:0 0 8px; }
+    .row { display:flex; gap:12px; align-items:center; }
+    .input { flex:1; display:flex; flex-direction:column; }
+    .input label { font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .input input { padding:10px 12px; border-radius:12px; border:1px solid var(--ring); outline:none; font-size:14px; }
+    .switch { display:flex; gap:10px; flex-wrap:wrap; margin:12px 0 4px; }
+    .switch label { padding:8px 10px; border:1px solid var(--ring); border-radius:12px; cursor:pointer; font-size:12px; }
+    .switch input { margin-right:6px; }
+    .charts { display:grid; gap:14px; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); }
+    .metric { background:var(--card); border-radius:18px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.06); text-align:center; }
+    .metric h4 { margin:0 0 4px; color:var(--muted); font-weight:600; font-size:13px; }
+    .metric .value { font-size:22px; font-weight:800; margin-bottom:6px; }
+    .footer { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    button { border:none; background:#111827; color:white; padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:700; }
+    canvas { max-width:220px; margin:0 auto; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h3 class="title">Данные рассылки</h3>
+    <div class="grid">
+      <div class="input">
+        <label>Разослано / доставлено (опционально, для расчёта %)</label>
+        <input id="delivered" type="number" min="0" placeholder="например, 63000" />
+      </div>
+      <div class="input">
+        <label>Открытия</label>
+        <input id="opens" type="number" min="0" placeholder="например, 26880" required />
+      </div>
+      <div class="input">
+        <label>Переходы</label>
+        <input id="clicks" type="number" min="0" placeholder="например, 13060" required />
+      </div>
+      <div class="input">
+        <label>Отписалось</label>
+        <input id="unsubs" type="number" min="0" placeholder="например, 519" required />
+      </div>
+    </div>
+
+    <div class="switch">
+      <label><input type="radio" name="base" value="delivered" checked />Проценты от «разослано»</label>
+      <label><input type="radio" name="base" value="opens" />CTR от «открытий» для «переходов»</label>
+    </div>
+
+    <div class="footer">
+      <button id="build">Построить графики</button>
+      <button id="share">Поделиться в чат</button>
+      <button id="reset" style="background:#e11d48">Сброс</button>
+    </div>
+  </div>
+
+  <div class="charts" style="margin-top:16px">
+    <div class="metric">
+      <h4>открытий</h4>
+      <div class="value" id="opensValue">—</div>
+      <canvas id="opensChart" width="240" height="240"></canvas>
+    </div>
+    <div class="metric">
+      <h4>переходов</h4>
+      <div class="value" id="clicksValue">—</div>
+      <canvas id="clicksChart" width="240" height="240"></canvas>
+    </div>
+    <div class="metric">
+      <h4>отписалось</h4>
+      <div class="value" id="unsubsValue">—</div>
+      <canvas id="unsubsChart" width="240" height="240"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Инициализация WebApp (красивые цвета под тему Telegram)
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.expand();
+    document.body.style.background = tg.backgroundColor || '#f7f7f8';
+  }
+
+  // Плагин для процентов по центру пончика
+  const centerText = {
+    id: 'centerText',
+    afterDraw(chart, args, pluginOptions) {
+      const {ctx, chartArea: {width, height}} = chart;
+      if (!pluginOptions?.text) return;
+      ctx.save();
+      ctx.font = pluginOptions.font || '700 28px system-ui';
+      ctx.fillStyle = pluginOptions.color || '#111827';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(pluginOptions.text, width / 2, height / 2);
+      ctx.restore();
+    }
+  };
+  Chart.register(centerText);
+
+  // Вспомогалки
+  const fmtNum = n => (n >= 1000 ? (Math.round(n/10)/100).toLocaleString('ru-RU')+'K' : n.toLocaleString('ru-RU'));
+  const pct = (part, total) => {
+    if (!total || total <= 0 || !isFinite(total)) return 0;
+    return Math.max(0, Math.min(100, (part / total) * 100));
+  };
+
+  let opensChart, clicksChart, unsubsChart;
+
+  function drawDonut(canvasId, value, percent, colorHex) {
+    const canvas = document.getElementById(canvasId);
+    const existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+    return new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels: ['value', 'rest'],
+        datasets: [{
+          data: [Math.max(0, percent), 100 - Math.max(0, percent)],
+          borderWidth: 0,
+          hoverOffset: 0,
+          cutout: '70%',
+          backgroundColor: [colorHex, '#e5e7eb']
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display:false },
+          tooltip: { enabled:false },
+          centerText: { text: `${percent.toFixed(1)}%`, color:'#111827' }
+        }
+      }
+    });
+  }
+
+  function build() {
+    const delivered = Number(document.getElementById('delivered').value || 0);
+    const opens = Number(document.getElementById('opens').value || 0);
+    const clicks = Number(document.getElementById('clicks').value || 0);
+    const unsubs = Number(document.getElementById('unsubs').value || 0);
+    const base = document.querySelector('input[name="base"]:checked').value;
+
+    // Проценты
+    const pOpens = pct(opens, delivered || opens); // если «разослано» пусто — 100%
+    const pClicks = base === 'opens' ? pct(clicks, opens) : pct(clicks, delivered || clicks);
+    const pUnsubs = pct(unsubs, delivered || unsubs);
+
+    // Подписи-значения
+    document.getElementById('opensValue').textContent = fmtNum(opens);
+    document.getElementById('clicksValue').textContent = fmtNum(clicks);
+    document.getElementById('unsubsValue').textContent = fmtNum(unsubs);
+
+    // Рисуем
+    opensChart = drawDonut('opensChart', opens, pOpens, '#29a3b3');      // бирюзовый как на скрине
+    clicksChart = drawDonut('clicksChart', clicks, pClicks, '#10b981');  // зелёный
+    unsubsChart = drawDonut('unsubsChart', unsubs, '#0ea5e9');           // синий/голубой
+
+    // Сохраняем состояние
+    localStorage.setItem('metrics', JSON.stringify({ delivered, opens, clicks, unsubs, base }));
+  }
+
+  function restore() {
+    const data = JSON.parse(localStorage.getItem('metrics') || '{}');
+    if (data.delivered != null) document.getElementById('delivered').value = data.delivered;
+    if (data.opens != null) document.getElementById('opens').value = data.opens;
+    if (data.clicks != null) document.getElementById('clicks').value = data.clicks;
+    if (data.unsubs != null) document.getElementById('unsubs').value = data.unsubs;
+    if (data.base) {
+      const el = document.querySelector(`input[name="base"][value="${data.base}"]`);
+      if (el) el.checked = true;
+    }
+    build();
+  }
+
+  document.getElementById('build').onclick = build;
+  document.getElementById('reset').onclick = () => {
+    localStorage.removeItem('metrics');
+    document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
+    document.querySelector('input[name="base"][value="delivered"]').checked = true;
+    build();
+  };
+
+  document.getElementById('share').onclick = () => {
+    const delivered = Number(document.getElementById('delivered').value || 0);
+    const opens = Number(document.getElementById('opens').value || 0);
+    const clicks = Number(document.getElementById('clicks').value || 0);
+    const unsubs = Number(document.getElementById('unsubs').value || 0);
+    const base = document.querySelector('input[name="base"]:checked').value;
+
+    const p = (n) => (Math.round(n * 10) / 10).toFixed(1) + '%';
+    const pOpens = pct(opens, delivered || opens);
+    const pClicks = base === 'opens' ? pct(clicks, opens) : pct(clicks, delivered || clicks);
+    const pUnsubs = pct(unsubs, delivered || unsubs);
+
+    const text =
+`Сводка рассылки:
+• Открытий: ${opens.toLocaleString('ru-RU')} (${p(pOpens)})
+• Переходов: ${clicks.toLocaleString('ru-RU')} (${p(pClicks)} ${base==='opens' ? 'от открытий' : 'от разослано'})
+• Отписалось: ${unsubs.toLocaleString('ru-RU')} (${p(pUnsubs)})`;
+
+    if (tg?.sendData) {
+      tg.sendData(text); // отправится как callback-данные вашему боту
+    } else {
+      alert(text);
+    }
+  };
+
+  // первый рендер
+  restore();
+</script>
+</body>
+</html>
