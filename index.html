@@ -12,6 +12,19 @@
       --accent:#6d5cff; --green:#22c55e; --teal:#2bb3c1; --danger:#ef4444; --sky:#38bdf8;
       --shadow:0 8px 24px rgba(0,0,0,.35);
       --radius:18px;
+      --logo-from:#b19cff;   
+      --logo-to:#6ad3ff;   
+    }
+    .logo {
+      font-weight: 900;
+      font-size: 28px;
+      line-height: 1;
+      letter-spacing: .2px;
+      background: linear-gradient(90deg, var(--logo-from), var(--logo-to));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-fill-color: transparent;
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
@@ -40,12 +53,12 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="topbar">
-    <div class="brand">
-      <span class="pill">Волшебная палочка для B2B-продаж</span>
-    </div>
+<div class="topbar">
+  <div class="brand">
+    <span class="logo">WandLead</span>
   </div>
-
+</div>
+  
   <div class="card">
     <h1>WandLead: Включаем AI — закрываем сделки.</h1>
     <div class="kpis">
