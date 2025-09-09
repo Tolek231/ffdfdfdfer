@@ -12,27 +12,22 @@
       --accent:#6d5cff; --green:#22c55e; --teal:#2bb3c1; --danger:#ef4444; --sky:#38bdf8;
       --shadow:0 8px 24px rgba(0,0,0,.35);
       --radius:18px;
-      --logo-from:#b19cff;   
-      --logo-to:#6ad3ff;   
+      --logo-from:#b19cff;   /* мягкий лиловый */
+      --logo-to:#6ad3ff;     /* небесно-голубой */
     }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:1100px;margin:28px auto;padding:0 16px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
     .logo {
       font-weight: 900;
-      font-size: 28px;
-      line-height: 1;
-      letter-spacing: .2px;
+      font-size: 32px;
       background: linear-gradient(90deg, var(--logo-from), var(--logo-to));
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
       text-fill-color: transparent;
     }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-    .wrap{max-width:1100px;margin:28px auto;padding:0 16px}
-    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-    .brand{display:flex;align-items:center;gap:10px}
-    .pill{background:rgba(109,92,255,.15);color:#c9c5ff;border:1px solid rgba(109,92,255,.35);padding:6px 10px;border-radius:999px;font-size:12px}
-    h1{font-size:28px;margin:8px 0 0}
     .grid{display:grid;gap:16px}
     .grid.cards{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
     .card{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
@@ -45,7 +40,6 @@
     .metric .value{font-size:20px;font-weight:800;margin-bottom:6px}
     canvas{max-width:220px;margin:0 auto}
     .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:14px}
-    .badge-up{color:#10b981;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);padding:2px 8px;border-radius:999px;font-size:12px}
     .footer{margin-top:16px;color:var(--muted);font-size:12px;display:flex;gap:10px;align-items:center}
     .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
     .legend{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:6px}
@@ -53,14 +47,11 @@
 </head>
 <body>
 <div class="wrap">
-<div class="topbar">
-  <div class="brand">
+  <div class="topbar">
     <span class="logo">WandLead</span>
   </div>
-</div>
-  
+
   <div class="card">
-    <h1>WandLead: Включаем AI — закрываем сделки.</h1>
     <div class="kpis">
       <div class="kpi">
         <div class="label">Отправлено</div>
@@ -151,13 +142,11 @@
   }
 
   function parseTxt(txt){
-    // формат key=value построчно
     const out = {};
     txt.split(/\r?\n/).forEach(line=>{
       const m = line.trim().match(/^(\w+)\s*=\s*(.+)$/);
       if(m){ out[m[1]] = isNaN(+m[2]) ? m[2] : Number(m[2]); }
     });
-    // автоподстановка errors
     if(out.errors == null && out.sent != null && out.delivered != null){
       out.errors = Math.max(0, out.sent - out.delivered);
     }
@@ -165,7 +154,6 @@
   }
 
   async function loadData(){
-    // data.txt должен лежать рядом с index.html
     const url = new URL('data.txt', location.href).toString();
     const res = await fetch(url, { cache:'no-store' });
     if(!res.ok) throw new Error('Не удалось загрузить data.txt');
@@ -185,20 +173,17 @@
       const unsubs = +d.unsubs || 0;
       const errors = +d.errors || 0;
 
-      // KPI
       document.getElementById('sentKpi').textContent = fmtNum(sent);
       document.getElementById('deliveredKpi').textContent = fmtNum(delivered);
       document.getElementById('opensKpi').textContent = fmtNum(opens);
 
-      // Значения под заголовками метрик
       document.getElementById('opensVal').textContent = fmtNum(opens);
       document.getElementById('clicksVal').textContent = fmtNum(clicks);
       document.getElementById('unsubsVal').textContent = fmtNum(unsubs);
       document.getElementById('errorsVal').textContent = fmtNum(errors);
 
-      // Проценты
       const pOpens  = delivered ? (opens/delivered)*100 : 0;
-      const pClicks = opens ? (clicks/opens)*100 : 0;     // CTOR
+      const pClicks = opens ? (clicks/opens)*100 : 0;
       const pUnsubs = delivered ? (unsubs/delivered)*100 : 0;
       const pErrors = sent ? (errors/sent)*100 : 0;
 
@@ -207,7 +192,6 @@
       donut('unsubsChart', pUnsubs, getComputedStyle(document.documentElement).getPropertyValue('--sky').trim());
       donut('errorsChart', pErrors, getComputedStyle(document.documentElement).getPropertyValue('--danger').trim());
 
-      // Обновление
       const upd = d.updated ? new Date(d.updated) : new Date();
       const fmt = upd.toLocaleString('ru-RU');
       document.getElementById('updatedInfo').textContent = 'Обновление: ' + fmt;
@@ -216,7 +200,7 @@
       console.error(e);
     }finally{
       clearTimeout(timerset);
-      timerset = setTimeout(render, 30000); // автообновление каждые 30с
+      timerset = setTimeout(render, 30000);
     }
   }
 
