@@ -2,318 +2,525 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WandLead — Дашборд</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>WandLead • Mini App</title>
+
+  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
   <style>
     :root{
-      --bg:#0b0b0f; --card:#12121a; --muted:#a1a1aa; --text:#f5f7ff; --ring:#1f1f2a;
-      --teal:#2bb3c1; --green:#22c55e; --sky:#38bdf8; --red:#ef4444;
-      --shadow:0 10px 30px rgba(0,0,0,.35); --radius:18px;
-      /* перламутровые оттенки */
-      --logo-a:#c6b8ff; --logo-b:#88d9ff; --logo-c:#b8ffe4;
+      --bg:#0b0c10;        /* строгий графитовый фон */
+      --fg:#e8e8f1;        /* светлый текст */
+      --muted:#9aa0ad;     /* холодный серый для вторичного */
+      --line:rgba(255,255,255,0.12); /* тонкие границы */
+      --cyan:#67e8f9;      /* холодный акцент для линий */
+      --violet:#a78bfa;    /* фиолетовый акцент */
+      --chip:linear-gradient(135deg,#00e5ff 0%, #7c3aed 100%);
     }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);
-         font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-    .wrap{max-width:1100px;margin:28px auto;padding:0 16px}
-
-    /* ----- header ----- */
-    .top{
-      display:grid;
-      grid-template-columns:1fr auto 1fr;
-      align-items:center;
-    }
-    .logo{
-      justify-self:center;
-      font-weight:900;
-      font-size:36px;
-      letter-spacing:.2px;
-      background: conic-gradient(from 200deg,var(--logo-a),var(--logo-b),var(--logo-c),var(--logo-a));
-      -webkit-background-clip:text; background-clip:text;
-      -webkit-text-fill-color:transparent; text-fill-color:transparent;
-      filter: drop-shadow(0 2px 10px rgba(136,217,255,.25));
-      animation: shimmer 6s linear infinite;
-    }
-    @keyframes shimmer{
-      0%{filter: drop-shadow(0 2px 10px rgba(136,217,255,.25))}
-      50%{filter: drop-shadow(0 2px 16px rgba(184,255,228,.35))}
-      100%{filter: drop-shadow(0 2px 10px rgba(136,217,255,.25))}
-    }
-    .wand{
-      justify-self:end; width:42px; height:42px; position:relative;
-      filter: drop-shadow(0 0 10px rgba(136,217,255,.35));
-      animation:pulse 3s ease-in-out infinite;
-    }
-    @keyframes pulse{0%,100%{transform:translateY(0) rotate(-10deg)}50%{transform:translateY(-3px) rotate(-6deg)}}
-    .spark{position:absolute; inset:-6px; pointer-events:none;
-      background: radial-gradient(12px 12px at 80% 25%, rgba(255,255,255,.35), transparent 60%),
-                  radial-gradient(10px 10px at 65% 10%, rgba(168,220,255,.25), transparent 60%);
-      animation: twinkle 2.6s ease-in-out infinite;}
-    @keyframes twinkle{0%,100%{opacity:.3}50%{opacity:.8}}
-
-    /* ----- подзаголовок "Статистика ниже:" ----- */
-    .sub{
-      margin:14px auto 18px;
-      display:flex; flex-direction:column; align-items:center; gap:8px;
-      text-align:center;
-    }
-    .sub .pill{
-      padding:8px 14px; border-radius:999px; font-weight:700;
-      background: linear-gradient(90deg,var(--logo-a),var(--logo-b),var(--logo-c));
-      color:#0b1020;  /* тёмный текст для контраста */
-      box-shadow:0 8px 26px rgba(136,217,255,.18), inset 0 1px 0 rgba(255,255,255,.35);
-    }
-    .sub .line{
-      width:min(320px,60%); height:2px; border-radius:2px;
-      background: linear-gradient(90deg, transparent, rgba(136,217,255,.55), transparent);
-      filter: blur(.2px);
-    }
-
-    /* ----- карточки и сетки ----- */
-    .card{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);
-          box-shadow:var(--shadow);padding:16px}
-    .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-    .kpi{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
-    .kpi .label{font-size:12px;color:var(--muted);margin-bottom:6px}
-    .kpi .value{font-size:26px;font-weight:800}
-
-    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:16px}
-    .metric{ text-align:center; position:relative; overflow:hidden }
-    .metric h4{margin:0 0 6px;color:var(--muted);font-weight:600}
-    .metric .value{font-size:20px;font-weight:800;margin-bottom:6px}
-    canvas{max-width:230px;margin:0 auto}
-    .legend{display:flex;gap:10px;justify-content:center;margin-top:6px;color:var(--muted);font-size:12px}
-    .dot{width:8px;height:8px;border-radius:50%}
-    .glow:before{
-      content:""; position:absolute; inset:-40%;
-      background: radial-gradient(circle at 50% 30%, rgba(109,92,255,.12), transparent 60%);
-      filter: blur(28px);
-    }
-    .footer{margin-top:14px;color:var(--muted);font-size:12px}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,'Helvetica Neue',Arial,'Apple Color Emoji','Segoe UI Emoji';}
+    *{box-sizing:border-box;letter-spacing:.01em}
+    .container{max-width:960px;margin:0 auto;padding:12px 12px 72px;}
+    .bar{position:sticky;top:0;z-index:5;background:color-mix(in oklab, var(--bg) 85%, transparent);backdrop-filter:saturate(120%) blur(8px);border-bottom:1px solid var(--line);}
+    .bar-inner{max-width:960px;margin:0 auto;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .brand{display:flex;align-items:center;gap:8px}
+    .dot{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#00e5ff 0%,#7c3aed 100%);}
+    .tabs, .period{display:flex;gap:8px}
+    .btn{border:1px solid var(--line);background:color-mix(in oklab, var(--bg) 95%, #fff 0%);color:var(--muted);padding:8px 10px;border-radius:10px;font-size:12px}
+    .btn:hover{color:var(--fg)}
+    .btn.active{background:white/5;background-color:rgba(255,255,255,0.06);color:#fff;border-color:var(--line)}
+    .btn-chip.active{background:var(--chip);color:#fff;border-color:#0000}
+    .grid{display:grid;gap:12px}
+    .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    @media (max-width:720px){.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr}}
+    .card{border:1px solid var(--line);border-radius:14px;background:color-mix(in oklab, var(--bg) 98%, #fff 0%);padding:12px}
+    .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .kpi{display:flex;align-items:flex-end;justify-content:space-between;margin-top:4px}
+    .kpi .val{font-size:24px;font-weight:700;tabular-nums:tabular-nums}
+    .delta{font-size:11px;border:1px solid;color:#fff;padding:2px 6px;border-radius:8px}
+    .delta.pos{border-color:#34d399;color:#34d399}
+    .delta.neg{border-color:#f87171;color:#f87171}
+    .spark{width:100%;height:34px;margin-top:6px}
+    .section-title{display:flex;align-items:center;justify-content:space-between;margin:8px 0}
+    .subtitle{font-size:12px;color:var(--muted)}
+    .footer{position:fixed;left:0;right:0;bottom:0;border-top:1px solid var(--line);background:color-mix(in oklab, var(--bg) 90%, transparent);backdrop-filter:blur(8px)}
+    .footer-inner{max-width:960px;margin:0 auto;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px}
+    .row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid color-mix(in oklab, var(--line), transparent 60%);}
+    .row:last-child{border-bottom:0}
+    .badge{font-size:11px;border:1px solid var(--line);border-radius:8px;padding:3px 8px;color:var(--muted)}
+    .ok{color:#34d399}
+    .err{color:#f87171}
+    .hint{color:var(--muted);font-size:12px}
+    .sheet{position:fixed;inset:0;z-index:20;display:none}
+    .sheet.show{display:block}
+    .sheet .bg{position:absolute;inset:0;background:#0008}
+    .sheet .panel{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:720px;background:var(--bg);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;padding:12px}
   </style>
 </head>
 <body>
-<div class="wrap">
-  <!-- HEADER -->
-  <div class="top">
-    <div></div>
-    <div class="logo">WandLead</div>
-    <div class="wand">
-      <!-- SVG палочка -->
-      <svg viewBox="0 0 64 64" width="42" height="42">
-        <defs>
-          <linearGradient id="g1" x1="0" x2="1">
-            <stop offset="0%"  stop-color="var(--logo-a)"/>
-            <stop offset="50%" stop-color="var(--logo-b)"/>
-            <stop offset="100%" stop-color="var(--logo-c)"/>
-          </linearGradient>
-        </defs>
-        <circle cx="46" cy="8" r="2.3" fill="url(#g1)"/>
-        <circle cx="55" cy="18" r="1.6" fill="url(#g1)"/>
-        <circle cx="50" cy="28" r="1.9" fill="url(#g1)"/>
-        <rect x="8" y="44" width="32" height="4" rx="2" fill="url(#g1)" transform="rotate(-30 8 44)"/>
-        <rect x="35" y="20" width="6" height="6" rx="1.5" fill="url(#g1)"/>
-      </svg>
-      <span class="spark"></span>
+  <!-- Top Bar -->
+  <div class="bar">
+    <div class="bar-inner">
+      <div class="brand">
+        <div class="dot"></div>
+        <div style="font-weight:600">WandLead • Mini</div>
+      </div>
+      <div class="period" id="periodBtns">
+        <button class="btn btn-chip active" data-period="today">День</button>
+        <button class="btn btn-chip" data-period="week">Неделя</button>
+        <button class="btn btn-chip" data-period="month">Месяц</button>
+      </div>
     </div>
   </div>
 
-  <!-- SUBTITLE -->
-  <div class="sub">
-    <div class="pill">Статистика ниже:</div>
-    <div class="line"></div>
-  </div>
+  <div class="container">
+    <!-- Tabs -->
+    <div class="tabs" id="tabs">
+      <button class="btn active" data-tab="overview">Обзор</button>
+      <button class="btn" data-tab="sectors">Сферы</button>
+      <button class="btn" data-tab="activity">Активность</button>
+    </div>
 
-  <!-- CONTENT -->
-  <div class="card">
-    <!-- KPI (без графиков) -->
-    <div class="kpis">
-      <div class="kpi">
-        <div class="label">Отправлено</div>
-        <div class="value" id="sentKpi">—</div>
+    <!-- OVERVIEW -->
+    <div id="tab-overview" class="grid" style="margin-top:12px">
+      <!-- KPIs -->
+      <div class="grid g2" id="kpis"></div>
+
+      <!-- Line Chart -->
+      <div class="card">
+        <div class="section-title">
+          <div>Динамика (Открытия • Ответы)</div>
+          <div class="subtitle" id="lineSubtitle">по дням</div>
+        </div>
+        <svg id="lineChart" viewBox="0 0 720 220" width="100%" height="220"></svg>
+        <div class="hint" style="margin-top:6px">Наведи/тапни по графику — появится вертикальный гид.</div>
       </div>
-      <div class="kpi">
-        <div class="label">Доставлено</div>
-        <div class="value" id="deliveredKpi">—</div>
+
+      <!-- Funnel + Donut -->
+      <div class="grid g3">
+        <div class="card" style="grid-column:span 2;">
+          <div class="section-title">
+            <div>Воронка</div><div class="subtitle">Sent → Opened → Replies</div>
+          </div>
+          <div id="funnel" class="grid g3"></div>
+        </div>
+        <div class="card">
+          <div class="section-title"><div>Качество</div><div class="subtitle" id="donutSub"></div></div>
+          <svg id="donut" viewBox="0 0 140 140" width="100%" height="140"></svg>
+        </div>
       </div>
     </div>
 
-    <!-- Метрики с графиками -->
-    <div class="stats">
-      <div class="metric card glow">
-        <h4>открытия</h4>
-        <div class="value" id="opensVal">—</div>
-        <canvas id="opensChart" width="240" height="240"></canvas>
-        <div class="legend"><span class="dot" style="background:var(--teal)"></span>от доставлено</div>
+    <!-- SECTORS -->
+    <div id="tab-sectors" class="grid" style="display:none;margin-top:12px">
+      <div class="section-title">
+        <div>Сферы: эффективность</div>
+        <div class="tabs">
+          <button class="btn active" id="sortReplies">По ответам</button>
+          <button class="btn" id="sortOpen">По открытиям</button>
+        </div>
       </div>
-
-      <div class="metric card glow">
-        <h4>переходы</h4>
-        <div class="value" id="clicksVal">—</div>
-        <canvas id="clicksChart" width="240" height="240"></canvas>
-        <div class="legend"><span class="dot" style="background:var(--green)"></span>от открытий (CTOR)</div>
-      </div>
-
-      <div class="metric card glow">
-        <h4>отписались</h4>
-        <div class="value" id="unsubsVal">—</div>
-        <canvas id="unsubsChart" width="240" height="240"></canvas>
-        <div class="legend"><span class="dot" style="background:var(--sky)"></span>от доставлено</div>
-      </div>
-
-      <div class="metric card glow">
-        <h4>ошибки</h4>
-        <div class="value" id="errorsVal">—</div>
-        <canvas id="errorsChart" width="240" height="240"></canvas>
-        <div class="legend"><span class="dot" style="background:var(--red)"></span>от отправлено</div>
-      </div>
+      <div id="sectorsList" class="grid g2"></div>
     </div>
 
-    <div class="footer" id="updatedInfo">Обновление: —</div>
+    <!-- ACTIVITY -->
+    <div id="tab-activity" style="display:none;margin-top:12px">
+      <div class="card">
+        <div class="section-title"><div>Лента активности</div><div class="subtitle" id="activityHint">за период</div></div>
+        <div id="feed"></div>
+      </div>
+    </div>
   </div>
-</div>
+
+  <!-- KPI DETAIL SHEET -->
+  <div id="sheet" class="sheet" aria-hidden="true">
+    <div class="bg"></div>
+    <div class="panel">
+      <div class="section-title"><div class="label">Детали метрики</div><button class="btn" id="closeSheet">Закрыть</button></div>
+      <div id="sheetTitle" style="font-weight:600;font-size:18px"></div>
+      <svg id="sheetSpark" class="spark" viewBox="0 0 160 42" width="100%" height="42"></svg>
+      <div class="grid g2" style="margin-top:8px">
+        <div class="card"><div class="label">Текущий</div><div id="sheetCur" style="margin-top:4px;font-size:14px;color:#34d399"></div></div>
+        <div class="card"><div class="label">Изм. к периоду</div><div id="sheetDelta" style="margin-top:4px;font-size:14px"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-inner">
+      <div class="hint">© 2025 WandLead</div>
+      <div class="tabs">
+        <button class="btn" id="exportCsv">Экспорт CSV</button>
+        <button class="btn" id="shareBtn">Поделиться</button>
+      </div>
+    </div>
+  </div>
 
 <script>
-  const tg = window.Telegram?.WebApp; if (tg) tg.expand();
+/* ================= Telegram WebApp init ================= */
+(function initTG(){
+  if (window.Telegram && Telegram.WebApp) {
+    const tg = Telegram.WebApp;
+    try {
+      tg.ready();
+      tg.expand();
+      // Тёмная/светлая тема Telegram — можно прочитать tg.themeParams при необходимости
+    } catch(e){}
+  }
+})();
 
-  // Проценты в центре пончика с лёгким свечением
-  const centerText = {
-    id:'centerText',
-    afterDraw(chart, args, opts){
-      const {ctx, chartArea:{width,height}} = chart;
-      if(!opts?.text) return;
-      ctx.save();
-      ctx.font = opts.font || '700 28px Inter, system-ui';
-      ctx.fillStyle = opts.color || '#f7fbff';
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.shadowColor='rgba(168,220,255,.35)';
-      ctx.shadowBlur=12;
-      ctx.fillText(opts.text, width/2, height/2);
-      ctx.restore();
+/* ================= Utilities ================= */
+const fmt = (n)=> n.toLocaleString('ru-RU');
+const clamp = (x,a,b)=> Math.max(a, Math.min(b, x));
+function trendPct(arr){
+  if(!arr || arr.length<2) return 0;
+  const first = arr[0], last = arr[arr.length-1];
+  if (first === 0) return 0;
+  return Math.round(((last - first)/first)*100);
+}
+
+/* ================= State ================= */
+let DATA = null;      // содержимое data.txt
+let PERIOD = 'today'; // today | week | month
+let SORT = 'replies'; // replies | open
+let ACTIVE_TAB = 'overview'; // overview | sectors | activity
+
+/* ================= DOM refs ================= */
+const periodBtns = document.getElementById('periodBtns');
+const tabs = document.getElementById('tabs');
+const kpisBox = document.getElementById('kpis');
+const lineSvg = document.getElementById('lineChart');
+const lineSubtitle = document.getElementById('lineSubtitle');
+const funnelBox = document.getElementById('funnel');
+const donutSvg = document.getElementById('donut');
+const donutSub = document.getElementById('donutSub');
+const sectorsList = document.getElementById('sectorsList');
+const sortReplies = document.getElementById('sortReplies');
+const sortOpen = document.getElementById('sortOpen');
+const feed = document.getElementById('feed');
+const activityHint = document.getElementById('activityHint');
+
+/* Sheet */
+const sheet = document.getElementById('sheet');
+const closeSheet = document.getElementById('closeSheet');
+const sheetTitle = document.getElementById('sheetTitle');
+const sheetCur = document.getElementById('sheetCur');
+const sheetDelta = document.getElementById('sheetDelta');
+const sheetSpark = document.getElementById('sheetSpark');
+
+/* Tabs content */
+const tabOverview = document.getElementById('tab-overview');
+const tabSectors = document.getElementById('tab-sectors');
+const tabActivity = document.getElementById('tab-activity');
+
+/* Footer */
+document.getElementById('exportCsv').addEventListener('click', exportCsv);
+document.getElementById('shareBtn').addEventListener('click', shareState);
+
+/* ================= Load data ================= */
+fetch('data.txt?ts=' + Date.now())
+  .then(r => r.text())
+  .then(txt => JSON.parse(txt))
+  .then(json => { DATA = json; renderAll(); })
+  .catch(err => {
+    console.error('Не удалось загрузить data.txt', err);
+    alert('Ошибка: не удалось загрузить data.txt');
+  });
+
+/* ================= Render ================= */
+function renderAll(){
+  const d = DATA[PERIOD];
+  renderKPIs(d);
+  renderLine(d);
+  renderFunnel(d);
+  renderDonut(d);
+  renderSectors();
+  renderFeed(d);
+  lineSubtitle.textContent = (PERIOD==='today'?'по часам':'по дням');
+  activityHint.textContent = (PERIOD==='today'?'за день':PERIOD==='week'?'за неделю':'за месяц');
+}
+
+/* KPIs */
+function renderKPIs(d){
+  kpisBox.innerHTML = '';
+  const kpis = [
+    { key:'sent',    label:'Отправлено', val:d.sent, delta:+5, spark:d.spark.sent },
+    { key:'opened',  label:'Открыто',    val:d.opened, delta:+12, spark:d.spark.opened },
+    { key:'replies', label:'Ответы',     val:d.replies, delta:+7, spark:d.spark.replies },
+    { key:'errors',  label:'Ошибки',     val:d.errors, delta:-3, spark:d.spark.errors },
+  ];
+  kpis.forEach(k => {
+    const card = document.createElement('button');
+    card.className = 'card';
+    card.style.textAlign='left';
+    card.addEventListener('click',()=>openSheet(k.label, k.val, k.spark));
+
+    const top = document.createElement('div');
+    top.className = 'label';
+    top.textContent = k.label;
+
+    const kpi = document.createElement('div');
+    kpi.className = 'kpi';
+    const val = document.createElement('div');
+    val.className = 'val';
+    val.textContent = fmt(k.val);
+    const delta = document.createElement('div');
+    delta.className = 'delta ' + (k.delta>=0?'pos':'neg');
+    delta.textContent = (k.delta>=0?'▲ ':'▼ ') + Math.abs(k.delta) + '%';
+    kpi.append(val, delta);
+
+    const spark = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    spark.setAttribute('viewBox','0 0 160 34'); spark.setAttribute('width','100%'); spark.setAttribute('height','34');
+    spark.classList.add('spark');
+    drawSparkline(spark, k.spark, '#6ee7f3');
+
+    card.append(top, kpi, spark);
+    kpisBox.appendChild(card);
+  });
+}
+
+/* Line chart */
+function renderLine(d){
+  const w=720,h=220,p=16;
+  while(lineSvg.firstChild) lineSvg.removeChild(lineSvg.firstChild);
+
+  const gridColor='rgba(255,255,255,0.06)';
+  for(let i=0;i<4;i++){
+    const y = p + i * ((h - p*2)/3);
+    const ln = lineSvg.ownerDocument.createElementNS('http://www.w3.org/2000/svg','line');
+    ln.setAttribute('x1', p); ln.setAttribute('x2', w-p); ln.setAttribute('y1', y); ln.setAttribute('y2', y);
+    ln.setAttribute('stroke', gridColor); lineSvg.appendChild(ln);
+  }
+
+  const maxY = Math.max(...d.byDay, ...d.repliesByDay) * 1.15;
+  const path1 = buildPath(d.byDay, w, h, p, maxY);
+  const path2 = buildPath(d.repliesByDay, w, h, p, maxY);
+
+  const p1 = svgPath(path1, '#67e8f9', 2.2);
+  const p2 = svgPath(path2, '#a78bfa', 2.2);
+  lineSvg.append(p1, p2);
+
+  // hover guide
+  const guide = lineSvg.ownerDocument.createElementNS('http://www.w3.org/2000/svg','line');
+  guide.setAttribute('y1', p); guide.setAttribute('y2', h-p);
+  guide.setAttribute('stroke','rgba(255,255,255,0.25)'); guide.style.display='none';
+  lineSvg.appendChild(guide);
+
+  lineSvg.onmousemove = (e)=>{
+    const rect = lineSvg.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const i = Math.round(((x - p) / (w - p*2)) * (d.byDay.length - 1));
+    if (i>=0 && i<d.byDay.length){
+      const cx = p + (i * (w - p*2)) / (d.byDay.length - 1);
+      guide.setAttribute('x1', cx); guide.setAttribute('x2', cx);
+      guide.style.display='block';
     }
   };
-  Chart.register(centerText);
+  lineSvg.onmouseleave = ()=> guide.style.display='none';
+}
 
-  const fmtNum = n => n==null ? '—' : (n>=1000 ? (Math.round(n/10)/100).toLocaleString('ru-RU')+'K' : n.toLocaleString('ru-RU'));
-  const clampPct = v => Math.max(0, Math.min(100, v));
+function buildPath(arr,w,h,p,maxY){
+  return arr.map((y,i)=>{
+    const x = p + (i * (w - p*2)) / (arr.length - 1);
+    const yy = h - p - (y / maxY) * (h - p*2);
+    return (i===0?'M':'L') + x + ',' + yy;
+  }).join(' ');
+}
+function svgPath(d, stroke, sw){
+  const el = document.createElementNS('http://www.w3.org/2000/svg','path');
+  el.setAttribute('d', d);
+  el.setAttribute('stroke', stroke);
+  el.setAttribute('stroke-width', sw);
+  el.setAttribute('fill', 'none');
+  return el;
+}
+function drawSparkline(svg, arr, color){
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+  const w=160,h=34,p=2;
+  const max = Math.max(...arr) || 1;
+  const min = Math.min(...arr) || 0;
+  const span = Math.max(max - min, 1);
+  const d = arr.map((v,i)=>{
+    const x = p + (i * (w - p*2))/(arr.length-1);
+    const y = h - p - ((v - min)/span) * (h - p*2);
+    return (i===0?'M':'L') + x + ',' + y;
+  }).join(' ');
+  const path = svgPath(d, color, 1.8);
+  svg.appendChild(path);
+}
 
-  function makeGradient(ctx, key){
-    const g = ctx.createLinearGradient(0,0,230,230);
-    const map = {
-      teal:['#2bb3c1','#79e3ef','#2bb3c1'],
-      green:['#22c55e','#8cf0b7','#22c55e'],
-      sky:['#38bdf8','#a8e6ff','#38bdf8'],
-      red:['#ef4444','#ff9b9b','#ef4444']
-    };
-    const p = map[key] || ['#6d5cff','#b9b0ff','#6d5cff'];
-    g.addColorStop(0,p[0]); g.addColorStop(.5,p[1]); g.addColorStop(1,p[2]);
-    return g;
+/* Funnel */
+function renderFunnel(d){
+  funnelBox.innerHTML = '';
+  const steps = [
+    { label:'Отправлено', val:d.sent },
+    { label:'Открыто',   val:d.opened },
+    { label:'Ответы',    val:d.replies },
+  ];
+  const max = Math.max(...steps.map(s=>s.val));
+  steps.forEach(s=>{
+    const card = document.createElement('div'); card.className='card';
+    const lb = document.createElement('div'); lb.className='label'; lb.textContent=s.label;
+    const bar = document.createElement('div'); bar.style.cssText='margin-top:8px;height:10px;border-radius:8px;background:rgba(255,255,255,0.06);overflow:hidden';
+    const fill = document.createElement('div'); fill.style.cssText = 'height:100%;background:linear-gradient(90deg,#00e5ff,#7c3aed)';
+    fill.style.width = Math.max(6, (s.val/max)*100) + '%';
+    bar.appendChild(fill);
+    const v = document.createElement('div'); v.style.cssText='margin-top:4px;font-size:13px'; v.textContent = fmt(s.val);
+    card.append(lb, bar, v);
+    funnelBox.appendChild(card);
+  });
+}
+
+/* Donut */
+function renderDonut(d){
+  const total = Math.max(d.sent, 1); // от общего отправленного
+  const errPct = clamp((d.errors/total)*100, 0, 100);
+  donutSub.textContent = `Ошибки ${Math.round(errPct)}%`;
+  while(donutSvg.firstChild) donutSvg.removeChild(donutSvg.firstChild);
+  const cx=70, cy=70, r=46, circ=2*Math.PI*r;
+
+  const base = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  base.setAttribute('cx',cx); base.setAttribute('cy',cy); base.setAttribute('r',r);
+  base.setAttribute('stroke','rgba(255,255,255,0.08)'); base.setAttribute('stroke-width','14'); base.setAttribute('fill','none');
+
+  const ring = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  ring.setAttribute('cx',cx); ring.setAttribute('cy',cy); ring.setAttribute('r',r);
+  ring.setAttribute('stroke','#1f2937'); ring.setAttribute('stroke-width','14'); ring.setAttribute('fill','none');
+  ring.setAttribute('transform','rotate(-90 70 70)');
+
+  const err = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  err.setAttribute('cx',cx); err.setAttribute('cy',cy); err.setAttribute('r',r);
+  err.setAttribute('stroke','#ef4444'); err.setAttribute('stroke-width','14'); err.setAttribute('fill','none');
+  err.setAttribute('stroke-linecap','round');
+  err.setAttribute('transform','rotate(-90 70 70)');
+  const errLen = (errPct/100)*circ;
+  err.setAttribute('stroke-dasharray', `${errLen} ${circ - errLen}`);
+
+  const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+  txt.setAttribute('x','50%'); txt.setAttribute('y','50%');
+  txt.setAttribute('dominant-baseline','middle'); txt.setAttribute('text-anchor','middle');
+  txt.setAttribute('class','pct'); txt.setAttribute('fill','#ffffff');
+  txt.style.fontSize='18px'; txt.style.fontWeight='700';
+  txt.textContent = (100 - errPct).toFixed(0) + '%';
+
+  donutSvg.append(base, ring, err, txt);
+}
+
+/* Sectors */
+function renderSectors(){
+  const sectors = (DATA[PERIOD].sectors||[]).slice();
+  sectors.sort((a,b)=> SORT==='replies' ? b.reply - a.reply : b.open - a.open);
+  sectorsList.innerHTML = '';
+  sectors.forEach(s=>{
+    const card = document.createElement('div'); card.className='card';
+    const head = document.createElement('div'); head.className='row'; head.style.padding='0'; head.style.border='0';
+    const name = document.createElement('div'); name.style.fontWeight='600'; name.textContent = s.name;
+    const trend = document.createElement('div'); trend.className='badge'; trend.style.color = s.trend>0?'#34d399':s.trend<0?'#f87171': 'var(--muted)';
+    trend.textContent = (s.trend>0?'▲ ':'') + (s.trend<0?'▼ ':'') + Math.abs(s.trend) + '%';
+    head.append(name, trend);
+
+    const meta = document.createElement('div'); meta.className='hint'; meta.textContent = 'Писем: ' + fmt(s.sent);
+
+    const grid = document.createElement('div'); grid.className='grid g2';
+    const c1 = document.createElement('div'); c1.className='card'; c1.innerHTML = `<div class="label">Открытия</div><div style="margin-top:4px"><b>${s.open}%</b></div>`;
+    const c2 = document.createElement('div'); c2.className='card'; c2.innerHTML = `<div class="label">Ответы</div><div style="margin-top:4px"><b>${s.reply}%</b></div>`;
+
+    grid.append(c1,c2);
+    card.append(head, meta, grid);
+    sectorsList.appendChild(card);
+  });
+}
+
+/* Feed */
+function renderFeed(d){
+  feed.innerHTML = '';
+  const items = [
+    { type:'sent',   title:`Отправлено писем: ${fmt(d.sent)}`,    time: '10 мин назад' },
+    { type:'open',   title:`Открытия за период: ${fmt(d.opened)}`,time: 'час назад' },
+    { type:'reply',  title:`Получено ответов: ${fmt(d.replies)}`, time: '2 ч назад' },
+    { type:'error',  title:`Ошибок доставки: ${fmt(d.errors)}`,   time: 'сегодня' },
+  ];
+  items.forEach(row=>{
+    const r = document.createElement('div'); r.className='row';
+    const left = document.createElement('div'); left.style.display='flex'; left.style.alignItems='center'; left.style.gap='8px';
+    const dot = document.createElement('div'); dot.style.width='10px'; dot.style.height='10px'; dot.style.borderRadius='50%';
+    dot.style.background = row.type==='reply'? '#34d399' : row.type==='open' ? '#67e8f9' : row.type==='error' ? '#f87171' : '#9ca3af';
+    const ttl = document.createElement('div'); ttl.textContent = row.title;
+    left.append(dot, ttl);
+    const time = document.createElement('div'); time.className='hint'; time.textContent=row.time;
+    r.append(left, time); feed.appendChild(r);
+  });
+}
+
+/* ================= Interactions ================= */
+periodBtns.addEventListener('click', (e)=>{
+  const b = e.target.closest('button'); if(!b) return;
+  PERIOD = b.dataset.period;
+  [...periodBtns.querySelectorAll('button')].forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  renderAll();
+});
+
+tabs.addEventListener('click', (e)=>{
+  const b = e.target.closest('button'); if(!b) return;
+  const tab = b.dataset.tab;
+  ACTIVE_TAB = tab;
+  [...tabs.querySelectorAll('button')].forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  tabOverview.style.display = tab==='overview'?'grid':'none';
+  tabSectors.style.display = tab==='sectors'?'grid':'none';
+  tabActivity.style.display = tab==='activity'?'block':'none';
+});
+
+sortReplies.addEventListener('click', ()=>{
+  SORT='replies'; sortReplies.classList.add('active'); sortOpen.classList.remove('active'); renderSectors();
+});
+sortOpen.addEventListener('click', ()=>{
+  SORT='open'; sortOpen.classList.add('active'); sortReplies.classList.remove('active'); renderSectors();
+});
+
+/* KPI Sheet */
+function openSheet(title, curVal, sparkArr){
+  sheet.classList.add('show');
+  sheetTitle.textContent = title;
+  sheetCur.textContent = fmt(curVal);
+  const t = trendPct(sparkArr);
+  sheetDelta.textContent = (t>=0?'▲ ':'▼ ') + Math.abs(t) + '%';
+  sheetDelta.style.color = t>=0 ? '#34d399' : '#f87171';
+  drawSparkline(sheetSpark, sparkArr, t>=0 ? '#34d399' : '#f87171');
+}
+document.querySelector('#sheet .bg').addEventListener('click', ()=> sheet.classList.remove('show'));
+closeSheet.addEventListener('click', ()=> sheet.classList.remove('show'));
+
+/* Export CSV (минимальный пример) */
+function exportCsv(){
+  if(!DATA) return;
+  const d = DATA[PERIOD];
+  const rows = [
+    ['metric','value'],
+    ['sent', d.sent],
+    ['opened', d.opened],
+    ['replies', d.replies],
+    ['errors', d.errors],
+  ];
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`metrics_${PERIOD}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* Share (в простом виде) */
+function shareState(){
+  const text = `WandLead: период=${PERIOD}, отправлено=${DATA[PERIOD].sent}, ответы=${DATA[PERIOD].replies}`;
+  if (navigator.share) {
+    navigator.share({text}).catch(()=>{});
+  } else {
+    alert(text);
   }
-
-  function donut(id, percent, paletteKey){
-    const el = document.getElementById(id);
-    const ex = Chart.getChart(el); if (ex) ex.destroy();
-    const ctx = el.getContext('2d');
-    const grad = makeGradient(ctx, paletteKey);
-
-    return new Chart(el, {
-      type:'doughnut',
-      data:{
-        labels:['val','rest'],
-        datasets:[{
-          data:[clampPct(percent), 100-clampPct(percent)],
-          borderWidth:0, hoverOffset:0, cutout:'70%',
-          backgroundColor:[grad, '#1f1f2a']
-        }]
-      },
-      options:{
-        animation:{
-          duration:1200, easing:'easeOutQuart',
-          animateRotate:true, animateScale:true
-        },
-        plugins:{ legend:{display:false}, tooltip:{enabled:false}, centerText:{ text: percent.toFixed(1)+'%' } }
-      },
-      plugins:[{
-        id:'glow',
-        beforeDraw(c){
-          const {ctx, chartArea:{width,height}} = c;
-          ctx.save();
-          ctx.shadowColor='rgba(109,92,255,.22)';
-          ctx.shadowBlur=14;
-          ctx.beginPath(); ctx.arc(width/2,height/2,Math.min(width,height)/2.35,0,Math.PI*2);
-          ctx.strokeStyle='rgba(109,92,255,.18)'; ctx.lineWidth=2; ctx.stroke();
-          ctx.restore();
-        }
-      }]
-    });
-  }
-
-  function parseTxt(txt){
-    const out = {};
-    txt.split(/\r?\n/).forEach(line=>{
-      const m = line.trim().match(/^(\w+)\s*=\s*(.+)$/);
-      if(m){ out[m[1]] = isNaN(+m[2]) ? m[2] : Number(m[2]); }
-    });
-    if(out.errors == null && out.sent != null && out.delivered != null){
-      out.errors = Math.max(0, out.sent - out.delivered);
-    }
-    return out;
-  }
-
-  async function loadData(){
-    const res = await fetch('data.txt', { cache:'no-store' });
-    if(!res.ok) throw new Error('Не удалось загрузить data.txt');
-    return parseTxt(await res.text());
-  }
-
-  let timer;
-  async function render(){
-    try{
-      const d = await loadData();
-
-      const sent = +d.sent || 0;
-      const delivered = +d.delivered || 0;
-      const opens = +d.opens || 0;
-      const clicks = +d.clicks || 0;
-      const unsubs = +d.unsubs || 0;
-      const errors = +d.errors || 0;
-
-      // KPI (без графиков)
-      document.getElementById('sentKpi').textContent = fmtNum(sent);
-      document.getElementById('deliveredKpi').textContent = fmtNum(delivered);
-
-      // подписи под графиками
-      document.getElementById('opensVal').textContent = fmtNum(opens);
-      document.getElementById('clicksVal').textContent = fmtNum(clicks);
-      document.getElementById('unsubsVal').textContent = fmtNum(unsubs);
-      document.getElementById('errorsVal').textContent = fmtNum(errors);
-
-      // проценты
-      const pOpens  = delivered ? (opens/delivered)*100 : 0;
-      const pClicks = opens ? (clicks/opens)*100 : 0;     // CTOR
-      const pUnsubs = delivered ? (unsubs/delivered)*100 : 0;
-      const pErrors = sent ? (errors/sent)*100 : 0;
-
-      donut('opensChart',  pOpens,  'teal');
-      donut('clicksChart', pClicks, 'green');
-      donut('unsubsChart', pUnsubs, 'sky');
-      donut('errorsChart', pErrors, 'red');
-
-      const upd = d.updated ? new Date(d.updated) : new Date();
-      document.getElementById('updatedInfo').textContent =
-        'Обновление: ' + upd.toLocaleString('ru-RU');
-    }catch(e){
-      document.getElementById('updatedInfo').textContent = 'Ошибка загрузки data.txt';
-      console.error(e);
-    }finally{
-      clearTimeout(timer);
-      timer = setTimeout(render, 30000);
-    }
-  }
-  render();
+}
 </script>
 </body>
 </html>
-
