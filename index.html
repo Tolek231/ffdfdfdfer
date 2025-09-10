@@ -12,13 +12,18 @@
     --muted:#9aa0ad;
     --line:rgba(255,255,255,0.12);
     --cyan:#67e8f9;
-    --cyan-strong:#22d3ee;
     --violet:#a78bfa;
-    --violet-strong:#7c3aed;
     --chip:linear-gradient(135deg,#00e5ff 0%, #7c3aed 100%);
+    /* компактность */
+    --gap: 10px;
+    --card-pad: 10px;
+    --chart-h: 160px;          /* высота графика динамики */
+    --chart-h-compact: 130px;  /* для низких экранов */
   }
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,'Helvetica Neue',Arial;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
+    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,'Helvetica Neue',Arial;}
   *{box-sizing:border-box;letter-spacing:.01em}
+
   .container{max-width:960px;margin:0 auto;padding:12px 12px 72px;}
   .bar{position:sticky;top:0;z-index:5;background:rgba(11,12,16,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
   .bar-inner{max-width:960px;margin:0 auto;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--fg)}
@@ -29,30 +34,43 @@
   .btn:hover{background:rgba(255,255,255,0.06)}
   .btn.active{background:rgba(255,255,255,0.08);color:var(--fg);border-color:var(--line)}
   .btn-chip.active{background:var(--chip);color:#fff;border-color:#0000}
-  .grid{display:grid;gap:12px}
+
+  .grid{display:grid;gap:var(--gap)}
   .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
   .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
   @media (max-width:720px){.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr}}
-  .card{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,0.02);padding:12px;color:var(--fg)}
+
+  .card{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,0.02);padding:var(--card-pad);color:var(--fg)}
   .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .section-title{display:flex;align-items:center;justify-content:space-between;margin:6px 0;color:var(--fg)}
+  .subtitle{font-size:12px;color:var(--muted)}
   .kpi{display:flex;align-items:flex-end;justify-content:space-between;margin-top:4px}
-  .kpi .val{font-size:24px;font-weight:700;tabular-nums:tabular-nums;color:var(--fg)}
+  .kpi .val{font-size:22px;font-weight:700;tabular-nums:tabular-nums;color:var(--fg)}
   .delta{font-size:11px;border:1px solid;color:#fff;padding:2px 6px;border-radius:8px}
   .delta.pos{border-color:#34d399;color:#34d399}
   .delta.neg{border-color:#f87171;color:#f87171}
-  .spark{width:100%;height:34px;margin-top:6px}
-  .section-title{display:flex;align-items:center;justify-content:space-between;margin:8px 0;color:var(--fg)}
-  .subtitle{font-size:12px;color:var(--muted)}
+  .spark{width:100%;height:28px;margin-top:4px}
+
   .footer{position:fixed;left:0;right:0;bottom:0;border-top:1px solid var(--line);background:rgba(11,12,16,.9);backdrop-filter:blur(8px)}
   .footer-inner{max-width:960px;margin:0 auto;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px}
   .row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.06);color:var(--fg)}
   .row:last-child{border-bottom:0}
   .badge{font-size:11px;border:1px solid var(--line);border-radius:8px;padding:3px 8px;color:var(--fg)}
   .hint{color:var(--muted);font-size:12px}
+
   .sheet{position:fixed;inset:0;z-index:20;display:none}
   .sheet.show{display:block}
   .sheet .bg{position:absolute;inset:0;background:#0008}
   .sheet .panel{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:720px;background:var(--bg);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;padding:12px;color:var(--fg)}
+
+  /* ещё компактнее при невысоких окнах */
+  @media (max-height: 780px){
+    :root{ --chart-h: var(--chart-h-compact); --gap: 8px; --card-pad: 8px; }
+    .kpi .val{font-size:20px}
+  }
+  @media (max-height: 680px){
+    :root{ --chart-h: 120px; }
+  }
 </style>
 </head>
 <body>
@@ -90,10 +108,8 @@
           <div>Динамика (Открытия • Ответы)</div>
           <div class="subtitle" id="lineSubtitle">по дням</div>
         </div>
-        <svg id="lineChart" viewBox="0 0 720 220" width="100%" height="220"></svg>
-        <svg id="lineChart" viewBox="0 0 720 220" width="100%" height="220"></svg>
+        <svg id="lineChart" viewBox="0 0 720 160" width="100%" height="160"></svg>
         <div id="lineTip" class="hint" style="margin-top:6px">Наведите/тапните по графику</div>
-
       </div>
 
       <!-- Funnel + Donut -->
@@ -106,7 +122,7 @@
         </div>
         <div class="card">
           <div class="section-title"><div>Качество</div><div class="subtitle" id="donutSub"></div></div>
-          <svg id="donut" viewBox="0 0 140 140" width="100%" height="140"></svg>
+          <svg id="donut" viewBox="0 0 140 140" width="100%" height="120"></svg>
         </div>
       </div>
     </div>
@@ -176,6 +192,7 @@ const tabs = document.getElementById('tabs');
 const kpisBox = document.getElementById('kpis');
 const lineSvg = document.getElementById('lineChart');
 const lineSubtitle = document.getElementById('lineSubtitle');
+const lineTip = document.getElementById('lineTip');
 const funnelBox = document.getElementById('funnel');
 const donutSvg = document.getElementById('donut');
 const donutSub = document.getElementById('donutSub');
@@ -235,8 +252,8 @@ function renderKPIs(d){
     kpi.append(val, del);
 
     const sparkSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-    sparkSvg.setAttribute('viewBox','0 0 160 34'); sparkSvg.setAttribute('width','100%'); sparkSvg.setAttribute('height','34'); sparkSvg.classList.add('spark');
-    drawSparkline(sparkSvg, spark, '#6ee7f3');
+    sparkSvg.setAttribute('viewBox','0 0 160 28'); sparkSvg.setAttribute('width','100%'); sparkSvg.setAttribute('height','28'); sparkSvg.classList.add('spark');
+    drawSparkline(sparkSvg, spark, getCss('--cyan'));
 
     card.append(top, kpi, sparkSvg);
     kpisBox.appendChild(card);
@@ -244,23 +261,19 @@ function renderKPIs(d){
 }
 
 function renderLine(d){
-  const w=720,h=220,p=16;
-  const tip = document.getElementById('lineTip');
+  // высота из CSS-переменной
+  const cssH = getComputedStyle(document.documentElement).getPropertyValue('--chart-h').trim();
+  const h = parseInt(cssH || '160', 10);
+  const w = 720, p = 16;
 
   while(lineSvg.firstChild) lineSvg.removeChild(lineSvg.firstChild);
+  lineSvg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  lineSvg.setAttribute('height', h);
 
   // defs: затухающие подложки
   const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
-  const g1 = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
-  g1.setAttribute('id','cyanFade'); g1.setAttribute('x1','0'); g1.setAttribute('x2','0'); g1.setAttribute('y1','0'); g1.setAttribute('y2','1');
-  let s1 = document.createElementNS('http://www.w3.org/2000/svg','stop'); s1.setAttribute('offset','0%'); s1.setAttribute('stop-color','var(--cyan)'); s1.setAttribute('stop-opacity','0.35'); g1.appendChild(s1);
-  s1 = document.createElementNS('http://www.w3.org/2000/svg','stop'); s1.setAttribute('offset','100%'); s1.setAttribute('stop-color','var(--cyan)'); s1.setAttribute('stop-opacity','0.02'); g1.appendChild(s1);
-
-  const g2 = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
-  g2.setAttribute('id','violetFade'); g2.setAttribute('x1','0'); g2.setAttribute('x2','0'); g2.setAttribute('y1','0'); g2.setAttribute('y2','1');
-  let s2 = document.createElementNS('http://www.w3.org/2000/svg','stop'); s2.setAttribute('offset','0%'); s2.setAttribute('stop-color','var(--violet)'); s2.setAttribute('stop-opacity','0.35'); g2.appendChild(s2);
-  s2 = document.createElementNS('http://www.w3.org/2000/svg','stop'); s2.setAttribute('offset','100%'); s2.setAttribute('stop-color','var(--violet)'); s2.setAttribute('stop-opacity','0.02'); g2.appendChild(s2);
-  defs.append(g1,g2);
+  defs.append(makeFade('cyanFade',  getCss('--cyan')));
+  defs.append(makeFade('violetFade',getCss('--violet')));
   lineSvg.appendChild(defs);
 
   // сетка
@@ -286,9 +299,8 @@ function renderLine(d){
   lineSvg.append(areaOpen, areaReply);
 
   // линии
-  const cyan = getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim() || '#67e8f9';
-  const violet = getComputedStyle(document.documentElement).getPropertyValue('--violet').trim() || '#a78bfa';
-  lineSvg.append(svgPath(pathOpen, cyan, 2.2), svgPath(pathReply, violet, 2.2));
+  lineSvg.append(svgPath(pathOpen,  getCss('--cyan'),  2.2));
+  lineSvg.append(svgPath(pathReply, getCss('--violet'),2.2));
 
   // вертикальный гид + маркеры
   const guide = document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -296,10 +308,10 @@ function renderLine(d){
   guide.setAttribute('stroke','rgba(255,255,255,0.28)'); guide.style.display='none';
   lineSvg.appendChild(guide);
 
-  const mOpen = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  mOpen.setAttribute('r','4'); mOpen.setAttribute('fill', cyan); mOpen.style.display='none';
+  const mOpen  = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  mOpen.setAttribute('r','4');  mOpen.setAttribute('fill', getCss('--cyan'));  mOpen.style.display='none';
   const mReply = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  mReply.setAttribute('r','4'); mReply.setAttribute('fill', violet); mReply.style.display='none';
+  mReply.setAttribute('r','4'); mReply.setAttribute('fill', getCss('--violet')); mReply.style.display='none';
   lineSvg.append(mOpen, mReply);
 
   function moveGuide(clientX){
@@ -312,30 +324,36 @@ function renderLine(d){
     guide.setAttribute('x1', cx); guide.setAttribute('x2', cx);
     guide.style.display='block';
 
-    // координаты точек
     const yOpen  = h - p - (d.byDay[i]        / maxY) * (h - p*2);
     const yReply = h - p - (d.repliesByDay[i] / maxY) * (h - p*2);
     mOpen.setAttribute('cx', cx);  mOpen.setAttribute('cy', yOpen);  mOpen.style.display='block';
     mReply.setAttribute('cx', cx); mReply.setAttribute('cy', yReply); mReply.style.display='block';
 
-    tip.textContent = `Точка ${i+1}: открытий ${d.byDay[i]}, ответов ${d.repliesByDay[i]}`;
+    lineTip.textContent = `Точка ${i+1}: открытий ${d.byDay[i]}, ответов ${d.repliesByDay[i]}`;
   }
   function hideGuide(){
     guide.style.display='none';
     mOpen.style.display='none';
     mReply.style.display='none';
-    // tip оставляем последнюю подсказку — можно очистить, если нужно:
-    // tip.textContent = 'Наведите/тапните по графику';
   }
 
-  // мышь
+  // мышь и тач
   lineSvg.addEventListener('mousemove', (e)=> moveGuide(e.clientX));
   lineSvg.addEventListener('mouseleave', hideGuide);
-  // тач
   lineSvg.addEventListener('touchstart', (e)=> { if(e.touches[0]) moveGuide(e.touches[0].clientX); }, {passive:true});
   lineSvg.addEventListener('touchmove',  (e)=> { if(e.touches[0]) moveGuide(e.touches[0].clientX); }, {passive:true});
 }
 
+function makeFade(id, color){
+  const g = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+  g.setAttribute('id',id); g.setAttribute('x1','0'); g.setAttribute('x2','0'); g.setAttribute('y1','0'); g.setAttribute('y2','1');
+  const s1 = document.createElementNS('http://www.w3.org/2000/svg','stop');
+  s1.setAttribute('offset','0%'); s1.setAttribute('stop-color',color); s1.setAttribute('stop-opacity','0.35'); g.appendChild(s1);
+  const s2 = document.createElementNS('http://www.w3.org/2000/svg','stop');
+  s2.setAttribute('offset','100%'); s2.setAttribute('stop-color',color); s2.setAttribute('stop-opacity','0.02'); g.appendChild(s2);
+  return g;
+}
+function getCss(varName){ return getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); }
 
 function buildPath(arr,w,h,p,maxY){
   return arr.map((y,i)=>{
@@ -351,7 +369,7 @@ function svgPath(d, stroke, sw){
 }
 function drawSparkline(svg, arr, color){
   while(svg.firstChild) svg.removeChild(svg.firstChild);
-  const w=160,h=34,p=2;
+  const w=160,h=28,p=2;
   const max = Math.max(...arr) || 1;
   const min = Math.min(...arr) || 0;
   const span = Math.max(max - min, 1);
@@ -360,19 +378,17 @@ function drawSparkline(svg, arr, color){
     const y = h - p - ((v - min)/span) * (h - p*2);
     return (i===0?'M':'L') + x + ',' + y;
   }).join(' ');
-  // fading fill for spark
+  // fading fill
   const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
   const gid = 'sp' + Math.random().toString(36).slice(2);
-  const g = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
-  g.setAttribute('id',gid); g.setAttribute('x1','0'); g.setAttribute('x2','0'); g.setAttribute('y1','0'); g.setAttribute('y2','1');
-  let s = document.createElementNS('http://www.w3.org/2000/svg','stop'); s.setAttribute('offset','0%'); s.setAttribute('stop-color',color); s.setAttribute('stop-opacity','0.35'); g.appendChild(s);
-  s = document.createElementNS('http://www.w3.org/2000/svg','stop'); s.setAttribute('offset','100%'); s.setAttribute('stop-color',color); s.setAttribute('stop-opacity','0.02'); g.appendChild(s);
-  defs.appendChild(g); svg.appendChild(defs);
+  const grad = makeFade(gid, color);
+  grad.setAttribute('id', gid);
+  defs.appendChild(grad); svg.appendChild(defs);
   const area = document.createElementNS('http://www.w3.org/2000/svg','path');
   area.setAttribute('d', d + ` L ${w-p},${h-p} L ${p},${h-p} Z`);
   area.setAttribute('fill', `url(#${gid})`);
   svg.appendChild(area);
-  const path = svgPath(d, color, 1.8);
+  const path = svgPath(d, color, 1.6);
   svg.appendChild(path);
 }
 
@@ -383,7 +399,7 @@ function renderFunnel(d){
   steps.forEach(s=>{
     const card = document.createElement('div'); card.className='card';
     const lb = document.createElement('div'); lb.className='label'; lb.textContent=s.label;
-    const bar = document.createElement('div'); bar.style.cssText='margin-top:8px;height:10px;border-radius:8px;background:rgba(255,255,255,0.06);overflow:hidden';
+    const bar = document.createElement('div'); bar.style.cssText='margin-top:8px;height:8px;border-radius:8px;background:rgba(255,255,255,0.06);overflow:hidden';
     const fill = document.createElement('div'); fill.style.cssText='height:100%;background:linear-gradient(90deg,#00e5ff,#7c3aed)';
     fill.style.width = Math.max(6, (s.val/max)*100) + '%';
     bar.appendChild(fill);
@@ -453,7 +469,6 @@ function renderSectors(){
 function renderFeed(d){
   feed.innerHTML='';
   const items = DATA.feedTemplate.map(t => {
-    // подставляем значения метрик в шаблон
     const text = t.text
       .replace('{sent}', fmt(d.sent))
       .replace('{opened}', fmt(d.opened))
@@ -526,4 +541,3 @@ function shareState(){
 </script>
 </body>
 </html>
-
