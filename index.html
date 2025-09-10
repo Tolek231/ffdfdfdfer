@@ -245,9 +245,11 @@ function renderKPIs(d){
 
 function renderLine(d){
   const w=720,h=220,p=16;
+  const tip = document.getElementById('lineTip');
+
   while(lineSvg.firstChild) lineSvg.removeChild(lineSvg.firstChild);
 
-  // defs for fading areas
+  // defs: затухающие подложки
   const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
   const g1 = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
   g1.setAttribute('id','cyanFade'); g1.setAttribute('x1','0'); g1.setAttribute('x2','0'); g1.setAttribute('y1','0'); g1.setAttribute('y2','1');
@@ -261,6 +263,7 @@ function renderLine(d){
   defs.append(g1,g2);
   lineSvg.appendChild(defs);
 
+  // сетка
   const gridColor='rgba(255,255,255,0.06)';
   for(let i=0;i<4;i++){
     const y=p + i*((h-p*2)/3);
@@ -273,7 +276,7 @@ function renderLine(d){
   const pathOpen = buildPath(d.byDay, w, h, p, maxY);
   const pathReply = buildPath(d.repliesByDay, w, h, p, maxY);
 
-  // Areas (fading)
+  // подложки
   const areaOpen = document.createElementNS('http://www.w3.org/2000/svg','path');
   areaOpen.setAttribute('d', pathOpen + ` L ${w-p},${h-p} L ${p},${h-p} Z`);
   areaOpen.setAttribute('fill','url(#cyanFade)');
@@ -282,29 +285,57 @@ function renderLine(d){
   areaReply.setAttribute('fill','url(#violetFade)');
   lineSvg.append(areaOpen, areaReply);
 
-  // Lines
-  const p1 = svgPath(pathOpen, getComputedStyle(document.documentElement).getPropertyValue('--cyan'), 2.2);
-  const p2 = svgPath(pathReply, getComputedStyle(document.documentElement).getPropertyValue('--violet'), 2.2);
-  lineSvg.append(p1, p2);
+  // линии
+  const cyan = getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim() || '#67e8f9';
+  const violet = getComputedStyle(document.documentElement).getPropertyValue('--violet').trim() || '#a78bfa';
+  lineSvg.append(svgPath(pathOpen, cyan, 2.2), svgPath(pathReply, violet, 2.2));
 
-  // hover guide
+  // вертикальный гид + маркеры
   const guide = document.createElementNS('http://www.w3.org/2000/svg','line');
   guide.setAttribute('y1', p); guide.setAttribute('y2', h-p);
-  guide.setAttribute('stroke','rgba(255,255,255,0.25)'); guide.style.display='none';
+  guide.setAttribute('stroke','rgba(255,255,255,0.28)'); guide.style.display='none';
   lineSvg.appendChild(guide);
 
-  lineSvg.onmousemove = (e)=>{
+  const mOpen = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  mOpen.setAttribute('r','4'); mOpen.setAttribute('fill', cyan); mOpen.style.display='none';
+  const mReply = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  mReply.setAttribute('r','4'); mReply.setAttribute('fill', violet); mReply.style.display='none';
+  lineSvg.append(mOpen, mReply);
+
+  function moveGuide(clientX){
     const rect = lineSvg.getBoundingClientRect();
-    const x = e.clientX - rect.left;
+    const x = clientX - rect.left;
     const i = Math.round(((x - p) / (w - p*2)) * (d.byDay.length - 1));
-    if (i>=0 && i<d.byDay.length){
-      const cx = p + (i * (w - p*2)) / (d.byDay.length - 1);
-      guide.setAttribute('x1', cx); guide.setAttribute('x2', cx);
-      guide.style.display='block';
-    }
-  };
-  lineSvg.onmouseleave = ()=> guide.style.display='none';
+    if (i<0 || i>=d.byDay.length) return hideGuide();
+
+    const cx = p + (i * (w - p*2)) / (d.byDay.length - 1);
+    guide.setAttribute('x1', cx); guide.setAttribute('x2', cx);
+    guide.style.display='block';
+
+    // координаты точек
+    const yOpen  = h - p - (d.byDay[i]        / maxY) * (h - p*2);
+    const yReply = h - p - (d.repliesByDay[i] / maxY) * (h - p*2);
+    mOpen.setAttribute('cx', cx);  mOpen.setAttribute('cy', yOpen);  mOpen.style.display='block';
+    mReply.setAttribute('cx', cx); mReply.setAttribute('cy', yReply); mReply.style.display='block';
+
+    tip.textContent = `Точка ${i+1}: открытий ${d.byDay[i]}, ответов ${d.repliesByDay[i]}`;
+  }
+  function hideGuide(){
+    guide.style.display='none';
+    mOpen.style.display='none';
+    mReply.style.display='none';
+    // tip оставляем последнюю подсказку — можно очистить, если нужно:
+    // tip.textContent = 'Наведите/тапните по графику';
+  }
+
+  // мышь
+  lineSvg.addEventListener('mousemove', (e)=> moveGuide(e.clientX));
+  lineSvg.addEventListener('mouseleave', hideGuide);
+  // тач
+  lineSvg.addEventListener('touchstart', (e)=> { if(e.touches[0]) moveGuide(e.touches[0].clientX); }, {passive:true});
+  lineSvg.addEventListener('touchmove',  (e)=> { if(e.touches[0]) moveGuide(e.touches[0].clientX); }, {passive:true});
 }
+
 
 function buildPath(arr,w,h,p,maxY){
   return arr.map((y,i)=>{
