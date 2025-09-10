@@ -1,17 +1,42 @@
 {
+  "labels": {
+    "sent": "Отправлено",
+    "opened": "Открыто",
+    "replies": "Ответы",
+    "errors": "Ошибки"
+  },
+  "kpis": [
+    { "key": "sent", "label": "Отправлено" },
+    { "key": "opened", "label": "Открыто" },
+    { "key": "replies", "label": "Ответы" },
+    { "key": "errors", "label": "Ошибки" }
+  ],
+  "funnelOrder": ["sent", "opened", "replies"],
+  "feedTemplate": [
+    { "type": "sent",   "text": "Отправлено писем: {sent}",    "time": "10 мин назад" },
+    { "type": "open",   "text": "Открытия за период: {opened}","time": "час назад" },
+    { "type": "reply",  "text": "Получено ответов: {replies}", "time": "2 ч назад" },
+    { "type": "error",  "text": "Ошибок доставки: {errors}",   "time": "сегодня" }
+  ],
+
   "today": {
     "sent": 120,
     "opened": 76,
     "replies": 18,
     "errors": 4,
+
+    "delta": { "sent": 5, "opened": 12, "replies": 7, "errors": -3 },
+
     "byDay": [18,20,17,22,19,14,10],
     "repliesByDay": [3,2,4,3,5,1,0],
+
     "spark": {
       "sent":    [14,16,15,17,18,16,24],
       "opened":  [9,10,11,13,12,12,9],
       "replies": [1,2,3,2,4,3,3],
       "errors":  [1,0,1,1,0,1,0]
     },
+
     "sectors": [
       { "name":"IT",           "sent":120, "open":36, "reply":14, "trend": 5 },
       { "name":"Строительство","sent":90,  "open":28, "reply":10, "trend": 2 },
@@ -19,19 +44,25 @@
       { "name":"Финтех",       "sent":80,  "open":33, "reply":12, "trend": 1 }
     ]
   },
+
   "week": {
     "sent": 1240,
     "opened": 860,
     "replies": 240,
     "errors": 35,
+
+    "delta": { "sent": 5, "opened": 12, "replies": 7, "errors": -3 },
+
     "byDay": [120,180,140,200,220,190,190],
     "repliesByDay": [20,35,28,42,36,40,39],
+
     "spark": {
       "sent":    [150,170,160,180,190,190,200],
       "opened":  [90,110,95,120,130,155,160],
       "replies": [22,28,26,31,33,34,36],
       "errors":  [7,6,5,6,5,3,3]
     },
+
     "sectors": [
       { "name":"IT",           "sent":420, "open":35, "reply":12, "trend": 6 },
       { "name":"Строительство","sent":310, "open":28, "reply": 8, "trend": 3 },
@@ -40,19 +71,25 @@
       { "name":"Производство", "sent":300, "open":25, "reply": 7, "trend": 0 }
     ]
   },
+
   "month": {
     "sent": 5120,
     "opened": 3550,
     "replies": 980,
     "errors": 110,
+
+    "delta": { "sent": 3, "opened": 8, "replies": 4, "errors": -2 },
+
     "byDay": [140,160,100,200,220,180,210,190,170,200,220,210,180,170,160,190,200,220,210,230,240,200,180,170,160,150,140,130,180,200],
     "repliesByDay": [28,24,20,35,40,30,38,31,29,36,38,35,31,28,25,30,32,40,34,41,44,33,28,26,22,20,18,16,28,32],
+
     "spark": {
       "sent":    [150,140,160,170,165,180,190,200,210,220],
       "opened":  [90,85,92,110,120,118,130,135,140,150],
       "replies": [25,24,26,28,30,29,31,32,33,35],
       "errors":  [10,11,10,9,9,8,7,7,6,6]
     },
+
     "sectors": [
       { "name":"IT",           "sent":1600, "open":36, "reply":12, "trend": 7 },
       { "name":"Строительство","sent":1200, "open":29, "reply": 8, "trend": 2 },
@@ -62,3 +99,4 @@
     ]
   }
 }
+
