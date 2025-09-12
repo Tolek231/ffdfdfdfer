@@ -53,6 +53,30 @@
   .sheet .panel{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:720px;background:var(--bg);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;padding:12px}
   @media (max-height: 780px){ :root{ --chart-h: var(--chart-h-compact); --gap:8px; --card-pad:8px } .kpi .val{font-size:20px} }
   @media (max-height: 680px){ :root{ --chart-h: 120px } }
+
+  /* --- Enhancements --- */
+  .btn{cursor:pointer}
+  .kpi .val{color:var(--fg);} /* force visible in dark theme */
+  .kpi .val.sent-gradient{
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: none;
+  }
+  /* Smooth width transitions for funnel bars */
+  .funnel-fill{ transition: width .8s ease; }
+  /* Area/line appear */
+  .fade-in{ opacity:0; transition: opacity .6s ease; }
+  .fade-in.show{ opacity:1; }
+  /* Donut sweep animation */
+  @keyframes sweep {
+    from { stroke-dashoffset: 1000; }
+    to   { stroke-dashoffset: 0; }
+  }
+  /* Sectors buttons accessibility */
+  #sortReplies[aria-pressed="true"], #sortOpen[aria-pressed="true"]{ background: var(--btn-active); }
+
 </style>
 </head>
 <body>
@@ -198,6 +222,20 @@
     </div>
   </div>
 
+
+  <!-- PERCENT EXPLANATION MODAL -->
+  <div id="percentModal" class="sheet" aria-hidden="true">
+    <div class="bg"></div>
+    <div class="panel">
+      <div class="section-title">
+        <div class="label">Пояснение процентов</div>
+        <button class="btn" id="closePercent">Закрыть</button>
+      </div>
+      <div id="percentBody" class="subtitle"></div>
+    </div>
+  </div>
+
+
   <!-- Footer -->
   <div class="footer">
     <div class="footer-inner">
@@ -302,7 +340,7 @@ function renderAll(){
   renderDonut(d);
   renderSectors();
   renderFeed(d);
-  lineSubtitle.textContent = DATA.ui.dynamicSubtitle; // "накопительно"
+  lineSubtitle.textContent = DATA.ui.dynamicSubtitle[PERIOD]; // "накопительно"
   activityHint.textContent = DATA.ui.activitySubtitle[PERIOD];
 }
 
@@ -319,7 +357,7 @@ function renderKPIs(d){
     const top = document.createElement('div'); top.className='label'; top.textContent=k.label;
 
     const kpi = document.createElement('div'); kpi.className='kpi';
-    const val = document.createElement('div'); val.className='val'; val.textContent=fmt(d[k.key]||0);
+    const val = document.createElement('div'); val.className='val'; if(k.key==='sent'){ val.classList.add('sent-gradient'); } val.textContent=fmt(d[k.key]||0);
     const del = document.createElement('div'); del.className='delta '+(delta>=0?'pos':'neg'); del.textContent=(delta>=0?'▲ ':'▼ ')+Math.abs(delta)+'%';
     kpi.append(val, del);
 
@@ -384,8 +422,16 @@ function renderLine(d){
   lineSvg.append(areaOpen, areaReply);
 
   // lines
-  lineSvg.append(svgPath(pathOpen,  cssVar('--cyan'),  2.2));
-  lineSvg.append(svgPath(pathReply, cssVar('--violet'),2.2));
+  const line1 = svgPath(pathOpen,  cssVar('--cyan'),  2.2);
+  const line2 = svgPath(pathReply, cssVar('--violet'),2.2);
+  line1.classList.add('fade-in'); line2.classList.add('fade-in');
+  lineSvg.append(line1, line2);
+  // animate draw
+  animateStroke(line1); animateStroke(line2);
+  // reveal areas
+  areaOpen.classList.add('fade-in'); areaReply.classList.add('fade-in');
+  requestAnimationFrame(()=>{ areaOpen.classList.add('show'); areaReply.classList.add('show'); });
+
 
   // guide + markers
   const guide = document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -433,7 +479,7 @@ function renderFunnel(d){
     const card = document.createElement('div'); card.className='card';
     const lb = document.createElement('div'); lb.className='label'; lb.textContent=s.label;
     const bar = document.createElement('div'); bar.style.cssText='margin-top:8px;height:8px;border-radius:8px;background:rgba(255,255,255,0.06);overflow:hidden';
-    const fill = document.createElement('div'); fill.style.cssText='height:100%;background:linear-gradient(90deg,#00e5ff,#7c3aed)';
+    const fill = document.createElement('div'); fill.className='funnel-fill'; fill.style.cssText='height:100%;background:linear-gradient(90deg,#00e5ff,#7c3aed)';
     fill.style.width = Math.max(6, (s.val/max)*100) + '%';
     bar.appendChild(fill);
     const v = document.createElement('div'); v.style.cssText='margin-top:4px;font-size:13px'; v.textContent = fmt(s.val);
@@ -453,7 +499,7 @@ function renderDonut(d){
   const base = circElem('circle',{cx,cy,r, stroke:'rgba(255,255,255,0.08)', 'stroke-width':14, fill:'none'});
   const ring = circElem('circle',{cx,cy,r, stroke:'#1f2937', 'stroke-width':14, fill:'none', transform:'rotate(-90 70 70)'});
   const err  = circElem('circle',{cx,cy,r, stroke:'#ef4444', 'stroke-width':14, fill:'none', 'stroke-linecap':'round', transform:'rotate(-90 70 70)'});
-  const errLen = (errPct/100)*circ; err.setAttribute('stroke-dasharray', `${errLen} ${circ - errLen}`);
+  const errLen = (errPct/100)*circ; err.setAttribute('stroke-dasharray', `${errLen} ${circ - errLen}`); err.style.strokeDashoffset = String(errLen + circ); err.style.animation = 'sweep 1s ease forwards';
   const txt = textElem({x:'50%', y:'50%', 'dominant-baseline':'middle', 'text-anchor':'middle', fill:'#ffffff'}, (100 - errPct).toFixed(0)+'%');
   txt.style.fontSize='18px'; txt.style.fontWeight='700';
   donutSvg.append(base, ring, err, txt);
@@ -539,11 +585,37 @@ tabs.addEventListener('click', (e)=>{
   tabSectors.style.display = tab==='sectors'?'grid':'none';
   tabActivity.style.display = tab==='activity'?'block':'none';
 });
-sortReplies.addEventListener('click', ()=>{ SORT='replies'; sortReplies.classList.add('active'); sortOpen.classList.remove('active'); renderSectors(); });
-sortOpen.addEventListener('click',   ()=>{ SORT='open';    sortOpen.classList.add('active');    sortReplies.classList.remove('active'); renderSectors(); });
+sortReplies.setAttribute('aria-pressed','true'); sortOpen.setAttribute('aria-pressed','false');
+sortReplies.addEventListener('click', ()=>{ SORT='replies'; sortReplies.classList.add('active'); sortOpen.classList.remove('active'); sortReplies.setAttribute('aria-pressed','true'); sortOpen.setAttribute('aria-pressed','false'); renderSectors(); });
+sortOpen.addEventListener('click',   ()=>{ SORT='open';    sortOpen.classList.add('active');    sortReplies.classList.remove('active'); sortReplies.setAttribute('aria-pressed','false'); sortOpen.setAttribute('aria-pressed','true'); renderSectors(); });
 dynInfoBtn.addEventListener('click', ()=> dynInfo.classList.toggle('show'));
 funnelInfoBtn.addEventListener('click', ()=> funnelInfo.classList.toggle('show'));
 qualityInfoBtn.addEventListener('click', ()=> qualityInfo.classList.toggle('show'));
+
+/* Percent explanation modal */
+const percentModal = document.getElementById('percentModal');
+const percentBody = document.getElementById('percentBody');
+document.querySelector('#percentModal .bg').addEventListener('click', ()=> percentModal.classList.remove('show'));
+document.getElementById('closePercent').addEventListener('click', ()=> percentModal.classList.remove('show'));
+
+function showPercentExplanation(){
+  const d = DATA[PERIOD];
+  const total = Math.max(d.sent, 1);
+  const pOpen = Math.round((d.opened/total)*100);
+  const pReply = Math.round((d.replies/total)*100);
+  const pErr = Math.round((d.errors/total)*100);
+  percentBody.innerHTML = [
+    '<div><b>Как считаются проценты:</b></div>',
+    `<div style="margin-top:6px">Открытия: <b>${pOpen}%</b> = открыто (${fmt(d.opened)}) / отправлено (${fmt(total)}) × 100</div>`,
+    `<div>Ответы: <b>${pReply}%</b> = ответы (${fmt(d.replies)}) / отправлено (${fmt(total)}) × 100</div>`,
+    `<div>Ошибки: <b>${pErr}%</b> = ошибки (${fmt(d.errors)}) / отправлено (${fmt(total)}) × 100</div>`,
+    '<div class="info show" style="margin-top:8px">Проценты всегда считаем от количества отправленных писем в выбранном периоде.</div>'
+  ].join('');
+  percentModal.classList.add('show');
+}
+lineSvg.addEventListener('click', showPercentExplanation);
+donutSvg.addEventListener('click', showPercentExplanation);
+
 sectorsInfoBtn.addEventListener('click', ()=> sectorsInfo.classList.toggle('show'));
 feedInfoBtn.addEventListener('click', ()=> feedInfo.classList.toggle('show'));
 
@@ -579,6 +651,19 @@ document.querySelector('#sheet .bg').addEventListener('click', ()=> sheet.classL
 closeSheet.addEventListener('click', ()=> sheet.classList.remove('show'));
 
 /* Helpers: charts */
+
+function animateStroke(el){
+  try{
+    const len = el.getTotalLength();
+    el.style.strokeDasharray = String(len);
+    el.style.strokeDashoffset = String(len);
+    // trigger
+    void el.getBoundingClientRect();
+    el.style.transition = 'stroke-dashoffset .9s ease';
+    el.style.strokeDashoffset = '0';
+  }catch(e){}
+}
+
 function makeFade(id, color){
   const g = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
   g.setAttribute('id',id); g.setAttribute('x1','0'); g.setAttribute('x2','0'); g.setAttribute('y1','0'); g.setAttribute('y2','1');
