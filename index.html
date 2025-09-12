@@ -360,7 +360,7 @@ function renderKPIs(d){
     const top = document.createElement('div'); top.className='label'; top.textContent=k.label;
 
     const kpi = document.createElement('div'); kpi.className='kpi';
-    const val = document.createElement('div'); val.className='val'; if(k.key==='sent'){ val.classList.add('sent-gradient'); } val.textContent=fmt(d[k.key]||0);
+    const val = document.createElement('div'); val.className='val'; val.textContent=fmt(d[k.key]||0);
     const del = document.createElement('div'); del.className='delta '+(delta>=0?'pos':'neg'); del.textContent=(delta>=0?'▲ ':'▼ ')+Math.abs(delta)+'%';
     kpi.append(val, del);
 
@@ -608,11 +608,11 @@ function showPercentExplanation(){
   const pReply = Math.round((d.replies/total)*100);
   const pErr = Math.round((d.errors/total)*100);
   percentBody.innerHTML = [
-    '<div><b>Как считаются проценты:</b></div>',
-    `<div style="margin-top:6px">Открытия: <b>${pOpen}%</b> = открыто (${fmt(d.opened)}) / отправлено (${fmt(total)}) × 100</div>`,
-    `<div>Ответы: <b>${pReply}%</b> = ответы (${fmt(d.replies)}) / отправлено (${fmt(total)}) × 100</div>`,
-    `<div>Ошибки: <b>${pErr}%</b> = ошибки (${fmt(d.errors)}) / отправлено (${fmt(total)}) × 100</div>`,
-    '<div class="info show" style="margin-top:8px">Проценты всегда считаем от количества отправленных писем в выбранном периоде.</div>'
+    '<div><b>Проценты по метрикам:</b></div>',
+    `<div style="margin-top:6px">Открытия: <b>${pOpen}%</b></div>`,
+    `<div>Ответы: <b>${pReply}%</b></div>`,
+    `<div>Ошибки: <b>${pErr}%</b></div>`,
+    '<div class="info show" style="margin-top:8px">Проценты считаются от количества отправленных писем в выбранном периоде.</div>'
   ].join('');
   percentModal.classList.add('show');
 }
@@ -633,12 +633,30 @@ function openSheet(key, label, curVal, series){
   document.getElementById('howLabel').textContent = DATA.ui.detail.howLabel;
 
   sheetCur.textContent = fmt(curVal);
-
-  // прирост: последнее - первое (и % к первому)
-  const first = series[0] ?? 0, last = series[series.length-1] ?? 0;
-  const abs = last - first, prc = pctDelta(first,last);
-  const arrow = abs>=0 ? '▲' : '▼';
-  sheetDelta.textContent = `${arrow} ${fmt(Math.abs(abs))} (${Math.abs(prc)}%)`;
+// Forecast in right card for non-error metrics
+const chgCard = document.getElementById('chgLabel').parentElement;
+if(key==='errors'){
+  document.getElementById('chgLabel').textContent = DATA.ui.detail.growthLabel;
+  chgCard.style.display = 'none';
+  sheetDelta.textContent = '';
+}else{
+  chgCard.style.display = '';
+  document.getElementById('chgLabel').textContent = 'Прогноз';
+  let factor = 1;
+  if(PERIOD==='day'){
+    const hour = new Date().getHours()||1;
+    factor = 24/hour;
+  }else if(PERIOD==='week'){
+    const day = (new Date().getDay()||1); // 1..6
+    factor = 7/day;
+  }else if(PERIOD==='month'){
+    const today = new Date().getDate()||1;
+    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate();
+    factor = daysInMonth/today;
+  }
+  const projected = Math.round((curVal||0)*factor);
+  sheetDelta.textContent = `~ ${fmt(projected)}`;
+}
 
   // пояснения
   sheetDef.textContent  = DATA.ui.metricExplain[key].what;
@@ -757,3 +775,4 @@ function drawDetailChart(svg, arr, axisXLabel, axisYLabel){
 </script>
 </body>
 </html>
+
