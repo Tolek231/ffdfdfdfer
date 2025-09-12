@@ -80,6 +80,11 @@
 
   .forecast{margin-top:2px;color:var(--fg);}
 
+
+  /* Reveal animation for sparkline containers */
+  .spark { opacity: 0; transform: translateY(4px); transition: opacity .6s ease, transform .6s ease; }
+  .spark.show { opacity: 1; transform: translateY(0); }
+
 </style>
 </head>
 <body>
@@ -224,21 +229,6 @@
       </div>
     </div>
   </div>
-
-
-  <!-- PERCENT EXPLANATION MODAL -->
-  <div id="percentModal" class="sheet" aria-hidden="true">
-    <div class="bg"></div>
-    <div class="panel">
-      <div class="section-title">
-        <div class="label">Пояснение процентов</div>
-        <button class="btn" id="closePercent">Закрыть</button>
-      </div>
-      <div id="percentBody" class="subtitle"></div>
-    </div>
-  </div>
-
-
   <!-- Footer -->
   <div class="footer">
     <div class="footer-inner">
@@ -349,6 +339,7 @@ function renderAll(){
 
 /* KPI */
 function renderKPIs(d){
+
   kpisBox.innerHTML = '';
   DATA.kpis.forEach(k=>{
     const delta = d.delta[k.key] ?? 0;
@@ -370,7 +361,15 @@ function renderKPIs(d){
 
     card.append(top, kpi, sparkSvg);
     kpisBox.appendChild(card);
-  });
+  
+
+  // Reveal small charts when they enter viewport
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('show'); io.unobserve(e.target); } });
+  }, {threshold: 0.2});
+  document.querySelectorAll('.spark').forEach(el=> io.observe(el));
+
+});
 }
 
 /* Responsive Line chart (cumulative) with guide */
@@ -595,29 +594,6 @@ dynInfoBtn.addEventListener('click', ()=> dynInfo.classList.toggle('show'));
 funnelInfoBtn.addEventListener('click', ()=> funnelInfo.classList.toggle('show'));
 qualityInfoBtn.addEventListener('click', ()=> qualityInfo.classList.toggle('show'));
 
-/* Percent explanation modal */
-const percentModal = document.getElementById('percentModal');
-const percentBody = document.getElementById('percentBody');
-document.querySelector('#percentModal .bg').addEventListener('click', ()=> percentModal.classList.remove('show'));
-document.getElementById('closePercent').addEventListener('click', ()=> percentModal.classList.remove('show'));
-
-function showPercentExplanation(){
-  const d = DATA[PERIOD];
-  const total = Math.max(d.sent, 1);
-  const pOpen = Math.round((d.opened/total)*100);
-  const pReply = Math.round((d.replies/total)*100);
-  const pErr = Math.round((d.errors/total)*100);
-  percentBody.innerHTML = [
-    '<div><b>Проценты по метрикам:</b></div>',
-    `<div style="margin-top:6px">Открытия: <b>${pOpen}%</b></div>`,
-    `<div>Ответы: <b>${pReply}%</b></div>`,
-    `<div>Ошибки: <b>${pErr}%</b></div>`,
-    '<div class="info show" style="margin-top:8px">Проценты считаются от количества отправленных писем в выбранном периоде.</div>'
-  ].join('');
-  percentModal.classList.add('show');
-}
-lineSvg.addEventListener('click', showPercentExplanation);
-donutSvg.addEventListener('click', showPercentExplanation);
 
 sectorsInfoBtn.addEventListener('click', ()=> sectorsInfo.classList.toggle('show'));
 feedInfoBtn.addEventListener('click', ()=> feedInfo.classList.toggle('show'));
@@ -655,7 +631,7 @@ if(key==='errors'){
     factor = daysInMonth/today;
   }
   const projected = Math.round((curVal||0)*factor);
-  sheetDelta.textContent = `~ ${fmt(projected)}`;
+  sheetDelta.textContent = `Прогноз (если темп сохранится): ~ ${fmt(projected)}`;
 }
 
   // пояснения
@@ -775,4 +751,3 @@ function drawDetailChart(svg, arr, axisXLabel, axisYLabel){
 </script>
 </body>
 </html>
-
