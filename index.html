@@ -53,6 +53,38 @@
   .sheet .panel{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:720px;background:var(--bg);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;padding:12px}
   @media (max-height: 780px){ :root{ --chart-h: var(--chart-h-compact); --gap:8px; --card-pad:8px } .kpi .val{font-size:20px} }
   @media (max-height: 680px){ :root{ --chart-h: 120px } }
+
+  /* --- Enhancements --- */
+  .btn{cursor:pointer}
+  .kpi .val{color:var(--fg);} /* force visible in dark theme */
+  .kpi .val.sent-gradient{
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: none;
+  }
+  /* Smooth width transitions for funnel bars */
+  .funnel-fill{ transition: width .8s ease; }
+  /* Area/line appear */
+  .fade-in{ opacity:0; transition: opacity .6s ease; }
+  .fade-in.show{ opacity:1; }
+  /* Donut sweep animation */
+  @keyframes sweep {
+    from { stroke-dashoffset: 1000; }
+    to   { stroke-dashoffset: 0; }
+  }
+  /* Sectors buttons accessibility */
+  #sortReplies[aria-pressed="true"], #sortOpen[aria-pressed="true"]{ background: var(--btn-active); }
+
+
+  .forecast{margin-top:2px;color:var(--fg);}
+
+
+  /* Reveal animation for sparkline containers */
+  .spark { opacity: 0; transform: translateY(4px); transition: opacity .6s ease, transform .6s ease; }
+  .spark.show { opacity: 1; transform: translateY(0); }
+
 </style>
 </head>
 <body>
@@ -197,7 +229,6 @@
       </div>
     </div>
   </div>
-
   <!-- Footer -->
   <div class="footer">
     <div class="footer-inner">
@@ -302,12 +333,13 @@ function renderAll(){
   renderDonut(d);
   renderSectors();
   renderFeed(d);
-  lineSubtitle.textContent = DATA.ui.dynamicSubtitle; // "накопительно"
+  lineSubtitle.textContent = DATA.ui.dynamicSubtitle[PERIOD]; // "накопительно"
   activityHint.textContent = DATA.ui.activitySubtitle[PERIOD];
 }
 
 /* KPI */
 function renderKPIs(d){
+
   kpisBox.innerHTML = '';
   DATA.kpis.forEach(k=>{
     const delta = d.delta[k.key] ?? 0;
@@ -329,7 +361,15 @@ function renderKPIs(d){
 
     card.append(top, kpi, sparkSvg);
     kpisBox.appendChild(card);
-  });
+  
+
+  // Reveal small charts when they enter viewport
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('show'); io.unobserve(e.target); } });
+  }, {threshold: 0.2});
+  document.querySelectorAll('.spark').forEach(el=> io.observe(el));
+
+});
 }
 
 /* Responsive Line chart (cumulative) with guide */
@@ -384,8 +424,16 @@ function renderLine(d){
   lineSvg.append(areaOpen, areaReply);
 
   // lines
-  lineSvg.append(svgPath(pathOpen,  cssVar('--cyan'),  2.2));
-  lineSvg.append(svgPath(pathReply, cssVar('--violet'),2.2));
+  const line1 = svgPath(pathOpen,  cssVar('--cyan'),  2.2);
+  const line2 = svgPath(pathReply, cssVar('--violet'),2.2);
+  line1.classList.add('fade-in'); line2.classList.add('fade-in');
+  lineSvg.append(line1, line2);
+  // animate draw
+  animateStroke(line1); animateStroke(line2);
+  // reveal areas
+  areaOpen.classList.add('fade-in'); areaReply.classList.add('fade-in');
+  requestAnimationFrame(()=>{ areaOpen.classList.add('show'); areaReply.classList.add('show'); });
+
 
   // guide + markers
   const guide = document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -433,7 +481,7 @@ function renderFunnel(d){
     const card = document.createElement('div'); card.className='card';
     const lb = document.createElement('div'); lb.className='label'; lb.textContent=s.label;
     const bar = document.createElement('div'); bar.style.cssText='margin-top:8px;height:8px;border-radius:8px;background:rgba(255,255,255,0.06);overflow:hidden';
-    const fill = document.createElement('div'); fill.style.cssText='height:100%;background:linear-gradient(90deg,#00e5ff,#7c3aed)';
+    const fill = document.createElement('div'); fill.className='funnel-fill'; fill.style.cssText='height:100%;background:linear-gradient(90deg,#00e5ff,#7c3aed)';
     fill.style.width = Math.max(6, (s.val/max)*100) + '%';
     bar.appendChild(fill);
     const v = document.createElement('div'); v.style.cssText='margin-top:4px;font-size:13px'; v.textContent = fmt(s.val);
@@ -453,7 +501,7 @@ function renderDonut(d){
   const base = circElem('circle',{cx,cy,r, stroke:'rgba(255,255,255,0.08)', 'stroke-width':14, fill:'none'});
   const ring = circElem('circle',{cx,cy,r, stroke:'#1f2937', 'stroke-width':14, fill:'none', transform:'rotate(-90 70 70)'});
   const err  = circElem('circle',{cx,cy,r, stroke:'#ef4444', 'stroke-width':14, fill:'none', 'stroke-linecap':'round', transform:'rotate(-90 70 70)'});
-  const errLen = (errPct/100)*circ; err.setAttribute('stroke-dasharray', `${errLen} ${circ - errLen}`);
+  const errLen = (errPct/100)*circ; err.setAttribute('stroke-dasharray', `${errLen} ${circ - errLen}`); err.style.strokeDashoffset = String(errLen + circ); err.style.animation = 'sweep 1s ease forwards';
   const txt = textElem({x:'50%', y:'50%', 'dominant-baseline':'middle', 'text-anchor':'middle', fill:'#ffffff'}, (100 - errPct).toFixed(0)+'%');
   txt.style.fontSize='18px'; txt.style.fontWeight='700';
   donutSvg.append(base, ring, err, txt);
@@ -539,11 +587,14 @@ tabs.addEventListener('click', (e)=>{
   tabSectors.style.display = tab==='sectors'?'grid':'none';
   tabActivity.style.display = tab==='activity'?'block':'none';
 });
-sortReplies.addEventListener('click', ()=>{ SORT='replies'; sortReplies.classList.add('active'); sortOpen.classList.remove('active'); renderSectors(); });
-sortOpen.addEventListener('click',   ()=>{ SORT='open';    sortOpen.classList.add('active');    sortReplies.classList.remove('active'); renderSectors(); });
+sortReplies.setAttribute('aria-pressed','true'); sortOpen.setAttribute('aria-pressed','false');
+sortReplies.addEventListener('click', ()=>{ SORT='replies'; sortReplies.classList.add('active'); sortOpen.classList.remove('active'); sortReplies.setAttribute('aria-pressed','true'); sortOpen.setAttribute('aria-pressed','false'); renderSectors(); });
+sortOpen.addEventListener('click',   ()=>{ SORT='open';    sortOpen.classList.add('active');    sortReplies.classList.remove('active'); sortReplies.setAttribute('aria-pressed','false'); sortOpen.setAttribute('aria-pressed','true'); renderSectors(); });
 dynInfoBtn.addEventListener('click', ()=> dynInfo.classList.toggle('show'));
 funnelInfoBtn.addEventListener('click', ()=> funnelInfo.classList.toggle('show'));
 qualityInfoBtn.addEventListener('click', ()=> qualityInfo.classList.toggle('show'));
+
+
 sectorsInfoBtn.addEventListener('click', ()=> sectorsInfo.classList.toggle('show'));
 feedInfoBtn.addEventListener('click', ()=> feedInfo.classList.toggle('show'));
 
@@ -558,12 +609,30 @@ function openSheet(key, label, curVal, series){
   document.getElementById('howLabel').textContent = DATA.ui.detail.howLabel;
 
   sheetCur.textContent = fmt(curVal);
-
-  // прирост: последнее - первое (и % к первому)
-  const first = series[0] ?? 0, last = series[series.length-1] ?? 0;
-  const abs = last - first, prc = pctDelta(first,last);
-  const arrow = abs>=0 ? '▲' : '▼';
-  sheetDelta.textContent = `${arrow} ${fmt(Math.abs(abs))} (${Math.abs(prc)}%)`;
+// Forecast in right card for non-error metrics
+const chgCard = document.getElementById('chgLabel').parentElement;
+if(key==='errors'){
+  document.getElementById('chgLabel').textContent = DATA.ui.detail.growthLabel;
+  chgCard.style.display = 'none';
+  sheetDelta.textContent = '';
+}else{
+  chgCard.style.display = '';
+  document.getElementById('chgLabel').textContent = 'Прогноз';
+  let factor = 1;
+  if(PERIOD==='day'){
+    const hour = new Date().getHours()||1;
+    factor = 24/hour;
+  }else if(PERIOD==='week'){
+    const day = (new Date().getDay()||1); // 1..6
+    factor = 7/day;
+  }else if(PERIOD==='month'){
+    const today = new Date().getDate()||1;
+    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate();
+    factor = daysInMonth/today;
+  }
+  const projected = Math.round((curVal||0)*factor);
+  sheetDelta.textContent = `Прогноз (если темп сохранится): ~ ${fmt(projected)}`;
+}
 
   // пояснения
   sheetDef.textContent  = DATA.ui.metricExplain[key].what;
@@ -579,6 +648,19 @@ document.querySelector('#sheet .bg').addEventListener('click', ()=> sheet.classL
 closeSheet.addEventListener('click', ()=> sheet.classList.remove('show'));
 
 /* Helpers: charts */
+
+function animateStroke(el){
+  try{
+    const len = el.getTotalLength();
+    el.style.strokeDasharray = String(len);
+    el.style.strokeDashoffset = String(len);
+    // trigger
+    void el.getBoundingClientRect();
+    el.style.transition = 'stroke-dashoffset .9s ease';
+    el.style.strokeDashoffset = '0';
+  }catch(e){}
+}
+
 function makeFade(id, color){
   const g = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
   g.setAttribute('id',id); g.setAttribute('x1','0'); g.setAttribute('x2','0'); g.setAttribute('y1','0'); g.setAttribute('y2','1');
