@@ -21,7 +21,7 @@
   .brand{display:flex;align-items:center;gap:8px}
   .dot{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#00e5ff 0%,#7c3aed 100%);}
   .tabs,.period{display:flex;gap:8px}
-  .btn{border:1px solid var(--line);background:var(--btn-bg);color:var(--fg);padding:7px 10px;border-radius:10px;font-size:12px}
+  .btn{border:1px solid var(--line);background:var(--btn-bg);color:var(--fg);padding:7px 10px;border-radius:10px;font-size:12px;cursor:pointer}
   .btn:hover{background:rgba(255,255,255,0.06)}
   .btn.active{background:var(--btn-active);border-color:var(--line)}
   .grid{display:grid;gap:var(--gap)}
@@ -34,11 +34,12 @@
   .section-left{display:flex;align-items:center;gap:8px}
   .subtitle{font-size:12px;color:var(--muted)}
   .kpi{display:flex;align-items:flex-end;justify-content:space-between;margin-top:4px}
-  .kpi .val{font-size:22px;font-weight:700;tabular-nums:tabular-nums}
+  .kpi .val{font-size:22px;font-weight:700;tabular-nums:tabular-nums;color:var(--fg)}
   .delta{font-size:11px;border:1px solid;color:#fff;padding:2px 6px;border-radius:8px}
   .delta.pos{border-color:#34d399;color:#34d399}
   .delta.neg{border-color:#f87171;color:#f87171}
-  .spark{width:100%;height:28px;margin-top:4px}
+  .spark{width:100%;height:28px;margin-top:4px;opacity:0;transform:translateY(4px);transition:opacity .6s ease,transform .6s ease}
+  .spark.show{opacity:1;transform:translateY(0)}
   .info{border:1px solid var(--line);border-radius:8px;padding:8px;color:var(--muted);font-size:12px;margin-top:6px;display:none}
   .info.show{display:block}
   .icon-btn{width:22px;height:22px;border:1px solid var(--line);border-radius:50%;background:var(--btn-bg);color:var(--fg);font-size:12px;display:flex;align-items:center;justify-content:center}
@@ -54,60 +55,26 @@
   @media (max-height: 780px){ :root{ --chart-h: var(--chart-h-compact); --gap:8px; --card-pad:8px } .kpi .val{font-size:20px} }
   @media (max-height: 680px){ :root{ --chart-h: 120px } }
 
-  /* --- Enhancements --- */
-  .btn{cursor:pointer}
-  .kpi .val{color:var(--fg);}
-  .kpi .val.sent-gradient{
-    background: linear-gradient(135deg, var(--cyan), var(--violet));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: none;
-  }
-  .funnel-fill{ transition: width .8s ease; }
-  .fade-in{ opacity:0; transition: opacity .6s ease; }
-  .fade-in.show{ opacity:1; }
+  /* Motion */
+  .funnel-fill{transition:width .8s ease}
+  .fade-in{opacity:0;transition:opacity .6s ease}
+  .fade-in.show{opacity:1}
   @keyframes sweep { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
-  #sortReplies[aria-pressed="true"], #sortOpen[aria-pressed="true"]{ background: var(--btn-active); }
-  .forecast{margin-top:2px;color:var(--fg);}
-  .spark { opacity: 0; transform: translateY(4px); transition: opacity .6s ease, transform .6s ease; }
-  .spark.show { opacity: 1; transform: translateY(0); }
+  #sortReplies[aria-pressed="true"], #sortOpen[aria-pressed="true"]{background:var(--btn-active)}
 
-  /* ===== Motion design для «Детали метрики» (≤ 2 сек суммарно) ===== */
-  .axis-line {
-    stroke-dasharray: 400;
-    stroke-dashoffset: 400;
-    animation: axisDraw .6s ease forwards;
-  }
-  @keyframes axisDraw { to { stroke-dashoffset: 0; } }
-
-  .axis-label {
-    opacity: 0;
-    animation: fadeIn .5s ease forwards;
-    animation-delay: .5s; /* после осей */
-  }
-  @keyframes fadeIn { to { opacity: 1; } }
-
-  .detail-path {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-    animation: strokePlay 1s ease forwards;
-    animation-delay: .8s; /* после появления поля измерения */
-  }
-  @keyframes strokePlay { to { stroke-dashoffset: 0; } }
-
-  .detail-area {
-    opacity: 0;
-    transition: opacity .5s ease .8s; /* синхронно с линией */
-  }
-  .detail-area.show { opacity: 1; }
-
-  /* курсор-гида для detailChart */
-  .guide-line { pointer-events:none }
+  /* Детали метрики (≤2с) */
+  .axis-line{stroke-dasharray:400;stroke-dashoffset:400;animation:axisDraw .6s ease forwards}
+  @keyframes axisDraw{to{stroke-dashoffset:0}}
+  .axis-label{opacity:0;animation:fadeIn .5s ease .5s forwards}
+  @keyframes fadeIn{to{opacity:1}}
+  .detail-path{stroke-dasharray:1000;stroke-dashoffset:1000;animation:strokePlay 1s ease .8s forwards}
+  @keyframes strokePlay{to{stroke-dashoffset:0}}
+  .detail-area{opacity:0;transition:opacity .5s ease .8s}
+  .detail-area.show{opacity:1}
+  .guide-line{pointer-events:none}
 </style>
 </head>
 <body>
-  <!-- Top Bar -->
   <div class="bar">
     <div class="bar-inner">
       <div class="brand">
@@ -123,19 +90,15 @@
   </div>
 
   <div class="container">
-    <!-- Tabs -->
     <div class="tabs" id="tabs">
       <button class="btn active" data-tab="overview" id="tabBtnOverview">Обзор</button>
       <button class="btn" data-tab="sectors" id="tabBtnSectors">Сферы</button>
       <button class="btn" data-tab="activity" id="tabBtnActivity">Активность</button>
     </div>
 
-    <!-- OVERVIEW -->
     <div id="tab-overview" class="grid" style="margin-top:12px">
-      <!-- KPIs -->
       <div class="grid g2" id="kpis"></div>
 
-      <!-- Line Chart -->
       <div class="card" id="dynamicCard">
         <div class="section-title">
           <div class="section-left">
@@ -151,7 +114,6 @@
         <div id="lineTip" class="subtitle" style="margin-top:6px"></div>
       </div>
 
-      <!-- Funnel + Donut -->
       <div class="grid g3">
         <div class="card" style="grid-column:span 2;">
           <div class="section-title">
@@ -178,7 +140,6 @@
       </div>
     </div>
 
-    <!-- SECTORS -->
     <div id="tab-sectors" class="grid" style="display:none;margin-top:12px">
       <div class="section-title">
         <div class="section-left">
@@ -194,7 +155,6 @@
       <div id="sectorsList" class="grid g2"></div>
     </div>
 
-    <!-- ACTIVITY -->
     <div id="tab-activity" style="display:none;margin-top:12px">
       <div class="card">
         <div class="section-title">
@@ -221,7 +181,6 @@
 
       <div id="sheetTitle" style="font-weight:600;font-size:18px"></div>
 
-      <!-- оси и график -->
       <div style="margin-top:10px">
         <svg id="detailChart" viewBox="0 0 340 160" width="100%" height="160"></svg>
         <div class="subtitle" id="detailAxesNote" style="margin-top:4px"></div>
@@ -249,7 +208,7 @@
       </div>
     </div>
   </div>
-  <!-- Footer -->
+
   <div class="footer">
     <div class="footer-inner">
       <div class="subtitle" id="footerCopy">© 2025 WandLead</div>
@@ -270,10 +229,9 @@
 const fmt = (n)=> n.toLocaleString('ru-RU');
 const clamp = (x,a,b)=> Math.max(a, Math.min(b, x));
 function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-function pctDelta(first,last){ if(first===0) return 0; return Math.round(((last-first)/first)*100); }
 
 /* State & refs */
-let DATA=null, PERIOD='today', SORT='replies', ACTIVE_TAB='overview';
+let DATA=null, PERIOD='today', SORT='replies';
 const periodBtns = document.getElementById('periodBtns');
 const tabs = document.getElementById('tabs');
 const kpisBox = document.getElementById('kpis');
@@ -285,12 +243,6 @@ const dynInfoBtn = document.getElementById('dynInfoBtn');
 const dynInfo = document.getElementById('dynInfo');
 const funnelInfoBtn = document.getElementById('funnelInfoBtn');
 const funnelInfo = document.getElementById('funnelInfo');
-const qualityInfoBtn = document.getElementById('qualityInfoBtn');
-const qualityInfo = document.getElementById('qualityInfo');
-const sectorsInfoBtn = document.getElementById('sectorsInfoBtn');
-const sectorsInfo = document.getElementById('sectorsInfo');
-const feedInfoBtn = document.getElementById('feedInfoBtn');
-const feedInfo = document.getElementById('feedInfo');
 const funnelBox = document.getElementById('funnel');
 const donutSvg = document.getElementById('donut');
 const donutSub = document.getElementById('donutSub');
@@ -340,7 +292,8 @@ function hydrateUiText(){
   funnelInfo.textContent  = DATA.ui.sections.funnel.info;
   qualityInfo.textContent = DATA.ui.sections.quality.info;
   sectorsInfo.textContent = DATA.ui.sections.sectors.info;
-  feedInfo.textContent    = DATA.ui.sections.feed.info;
+  // воронка поясняет путь аудитории из data.txt
+  document.getElementById('funnelSub').textContent = DATA.ui.funnelSubtitle;
 
   document.getElementById('exportCsv').textContent = DATA.ui.actions.export;
   document.getElementById('shareBtn').textContent  = DATA.ui.actions.share;
@@ -349,18 +302,17 @@ function hydrateUiText(){
 function renderAll(){
   const d = DATA[PERIOD];
   renderKPIs(d);
-  renderLine(d);                // накопительно
+  renderLine(d);
   renderFunnel(d);
   renderDonut(d);
   renderSectors();
   renderFeed(d);
-  lineSubtitle.textContent = DATA.ui.dynamicSubtitle[PERIOD]; // "накопительно"
+  lineSubtitle.textContent = DATA.ui.dynamicSubtitle[PERIOD];
   activityHint.textContent = DATA.ui.activitySubtitle[PERIOD];
 }
 
 /* KPI */
 function renderKPIs(d){
-
   kpisBox.innerHTML = '';
   DATA.kpis.forEach(k=>{
     const delta = d.delta[k.key] ?? 0;
@@ -370,7 +322,6 @@ function renderKPIs(d){
     card.addEventListener('click',()=>openSheet(k.key, k.label, d[k.key], spark));
 
     const top = document.createElement('div'); top.className='label'; top.textContent=k.label;
-
     const kpi = document.createElement('div'); kpi.className='kpi';
     const val = document.createElement('div'); val.className='val'; val.textContent=fmt(d[k.key]||0);
     const del = document.createElement('div'); del.className='delta '+(delta>=0?'pos':'neg'); del.textContent=(delta>=0?'▲ ':'▼ ')+Math.abs(delta)+'%';
@@ -382,18 +333,15 @@ function renderKPIs(d){
 
     card.append(top, kpi, sparkSvg);
     kpisBox.appendChild(card);
-  
+  });
 
-  // Reveal small charts when they enter viewport
   const io = new IntersectionObserver((entries)=>{
     entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('show'); io.unobserve(e.target); } });
   }, {threshold: 0.2});
   document.querySelectorAll('.spark').forEach(el=> io.observe(el));
-
-});
 }
 
-/* Responsive Line chart (cumulative) with guide */
+/* Responsive Line (overview) */
 let ro=null;
 function attachResize(){
   if (ro) ro.disconnect();
@@ -406,72 +354,67 @@ function renderLine(d){
   const w = Math.max(280, Math.floor(lineWrap.getBoundingClientRect().width));
   const p = 16;
 
-  // накопительные ряды: сумма с начала периода
   const cum = (arr)=> arr.reduce((acc,v)=>{ acc.push((acc.at(-1)||0)+v); return acc; }, []);
   const opensCum   = cum(d.byDay);
   const repliesCum = cum(d.repliesByDay);
 
-  while(lineSvg.firstChild) lineSvg.removeChild(lineSvg.firstChild);
-  lineSvg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-  lineSvg.setAttribute('width', w);
-  lineSvg.setAttribute('height', h);
+  const svg=lineSvg;
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
 
-  // defs
   const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
   defs.append(makeFade('cyanFade',  cssVar('--cyan')));
   defs.append(makeFade('violetFade',cssVar('--violet')));
-  lineSvg.appendChild(defs);
+  svg.appendChild(defs);
 
-  // grid
   const gridColor='rgba(255,255,255,0.06)';
   for(let i=0;i<4;i++){
     const y=p + i*((h-p*2)/3);
     const ln = document.createElementNS('http://www.w3.org/2000/svg','line');
     ln.setAttribute('x1',p); ln.setAttribute('x2',w-p); ln.setAttribute('y1',y); ln.setAttribute('y2',y);
-    ln.setAttribute('stroke',gridColor); lineSvg.appendChild(ln);
+    ln.setAttribute('stroke',gridColor); svg.appendChild(ln);
   }
 
   const maxY = Math.max(...opensCum, ...repliesCum) * 1.1;
   const pathOpen = buildPath(opensCum, w, h, p, maxY);
   const pathReply = buildPath(repliesCum, w, h, p, maxY);
 
-  // areas
   const areaOpen = document.createElementNS('http://www.w3.org/2000/svg','path');
   areaOpen.setAttribute('d', pathOpen + ` L ${w-p},${h-p} L ${p},${h-p} Z`);
   areaOpen.setAttribute('fill','url(#cyanFade)');
   const areaReply = document.createElementNS('http://www.w3.org/2000/svg','path');
   areaReply.setAttribute('d', pathReply + ` L ${w-p},${h-p} L ${p},${h-p} Z`);
   areaReply.setAttribute('fill','url(#violetFade)');
-  lineSvg.append(areaOpen, areaReply);
+  svg.append(areaOpen, areaReply);
 
-  // lines
   const line1 = svgPath(pathOpen,  cssVar('--cyan'),  2.2);
   const line2 = svgPath(pathReply, cssVar('--violet'),2.2);
   line1.classList.add('fade-in'); line2.classList.add('fade-in');
-  lineSvg.append(line1, line2);
-  // animate draw
+  svg.append(line1, line2);
   animateStroke(line1); animateStroke(line2);
-  // reveal areas
   areaOpen.classList.add('fade-in'); areaReply.classList.add('fade-in');
   requestAnimationFrame(()=>{ areaOpen.classList.add('show'); areaReply.classList.add('show'); });
 
-  // guide + markers
+  // guide synced with viewBox coords
   const guide = document.createElementNS('http://www.w3.org/2000/svg','line');
   guide.setAttribute('y1', p); guide.setAttribute('y2', h-p);
   guide.setAttribute('stroke','rgba(255,255,255,0.28)'); guide.style.display='none';
-  lineSvg.appendChild(guide);
+  svg.appendChild(guide);
   const mOpen  = document.createElementNS('http://www.w3.org/2000/svg','circle');
   mOpen.setAttribute('r','4');  mOpen.setAttribute('fill', cssVar('--cyan'));  mOpen.style.display='none';
   const mReply = document.createElementNS('http://www.w3.org/2000/svg','circle');
   mReply.setAttribute('r','4'); mReply.setAttribute('fill', cssVar('--violet')); mReply.style.display='none';
-  lineSvg.append(mOpen, mReply);
+  svg.append(mOpen, mReply);
 
   function moveGuide(clientX){
-    const rect = lineSvg.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const i = Math.round(((x - p) / (w - p*2)) * (opensCum.length - 1));
+    const rect = svg.getBoundingClientRect();
+    const vbW = w; // viewBox width
+    const xSvg = (clientX - rect.left) * (vbW / rect.width); // перевод в координаты SVG
+    const i = Math.round(((xSvg - p) / (vbW - p*2)) * (opensCum.length - 1));
     if (i<0 || i>=opensCum.length) return hideGuide();
-    const cx = p + (i * (w - p*2)) / (opensCum.length - 1);
+    const cx = p + (i * (vbW - p*2)) / (opensCum.length - 1);
     guide.setAttribute('x1', cx); guide.setAttribute('x2', cx);
     guide.style.display='block';
     const yOpen  = h - p - (opensCum[i]   / maxY) * (h - p*2);
@@ -485,10 +428,10 @@ function renderLine(d){
   }
   function hideGuide(){ guide.style.display='none'; mOpen.style.display='none'; mReply.style.display='none'; }
 
-  lineSvg.onmousemove = (e)=> moveGuide(e.clientX);
-  lineSvg.onmouseleave = hideGuide;
-  lineSvg.addEventListener('touchstart', (e)=> { if(e.touches[0]) moveGuide(e.touches[0].clientX); }, {passive:true});
-  lineSvg.addEventListener('touchmove',  (e)=> { if(e.touches[0]) moveGuide(e.touches[0].clientX); }, {passive:true});
+  svg.onmousemove = (e)=> moveGuide(e.clientX);
+  svg.onmouseleave = hideGuide;
+  svg.addEventListener('touchstart', (e)=> { if(e.touches[0]) moveGuide(e.touches[0].clientX); }, {passive:true});
+  svg.addEventListener('touchmove',  (e)=> { if(e.touches[0]) moveGuide(e.touches[0].clientX); }, {passive:true});
 }
 
 /* Funnel */
@@ -496,7 +439,6 @@ function renderFunnel(d){
   funnelBox.innerHTML = '';
   const steps = DATA.funnelOrder.map(key => ({label: DATA.labels[key] || key, val: d[key]}));
   const max = Math.max(...steps.map(s=>s.val));
-  document.getElementById('funnelSub').textContent = DATA.ui.funnelSubtitle;
   steps.forEach(s=>{
     const card = document.createElement('div'); card.className='card';
     const lb = document.createElement('div'); lb.className='label'; lb.textContent=s.label;
@@ -600,7 +542,7 @@ periodBtns.addEventListener('click', (e)=>{
 });
 tabs.addEventListener('click', (e)=>{
   const b = e.target.closest('button'); if(!b) return;
-  const tab = b.dataset.tab; ACTIVE_TAB = tab;
+  const tab = b.dataset.tab;
   [...tabs.querySelectorAll('button')].forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   tabOverview.style.display = tab==='overview'?'grid':'none';
@@ -612,14 +554,11 @@ sortReplies.addEventListener('click', ()=>{ SORT='replies'; sortReplies.classLis
 sortOpen.addEventListener('click',   ()=>{ SORT='open';    sortOpen.classList.add('active');    sortReplies.classList.remove('active'); sortReplies.setAttribute('aria-pressed','false'); sortOpen.setAttribute('aria-pressed','true'); renderSectors(); });
 dynInfoBtn.addEventListener('click', ()=> dynInfo.classList.toggle('show'));
 funnelInfoBtn.addEventListener('click', ()=> funnelInfo.classList.toggle('show'));
-qualityInfoBtn.addEventListener('click', ()=> qualityInfo.classList.toggle('show'));
-sectorsInfoBtn.addEventListener('click', ()=> sectorsInfo.classList.toggle('show'));
-feedInfoBtn.addEventListener('click', ()=> feedInfo.classList.toggle('show'));
 
 /* Sheet */
 function openSheet(key, label, curVal, series){
   sheet.classList.add('show');
-  document.getElementById('sheetHeader').textContent = DATA.ui.detail.header || 'Детали метрики';
+  document.getElementById('sheetHeader').textContent = DATA.ui.detail?.header || 'Детали метрики';
   sheetTitle.textContent = label;
   document.getElementById('curLabel').textContent = DATA.ui.detail.curLabel;
   document.getElementById('chgLabel').textContent = DATA.ui.detail.growthLabel;
@@ -627,7 +566,6 @@ function openSheet(key, label, curVal, series){
   document.getElementById('howLabel').textContent = DATA.ui.detail.howLabel;
 
   sheetCur.textContent = fmt(curVal);
-  // Прогноз вместо "Прирост" для не-ошибок
   const chgCard = document.getElementById('chgLabel').parentElement;
   if(key==='errors'){
     document.getElementById('chgLabel').textContent = DATA.ui.detail.growthLabel;
@@ -636,15 +574,15 @@ function openSheet(key, label, curVal, series){
   }else{
     chgCard.style.display = '';
     document.getElementById('chgLabel').textContent = 'Прогноз';
-    let factor = 1;
-    if(PERIOD==='day'){
-      const hour = new Date().getHours()||1;
+    let factor = 1, period=PERIOD;
+    if(period==='today'){
+      const hour = Math.max(1, new Date().getHours());
       factor = 24/hour;
-    }else if(PERIOD==='week'){
-      const day = (new Date().getDay()||1);
+    }else if(period==='week'){
+      const day = Math.max(1, new Date().getDay());
       factor = 7/day;
-    }else if(PERIOD==='month'){
-      const today = new Date().getDate()||1;
+    }else if(period==='month'){
+      const today = Math.max(1, new Date().getDate());
       const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate();
       factor = daysInMonth/today;
     }
@@ -652,14 +590,11 @@ function openSheet(key, label, curVal, series){
     sheetDelta.textContent = `Прогноз (если темп сохранится): ~ ${fmt(projected)}`;
   }
 
-  // пояснения
   sheetDef.textContent  = DATA.ui.metricExplain[key].what;
   sheetHow.textContent  = DATA.ui.metricExplain[key].how;
 
-  // график с анимацией осей/поля/линии и интерактивом
   drawDetailChart(detailSvg, series, DATA.ui.detail.axisX, DATA.ui.metricExplain[key].unitY, (i, val)=>{
-    if(i==null){ detailTip.textContent = ''; return; }
-    detailTip.textContent = `Точка ${i+1}: ${fmt(val)} ${DATA.ui.metricExplain[key].unitY.toLowerCase()}`;
+    detailTip.textContent = i==null ? '' : `Точка ${i+1}: ${fmt(val)} ${DATA.ui.metricExplain[key].unitY.toLowerCase()}`;
   });
 
   detailAxesNote.textContent = DATA.ui.detail.axesNote
@@ -670,7 +605,6 @@ document.querySelector('#sheet .bg').addEventListener('click', ()=> sheet.classL
 closeSheet.addEventListener('click', ()=> sheet.classList.remove('show'));
 
 /* Helpers: charts */
-
 function animateStroke(el){
   try{
     const len = el.getTotalLength();
@@ -681,7 +615,6 @@ function animateStroke(el){
     el.style.strokeDashoffset = '0';
   }catch(e){}
 }
-
 function makeFade(id, color){
   const g = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
   g.setAttribute('id',id); g.setAttribute('x1','0'); g.setAttribute('x2','0'); g.setAttribute('y1','0'); g.setAttribute('y2','1');
@@ -690,8 +623,9 @@ function makeFade(id, color){
   return g;
 }
 function buildPath(arr,w,h,p,maxY){
+  const n = Math.max(1, arr.length-1);
   return arr.map((y,i)=>{
-    const x = p + (i * (w - p*2)) / (arr.length - 1);
+    const x = p + (i * (w - p*2)) / n;
     const yy = h - p - (y / maxY) * (h - p*2);
     return (i===0?'M':'L') + x + ',' + yy;
   }).join(' ');
@@ -703,12 +637,12 @@ function svgPath(d, stroke, sw){
 }
 function drawSparkline(svg, arr, color){
   while(svg.firstChild) svg.removeChild(svg.firstChild);
-  const w=160,h=28,p=2;
+  const w=160,h=28,p=2,n=Math.max(1,arr.length-1);
   const max = Math.max(...arr) || 1;
   const min = Math.min(...arr) || 0;
   const span = Math.max(max - min, 1);
   const d = arr.map((v,i)=>{
-    const x = p + (i * (w - p*2))/(arr.length-1);
+    const x = p + (i * (w - p*2))/n;
     const y = h - p - ((v - min)/span) * (h - p*2);
     return (i===0?'M':'L') + x + ',' + y;
   }).join(' ');
@@ -724,10 +658,10 @@ function drawSparkline(svg, arr, color){
   svg.appendChild(path);
 }
 
-/* === Детальный график с анимациями и hover-гидом === */
+/* Detail chart with viewBox-correct hover */
 function drawDetailChart(svg, arr, axisXLabel, axisYLabel, onPoint){
   while(svg.firstChild) svg.removeChild(svg.firstChild);
-  const w=340, h=160, p=28;
+  const w=340, h=160, p=28, n=Math.max(1,arr.length-1);
   svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
   svg.setAttribute('width', '100%'); svg.setAttribute('height', h);
 
@@ -736,7 +670,6 @@ function drawDetailChart(svg, arr, axisXLabel, axisYLabel, onPoint){
   const span = Math.max(max-min, 1);
 
   const axisColor='rgba(255,255,255,0.4)';
-  // оси с анимацией
   const axX = document.createElementNS('http://www.w3.org/2000/svg','line');
   axX.setAttribute('x1', p); axX.setAttribute('y1', h-p); axX.setAttribute('x2', w-p); axX.setAttribute('y2', h-p);
   axX.setAttribute('stroke',axisColor); axX.classList.add('axis-line');
@@ -745,7 +678,6 @@ function drawDetailChart(svg, arr, axisXLabel, axisYLabel, onPoint){
   axY.setAttribute('stroke',axisColor); axY.classList.add('axis-line');
   svg.append(axX, axY);
 
-  // сетка + подписи Y
   for(let i=0;i<=3;i++){
     const y = p + i*((h - p*2)/3); const val = Math.round(max - (i*span/3));
     const ln = document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -754,66 +686,51 @@ function drawDetailChart(svg, arr, axisXLabel, axisYLabel, onPoint){
     const t = textElem({x:String(p-6), y:String(y+4), 'text-anchor':'end', fill:'#9aa0ad'}, String(val));
     t.style.fontSize='10px'; t.classList.add('axis-label'); svg.appendChild(t);
   }
-  // подписи X
   for(let i=0;i<arr.length;i++){
-    const x = p + (i * (w - p*2)) / (arr.length - 1);
+    const x = p + (i * (w - p*2)) / n;
     if (i%Math.ceil(arr.length/6)===0){
       const t = textElem({x:String(x), y:String(h-p+14), 'text-anchor':'middle', fill:'#9aa0ad'}, String(i+1));
       t.style.fontSize='10px'; t.classList.add('axis-label');
       svg.appendChild(t);
     }
   }
-  // подписи осей
   const xLabel = textElem({x:String(w/2), y:String(h-6), 'text-anchor':'middle', fill:'#9aa0ad'}, axisXLabel);
   xLabel.style.fontSize='11px'; xLabel.classList.add('axis-label');
   const yLabel = textElem({x:'6', y:String(h/2), 'text-anchor':'middle', fill:'#9aa0ad', transform:`rotate(-90 6 ${h/2})`}, axisYLabel);
   yLabel.style.fontSize='11px'; yLabel.classList.add('axis-label');
   svg.append(xLabel, yLabel);
 
-  // путь
   const d = arr.map((v,i)=>{
-    const x = p + (i * (w - p*2)) / (arr.length - 1);
+    const x = p + (i * (w - p*2)) / n;
     const y = h - p - ((v - min)/span) * (h - p*2);
     return (i===0?'M':'L') + x + ',' + y;
   }).join(' ');
 
-  // заливка
   const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
   defs.append(makeFade('detailFade', cssVar('--cyan'))); svg.appendChild(defs);
   const area = document.createElementNS('http://www.w3.org/2000/svg','path');
   area.setAttribute('d', d + ` L ${w-p},${h-p} L ${p},${h-p} Z`);
-  area.setAttribute('fill','url(#detailFade)');
-  area.classList.add('detail-area');
-  svg.appendChild(area);
-  requestAnimationFrame(()=> area.classList.add('show'));
+  area.setAttribute('fill','url(#detailFade)'); area.classList.add('detail-area');
+  svg.appendChild(area); requestAnimationFrame(()=> area.classList.add('show'));
 
-  // линия
-  const line = svgPath(d, cssVar('--cyan'), 2);
-  line.classList.add('detail-path');
-  svg.append(line);
+  const line = svgPath(d, cssVar('--cyan'), 2); line.classList.add('detail-path'); svg.append(line);
 
-  // hover-гид
   const guide = document.createElementNS('http://www.w3.org/2000/svg','line');
   guide.setAttribute('y1', p); guide.setAttribute('y2', h-p);
-  guide.setAttribute('stroke','rgba(255,255,255,0.28)');
-  guide.classList.add('guide-line');
-  guide.style.display='none';
+  guide.setAttribute('stroke','rgba(255,255,255,0.28)'); guide.classList.add('guide-line'); guide.style.display='none';
   svg.appendChild(guide);
-
   const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  dot.setAttribute('r','4');  dot.setAttribute('fill', cssVar('--cyan'));  dot.style.display='none';
-  svg.appendChild(dot);
+  dot.setAttribute('r','4'); dot.setAttribute('fill', cssVar('--cyan')); dot.style.display='none'; svg.appendChild(dot);
 
   function xy(i){
-    const x = p + (i * (w - p*2)) / (arr.length - 1);
+    const x = p + (i * (w - p*2)) / n;
     const y = h - p - ((arr[i] - min)/span) * (h - p*2);
     return {x,y};
   }
   function moveGuideAt(clientX){
     const rect = svg.getBoundingClientRect();
-    const wpx = rect.width;
-    const xLocal = clientX - rect.left;
-    const i = Math.round(((xLocal - p) / (wpx - p*2)) * (arr.length - 1));
+    const xSvg = (clientX - rect.left) * (w / rect.width); // перевод в координаты viewBox
+    const i = Math.round(((xSvg - p) / (w - p*2)) * (arr.length - 1));
     if (i<0 || i>=arr.length){ hideGuide(); return; }
     const {x,y} = xy(i);
     guide.setAttribute('x1', x); guide.setAttribute('x2', x);
@@ -821,10 +738,7 @@ function drawDetailChart(svg, arr, axisXLabel, axisYLabel, onPoint){
     dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.style.display='block';
     if(typeof onPoint==='function') onPoint(i, arr[i]);
   }
-  function hideGuide(){
-    guide.style.display='none'; dot.style.display='none';
-    if(typeof onPoint==='function') onPoint(null, null);
-  }
+  function hideGuide(){ guide.style.display='none'; dot.style.display='none'; if(onPoint) onPoint(null,null); }
 
   svg.onmousemove = (e)=> moveGuideAt(e.clientX);
   svg.onmouseleave = hideGuide;
