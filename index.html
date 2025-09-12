@@ -8,7 +8,7 @@
 <style>
   :root{
     --bg:#0b0c10; --fg:#e8e8f1; --muted:#9aa0ad; --line:rgba(255,255,255,0.12);
-    --cyan:#67e8f9; --violet:#a78bfa; --chip:linear-gradient(135deg,#00e5ff 0%, #7c3aed 100%);
+    --cyan:#67e8f9; --violet:#a78bfa;
     --gap:10px; --card-pad:10px; --chart-h:160px; --chart-h-compact:130px;
     --btn-bg: rgba(255,255,255,0.03); --btn-active: rgba(255,255,255,0.08);
   }
@@ -17,18 +17,18 @@
   *{box-sizing:border-box;letter-spacing:.01em}
   .container{max-width:960px;margin:0 auto;padding:12px 12px 72px;}
   .bar{position:sticky;top:0;z-index:5;background:rgba(11,12,16,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-  .bar-inner{max-width:960px;margin:0 auto;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--fg)}
+  .bar-inner{max-width:960px;margin:0 auto;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
   .brand{display:flex;align-items:center;gap:8px}
   .dot{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#00e5ff 0%,#7c3aed 100%);}
   .tabs,.period{display:flex;gap:8px}
   .btn{border:1px solid var(--line);background:var(--btn-bg);color:var(--fg);padding:7px 10px;border-radius:10px;font-size:12px}
   .btn:hover{background:rgba(255,255,255,0.06)}
-  .btn.active{background:var(--btn-active);color:var(--fg);border-color:var(--line);box-shadow:0 0 0 1px rgba(255,255,255,0.04) inset}
+  .btn.active{background:var(--btn-active);border-color:var(--line)}
   .grid{display:grid;gap:var(--gap)}
   .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
   .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
   @media (max-width:720px){.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr}}
-  .card{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,0.02);padding:var(--card-pad);color:var(--fg)}
+  .card{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,0.02);padding:var(--card-pad)}
   .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
   .section-title{display:flex;align-items:center;justify-content:space-between;margin:6px 0}
   .section-left{display:flex;align-items:center;gap:8px}
@@ -91,7 +91,7 @@
             <div id="dynTitle">Динамика (Открытия • Ответы)</div>
             <button class="icon-btn" id="dynInfoBtn">i</button>
           </div>
-          <div class="subtitle" id="lineSubtitle">по дням</div>
+          <div class="subtitle" id="lineSubtitle">накопительно</div>
         </div>
         <div id="dynInfo" class="info"></div>
         <div id="lineWrap" style="width:100%;">
@@ -182,7 +182,7 @@
           <div id="sheetCur" style="margin-top:4px;font-size:14px;color:#34d399"></div>
         </div>
         <div class="card">
-          <div class="label" id="chgLabel">Изменение к периоду</div>
+          <div class="label" id="chgLabel">Прирост за период</div>
           <div id="sheetDelta" style="margin-top:4px;font-size:14px"></div>
         </div>
       </div>
@@ -194,10 +194,6 @@
       <div class="card" style="margin-top:8px">
         <div class="label" id="howLabel">Как считается</div>
         <div id="sheetHow" class="subtitle" style="margin-top:4px"></div>
-      </div>
-      <div class="card" style="margin-top:8px">
-        <div class="label" id="imprLabel">Как улучшить</div>
-        <div id="sheetImpr" class="subtitle" style="margin-top:4px"></div>
       </div>
     </div>
   </div>
@@ -222,8 +218,8 @@
 })();
 const fmt = (n)=> n.toLocaleString('ru-RU');
 const clamp = (x,a,b)=> Math.max(a, Math.min(b, x));
-function trendPct(arr){ if(!arr||arr.length<2) return 0; const a=arr[0], b=arr[arr.length-1]; return a?Math.round(((b-a)/a)*100):0; }
 function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function pctDelta(first,last){ if(first===0) return 0; return Math.round(((last-first)/first)*100); }
 
 /* State & refs */
 let DATA=null, PERIOD='today', SORT='replies', ACTIVE_TAB='overview';
@@ -261,7 +257,6 @@ const detailSvg = document.getElementById('detailChart');
 const detailAxesNote = document.getElementById('detailAxesNote');
 const sheetDef = document.getElementById('sheetDef');
 const sheetHow = document.getElementById('sheetHow');
-const sheetImpr = document.getElementById('sheetImpr');
 const tabOverview = document.getElementById('tab-overview');
 const tabSectors = document.getElementById('tab-sectors');
 const tabActivity = document.getElementById('tab-activity');
@@ -274,7 +269,6 @@ fetch('data.txt?ts='+Date.now())
   .catch(err => { console.error(err); alert('Ошибка загрузки data.txt'); });
 
 function hydrateUiText(){
-  // Заголовки/подписи/подсказки из файла
   document.getElementById('appTitle').textContent = DATA.ui.title;
   document.getElementById('btnToday').textContent = DATA.ui.buttons.today;
   document.getElementById('btnWeek').textContent  = DATA.ui.buttons.week;
@@ -303,12 +297,12 @@ function hydrateUiText(){
 function renderAll(){
   const d = DATA[PERIOD];
   renderKPIs(d);
-  renderLine(d);
+  renderLine(d);                // накопительно
   renderFunnel(d);
   renderDonut(d);
   renderSectors();
   renderFeed(d);
-  lineSubtitle.textContent = DATA.ui.dynamicSubtitle[PERIOD];
+  lineSubtitle.textContent = DATA.ui.dynamicSubtitle; // "накопительно"
   activityHint.textContent = DATA.ui.activitySubtitle[PERIOD];
 }
 
@@ -333,15 +327,12 @@ function renderKPIs(d){
     sparkSvg.setAttribute('viewBox','0 0 160 28'); sparkSvg.setAttribute('width','100%'); sparkSvg.setAttribute('height','28'); sparkSvg.classList.add('spark');
     drawSparkline(sparkSvg, spark, cssVar('--cyan'));
 
-    // описание под KPI (из data.txt)
-    const info = document.createElement('div'); info.className='subtitle'; info.style.marginTop='6px'; info.textContent = DATA.ui.kpiHints[k.key];
-
-    card.append(top, kpi, sparkSvg, info);
+    card.append(top, kpi, sparkSvg);
     kpisBox.appendChild(card);
   });
 }
 
-/* Responsive Line chart with guide */
+/* Responsive Line chart (cumulative) with guide */
 let ro=null;
 function attachResize(){
   if (ro) ro.disconnect();
@@ -351,8 +342,13 @@ function attachResize(){
 function renderLine(d){
   const cssH = getComputedStyle(document.documentElement).getPropertyValue('--chart-h').trim();
   const h = parseInt(cssH || '160', 10);
-  const w = Math.max(280, Math.floor(lineWrap.getBoundingClientRect().width)); // адаптивно
+  const w = Math.max(280, Math.floor(lineWrap.getBoundingClientRect().width));
   const p = 16;
+
+  // накопительные ряды: сумма с начала периода
+  const cum = (arr)=> arr.reduce((acc,v)=>{ acc.push((acc.at(-1)||0)+v); return acc; }, []);
+  const opensCum   = cum(d.byDay);
+  const repliesCum = cum(d.repliesByDay);
 
   while(lineSvg.firstChild) lineSvg.removeChild(lineSvg.firstChild);
   lineSvg.setAttribute('viewBox', `0 0 ${w} ${h}`);
@@ -374,9 +370,9 @@ function renderLine(d){
     ln.setAttribute('stroke',gridColor); lineSvg.appendChild(ln);
   }
 
-  const maxY = Math.max(...d.byDay, ...d.repliesByDay) * 1.15;
-  const pathOpen = buildPath(d.byDay, w, h, p, maxY);
-  const pathReply = buildPath(d.repliesByDay, w, h, p, maxY);
+  const maxY = Math.max(...opensCum, ...repliesCum) * 1.1;
+  const pathOpen = buildPath(opensCum, w, h, p, maxY);
+  const pathReply = buildPath(repliesCum, w, h, p, maxY);
 
   // areas
   const areaOpen = document.createElementNS('http://www.w3.org/2000/svg','path');
@@ -405,19 +401,19 @@ function renderLine(d){
   function moveGuide(clientX){
     const rect = lineSvg.getBoundingClientRect();
     const x = clientX - rect.left;
-    const i = Math.round(((x - p) / (w - p*2)) * (d.byDay.length - 1));
-    if (i<0 || i>=d.byDay.length) return hideGuide();
-    const cx = p + (i * (w - p*2)) / (d.byDay.length - 1);
+    const i = Math.round(((x - p) / (w - p*2)) * (opensCum.length - 1));
+    if (i<0 || i>=opensCum.length) return hideGuide();
+    const cx = p + (i * (w - p*2)) / (opensCum.length - 1);
     guide.setAttribute('x1', cx); guide.setAttribute('x2', cx);
     guide.style.display='block';
-    const yOpen  = h - p - (d.byDay[i]        / maxY) * (h - p*2);
-    const yReply = h - p - (d.repliesByDay[i] / maxY) * (h - p*2);
+    const yOpen  = h - p - (opensCum[i]   / maxY) * (h - p*2);
+    const yReply = h - p - (repliesCum[i] / maxY) * (h - p*2);
     mOpen.setAttribute('cx', cx);  mOpen.setAttribute('cy', yOpen);  mOpen.style.display='block';
     mReply.setAttribute('cx', cx); mReply.setAttribute('cy', yReply); mReply.style.display='block';
     lineTip.textContent = DATA.ui.dynamicPoint
       .replace('{i}', (i+1))
-      .replace('{open}', d.byDay[i])
-      .replace('{reply}', d.repliesByDay[i]);
+      .replace('{open}', opensCum[i])
+      .replace('{reply}', repliesCum[i]);
   }
   function hideGuide(){ guide.style.display='none'; mOpen.style.display='none'; mReply.style.display='none'; }
 
@@ -514,6 +510,20 @@ function renderFeed(d){
 }
 
 /* Interactions */
+document.getElementById('exportCsv').addEventListener('click', ()=>{
+  if(!DATA) return; const d = DATA[PERIOD];
+  const rows = [['метрика','значение'], ...DATA.kpis.map(k => [k.label, d[k.key]])];
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download=`метрики_${PERIOD}.csv`; a.click(); URL.revokeObjectURL(url);
+});
+document.getElementById('shareBtn').addEventListener('click', ()=>{
+  const d = DATA[PERIOD];
+  const text = DATA.ui.shareTemplate
+    .replace('{period}', DATA.ui.periodNames[PERIOD])
+    .replace('{sent}', fmt(d.sent)).replace('{opened}', fmt(d.opened)).replace('{replies}', fmt(d.replies)).replace('{errors}', fmt(d.errors));
+  if (navigator.share) { navigator.share({text}).catch(()=>{}); } else { alert(text); }
+});
 periodBtns.addEventListener('click', (e)=>{
   const b = e.target.closest('button'); if(!b) return;
   PERIOD = b.dataset.period;
@@ -531,7 +541,6 @@ tabs.addEventListener('click', (e)=>{
 });
 sortReplies.addEventListener('click', ()=>{ SORT='replies'; sortReplies.classList.add('active'); sortOpen.classList.remove('active'); renderSectors(); });
 sortOpen.addEventListener('click',   ()=>{ SORT='open';    sortOpen.classList.add('active');    sortReplies.classList.remove('active'); renderSectors(); });
-
 dynInfoBtn.addEventListener('click', ()=> dynInfo.classList.toggle('show'));
 funnelInfoBtn.addEventListener('click', ()=> funnelInfo.classList.toggle('show'));
 qualityInfoBtn.addEventListener('click', ()=> qualityInfo.classList.toggle('show'));
@@ -541,22 +550,24 @@ feedInfoBtn.addEventListener('click', ()=> feedInfo.classList.toggle('show'));
 /* Sheet */
 function openSheet(key, label, curVal, series){
   sheet.classList.add('show');
+  document.getElementById('sheetHeader').textContent = DATA.ui.detail.header;
   sheetTitle.textContent = label;
   document.getElementById('curLabel').textContent = DATA.ui.detail.curLabel;
-  document.getElementById('chgLabel').textContent = DATA.ui.detail.chgLabel;
+  document.getElementById('chgLabel').textContent = DATA.ui.detail.growthLabel;
   document.getElementById('defLabel').textContent = DATA.ui.detail.defLabel;
   document.getElementById('howLabel').textContent = DATA.ui.detail.howLabel;
-  document.getElementById('imprLabel').textContent = DATA.ui.detail.imprLabel;
 
   sheetCur.textContent = fmt(curVal);
-  const t = trendPct(series);
-  sheetDelta.textContent = (t>=0?'▲ ':'▼ ') + Math.abs(t) + '%';
-  sheetDelta.style.color = t>=0 ? '#34d399' : '#f87171';
+
+  // прирост: последнее - первое (и % к первому)
+  const first = series[0] ?? 0, last = series[series.length-1] ?? 0;
+  const abs = last - first, prc = pctDelta(first,last);
+  const arrow = abs>=0 ? '▲' : '▼';
+  sheetDelta.textContent = `${arrow} ${fmt(Math.abs(abs))} (${Math.abs(prc)}%)`;
 
   // пояснения
   sheetDef.textContent  = DATA.ui.metricExplain[key].what;
   sheetHow.textContent  = DATA.ui.metricExplain[key].how;
-  sheetImpr.textContent = DATA.ui.metricExplain[key].improve;
 
   // график с осями
   drawDetailChart(detailSvg, series, DATA.ui.detail.axisX, DATA.ui.metricExplain[key].unitY);
@@ -566,22 +577,6 @@ function openSheet(key, label, curVal, series){
 }
 document.querySelector('#sheet .bg').addEventListener('click', ()=> sheet.classList.remove('show'));
 closeSheet.addEventListener('click', ()=> sheet.classList.remove('show'));
-
-/* CSV & Share */
-document.getElementById('exportCsv').addEventListener('click', ()=>{
-  if(!DATA) return; const d = DATA[PERIOD];
-  const rows = [['метрика','значение'], ...DATA.kpis.map(k => [k.label, d[k.key]])];
-  const csv = rows.map(r=>r.join(',')).join('\n');
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download=`метрики_${PERIOD}.csv`; a.click(); URL.revokeObjectURL(url);
-});
-document.getElementById('shareBtn').addEventListener('click', ()=>{
-  const d = DATA[PERIOD];
-  const text = DATA.ui.shareTemplate
-    .replace('{period}', DATA.ui.periodNames[PERIOD])
-    .replace('{sent}', fmt(d.sent)).replace('{opened}', fmt(d.opened)).replace('{replies}', fmt(d.replies)).replace('{errors}', fmt(d.errors));
-  if (navigator.share) { navigator.share({text}).catch(()=>{}); } else { alert(text); }
-});
 
 /* Helpers: charts */
 function makeFade(id, color){
@@ -627,7 +622,7 @@ function drawSparkline(svg, arr, color){
 }
 function drawDetailChart(svg, arr, axisXLabel, axisYLabel){
   while(svg.firstChild) svg.removeChild(svg.firstChild);
-  const w=340, h=160, p=28; // больше отступы под оси
+  const w=340, h=160, p=28;
   svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
   svg.setAttribute('width', '100%'); svg.setAttribute('height', h);
 
@@ -635,7 +630,6 @@ function drawDetailChart(svg, arr, axisXLabel, axisYLabel){
   const min = Math.min(...arr) || 0;
   const span = Math.max(max-min, 1);
 
-  // оси
   const axisColor='rgba(255,255,255,0.4)';
   const axX = document.createElementNS('http://www.w3.org/2000/svg','line');
   axX.setAttribute('x1', p); axX.setAttribute('y1', h-p); axX.setAttribute('x2', w-p); axX.setAttribute('y2', h-p); axX.setAttribute('stroke',axisColor);
@@ -643,7 +637,6 @@ function drawDetailChart(svg, arr, axisXLabel, axisYLabel){
   axY.setAttribute('x1', p); axY.setAttribute('y1', p); axY.setAttribute('x2', p); axY.setAttribute('y2', h-p); axY.setAttribute('stroke',axisColor);
   svg.append(axX, axY);
 
-  // тики Y
   for(let i=0;i<=3;i++){
     const y = p + i*((h - p*2)/3); const val = Math.round(max - (i*span/3));
     const ln = document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -651,20 +644,17 @@ function drawDetailChart(svg, arr, axisXLabel, axisYLabel){
     ln.setAttribute('stroke','rgba(255,255,255,0.09)'); svg.appendChild(ln);
     const t = textElem({x:String(p-6), y:String(y+4), 'text-anchor':'end', fill:'#9aa0ad'}, String(val)); t.style.fontSize='10px'; svg.appendChild(t);
   }
-  // тики X
   for(let i=0;i<arr.length;i++){
     const x = p + (i * (w - p*2)) / (arr.length - 1);
     if (i%Math.ceil(arr.length/6)===0){
       const t = textElem({x:String(x), y:String(h-p+14), 'text-anchor':'middle', fill:'#9aa0ad'}, String(i+1)); t.style.fontSize='10px'; svg.appendChild(t);
     }
   }
-  // подписи осей
   const xLabel = textElem({x:String(w/2), y:String(h-6), 'text-anchor':'middle', fill:'#9aa0ad'}, axisXLabel); xLabel.style.fontSize='11px';
   const yLabel = textElem({x:'6', y:String(h/2), 'text-anchor':'middle', fill:'#9aa0ad', transform:`rotate(-90 6 ${h/2})`}, axisYLabel); yLabel.style.fontSize='11px';
   svg.append(xLabel, yLabel);
 
-  // линия + подложка
-  const pathD = arr.map((v,i)=>{
+  const d = arr.map((v,i)=>{
     const x = p + (i * (w - p*2)) / (arr.length - 1);
     const y = h - p - ((v - min)/span) * (h - p*2);
     return (i===0?'M':'L') + x + ',' + y;
@@ -672,11 +662,10 @@ function drawDetailChart(svg, arr, axisXLabel, axisYLabel){
   const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
   defs.append(makeFade('detailFade', cssVar('--cyan'))); svg.appendChild(defs);
   const area = document.createElementNS('http://www.w3.org/2000/svg','path');
-  area.setAttribute('d', pathD + ` L ${w-p},${h-p} L ${p},${h-p} Z`);
+  area.setAttribute('d', d + ` L ${w-p},${h-p} L ${p},${h-p} Z`);
   area.setAttribute('fill','url(#detailFade)'); svg.appendChild(area);
-  svg.append(svgPath(pathD, cssVar('--cyan'), 2));
+  svg.append(svgPath(d, cssVar('--cyan'), 2));
 }
 </script>
 </body>
 </html>
-
