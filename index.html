@@ -56,7 +56,7 @@
 
   /* --- Enhancements --- */
   .btn{cursor:pointer}
-  .kpi .val{color:var(--fg);} /* force visible in dark theme */
+  .kpi .val{color:var(--fg);}
   .kpi .val.sent-gradient{
     background: linear-gradient(135deg, var(--cyan), var(--violet));
     -webkit-background-clip: text;
@@ -64,27 +64,46 @@
     color: transparent;
     text-shadow: none;
   }
-  /* Smooth width transitions for funnel bars */
   .funnel-fill{ transition: width .8s ease; }
-  /* Area/line appear */
   .fade-in{ opacity:0; transition: opacity .6s ease; }
   .fade-in.show{ opacity:1; }
-  /* Donut sweep animation */
-  @keyframes sweep {
-    from { stroke-dashoffset: 1000; }
-    to   { stroke-dashoffset: 0; }
-  }
-  /* Sectors buttons accessibility */
+  @keyframes sweep { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
   #sortReplies[aria-pressed="true"], #sortOpen[aria-pressed="true"]{ background: var(--btn-active); }
-
-
   .forecast{margin-top:2px;color:var(--fg);}
-
-
-  /* Reveal animation for sparkline containers */
   .spark { opacity: 0; transform: translateY(4px); transition: opacity .6s ease, transform .6s ease; }
   .spark.show { opacity: 1; transform: translateY(0); }
 
+  /* ===== Motion design для «Детали метрики» (≤ 2 сек суммарно) ===== */
+  .axis-line {
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    animation: axisDraw .6s ease forwards;
+  }
+  @keyframes axisDraw { to { stroke-dashoffset: 0; } }
+
+  .axis-label {
+    opacity: 0;
+    animation: fadeIn .5s ease forwards;
+    animation-delay: .5s; /* после осей */
+  }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  .detail-path {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: strokePlay 1s ease forwards;
+    animation-delay: .8s; /* после появления поля измерения */
+  }
+  @keyframes strokePlay { to { stroke-dashoffset: 0; } }
+
+  .detail-area {
+    opacity: 0;
+    transition: opacity .5s ease .8s; /* синхронно с линией */
+  }
+  .detail-area.show { opacity: 1; }
+
+  /* курсор-гида для detailChart */
+  .guide-line { pointer-events:none }
 </style>
 </head>
 <body>
@@ -205,7 +224,8 @@
       <!-- оси и график -->
       <div style="margin-top:10px">
         <svg id="detailChart" viewBox="0 0 340 160" width="100%" height="160"></svg>
-        <div class="subtitle" id="detailAxesNote"></div>
+        <div class="subtitle" id="detailAxesNote" style="margin-top:4px"></div>
+        <div class="subtitle" id="detailTip" style="margin-top:2px"></div>
       </div>
 
       <div class="grid g2" style="margin-top:8px">
@@ -286,6 +306,7 @@ const sheetCur = document.getElementById('sheetCur');
 const sheetDelta = document.getElementById('sheetDelta');
 const detailSvg = document.getElementById('detailChart');
 const detailAxesNote = document.getElementById('detailAxesNote');
+const detailTip = document.getElementById('detailTip');
 const sheetDef = document.getElementById('sheetDef');
 const sheetHow = document.getElementById('sheetHow');
 const tabOverview = document.getElementById('tab-overview');
@@ -433,7 +454,6 @@ function renderLine(d){
   // reveal areas
   areaOpen.classList.add('fade-in'); areaReply.classList.add('fade-in');
   requestAnimationFrame(()=>{ areaOpen.classList.add('show'); areaReply.classList.add('show'); });
-
 
   // guide + markers
   const guide = document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -593,15 +613,13 @@ sortOpen.addEventListener('click',   ()=>{ SORT='open';    sortOpen.classList.ad
 dynInfoBtn.addEventListener('click', ()=> dynInfo.classList.toggle('show'));
 funnelInfoBtn.addEventListener('click', ()=> funnelInfo.classList.toggle('show'));
 qualityInfoBtn.addEventListener('click', ()=> qualityInfo.classList.toggle('show'));
-
-
 sectorsInfoBtn.addEventListener('click', ()=> sectorsInfo.classList.toggle('show'));
 feedInfoBtn.addEventListener('click', ()=> feedInfo.classList.toggle('show'));
 
 /* Sheet */
 function openSheet(key, label, curVal, series){
   sheet.classList.add('show');
-  document.getElementById('sheetHeader').textContent = DATA.ui.detail.header;
+  document.getElementById('sheetHeader').textContent = DATA.ui.detail.header || 'Детали метрики';
   sheetTitle.textContent = label;
   document.getElementById('curLabel').textContent = DATA.ui.detail.curLabel;
   document.getElementById('chgLabel').textContent = DATA.ui.detail.growthLabel;
@@ -609,37 +627,41 @@ function openSheet(key, label, curVal, series){
   document.getElementById('howLabel').textContent = DATA.ui.detail.howLabel;
 
   sheetCur.textContent = fmt(curVal);
-// Forecast in right card for non-error metrics
-const chgCard = document.getElementById('chgLabel').parentElement;
-if(key==='errors'){
-  document.getElementById('chgLabel').textContent = DATA.ui.detail.growthLabel;
-  chgCard.style.display = 'none';
-  sheetDelta.textContent = '';
-}else{
-  chgCard.style.display = '';
-  document.getElementById('chgLabel').textContent = 'Прогноз';
-  let factor = 1;
-  if(PERIOD==='day'){
-    const hour = new Date().getHours()||1;
-    factor = 24/hour;
-  }else if(PERIOD==='week'){
-    const day = (new Date().getDay()||1); // 1..6
-    factor = 7/day;
-  }else if(PERIOD==='month'){
-    const today = new Date().getDate()||1;
-    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate();
-    factor = daysInMonth/today;
+  // Прогноз вместо "Прирост" для не-ошибок
+  const chgCard = document.getElementById('chgLabel').parentElement;
+  if(key==='errors'){
+    document.getElementById('chgLabel').textContent = DATA.ui.detail.growthLabel;
+    chgCard.style.display = 'none';
+    sheetDelta.textContent = '';
+  }else{
+    chgCard.style.display = '';
+    document.getElementById('chgLabel').textContent = 'Прогноз';
+    let factor = 1;
+    if(PERIOD==='day'){
+      const hour = new Date().getHours()||1;
+      factor = 24/hour;
+    }else if(PERIOD==='week'){
+      const day = (new Date().getDay()||1);
+      factor = 7/day;
+    }else if(PERIOD==='month'){
+      const today = new Date().getDate()||1;
+      const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate();
+      factor = daysInMonth/today;
+    }
+    const projected = Math.round((curVal||0)*factor);
+    sheetDelta.textContent = `Прогноз (если темп сохранится): ~ ${fmt(projected)}`;
   }
-  const projected = Math.round((curVal||0)*factor);
-  sheetDelta.textContent = `Прогноз (если темп сохранится): ~ ${fmt(projected)}`;
-}
 
   // пояснения
   sheetDef.textContent  = DATA.ui.metricExplain[key].what;
   sheetHow.textContent  = DATA.ui.metricExplain[key].how;
 
-  // график с осями
-  drawDetailChart(detailSvg, series, DATA.ui.detail.axisX, DATA.ui.metricExplain[key].unitY);
+  // график с анимацией осей/поля/линии и интерактивом
+  drawDetailChart(detailSvg, series, DATA.ui.detail.axisX, DATA.ui.metricExplain[key].unitY, (i, val)=>{
+    if(i==null){ detailTip.textContent = ''; return; }
+    detailTip.textContent = `Точка ${i+1}: ${fmt(val)} ${DATA.ui.metricExplain[key].unitY.toLowerCase()}`;
+  });
+
   detailAxesNote.textContent = DATA.ui.detail.axesNote
     .replace('{x}', DATA.ui.detail.axisX)
     .replace('{y}', DATA.ui.metricExplain[key].unitY);
@@ -654,7 +676,6 @@ function animateStroke(el){
     const len = el.getTotalLength();
     el.style.strokeDasharray = String(len);
     el.style.strokeDashoffset = String(len);
-    // trigger
     void el.getBoundingClientRect();
     el.style.transition = 'stroke-dashoffset .9s ease';
     el.style.strokeDashoffset = '0';
@@ -702,7 +723,9 @@ function drawSparkline(svg, arr, color){
   const path = svgPath(d, color, 1.6);
   svg.appendChild(path);
 }
-function drawDetailChart(svg, arr, axisXLabel, axisYLabel){
+
+/* === Детальный график с анимациями и hover-гидом === */
+function drawDetailChart(svg, arr, axisXLabel, axisYLabel, onPoint){
   while(svg.firstChild) svg.removeChild(svg.firstChild);
   const w=340, h=160, p=28;
   svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
@@ -713,40 +736,100 @@ function drawDetailChart(svg, arr, axisXLabel, axisYLabel){
   const span = Math.max(max-min, 1);
 
   const axisColor='rgba(255,255,255,0.4)';
+  // оси с анимацией
   const axX = document.createElementNS('http://www.w3.org/2000/svg','line');
-  axX.setAttribute('x1', p); axX.setAttribute('y1', h-p); axX.setAttribute('x2', w-p); axX.setAttribute('y2', h-p); axX.setAttribute('stroke',axisColor);
+  axX.setAttribute('x1', p); axX.setAttribute('y1', h-p); axX.setAttribute('x2', w-p); axX.setAttribute('y2', h-p);
+  axX.setAttribute('stroke',axisColor); axX.classList.add('axis-line');
   const axY = document.createElementNS('http://www.w3.org/2000/svg','line');
-  axY.setAttribute('x1', p); axY.setAttribute('y1', p); axY.setAttribute('x2', p); axY.setAttribute('y2', h-p); axY.setAttribute('stroke',axisColor);
+  axY.setAttribute('x1', p); axY.setAttribute('y1', p); axY.setAttribute('x2', p); axY.setAttribute('y2', h-p);
+  axY.setAttribute('stroke',axisColor); axY.classList.add('axis-line');
   svg.append(axX, axY);
 
+  // сетка + подписи Y
   for(let i=0;i<=3;i++){
     const y = p + i*((h - p*2)/3); const val = Math.round(max - (i*span/3));
     const ln = document.createElementNS('http://www.w3.org/2000/svg','line');
     ln.setAttribute('x1', p); ln.setAttribute('x2', w-p); ln.setAttribute('y1', y); ln.setAttribute('y2', y);
     ln.setAttribute('stroke','rgba(255,255,255,0.09)'); svg.appendChild(ln);
-    const t = textElem({x:String(p-6), y:String(y+4), 'text-anchor':'end', fill:'#9aa0ad'}, String(val)); t.style.fontSize='10px'; svg.appendChild(t);
+    const t = textElem({x:String(p-6), y:String(y+4), 'text-anchor':'end', fill:'#9aa0ad'}, String(val));
+    t.style.fontSize='10px'; t.classList.add('axis-label'); svg.appendChild(t);
   }
+  // подписи X
   for(let i=0;i<arr.length;i++){
     const x = p + (i * (w - p*2)) / (arr.length - 1);
     if (i%Math.ceil(arr.length/6)===0){
-      const t = textElem({x:String(x), y:String(h-p+14), 'text-anchor':'middle', fill:'#9aa0ad'}, String(i+1)); t.style.fontSize='10px'; svg.appendChild(t);
+      const t = textElem({x:String(x), y:String(h-p+14), 'text-anchor':'middle', fill:'#9aa0ad'}, String(i+1));
+      t.style.fontSize='10px'; t.classList.add('axis-label');
+      svg.appendChild(t);
     }
   }
-  const xLabel = textElem({x:String(w/2), y:String(h-6), 'text-anchor':'middle', fill:'#9aa0ad'}, axisXLabel); xLabel.style.fontSize='11px';
-  const yLabel = textElem({x:'6', y:String(h/2), 'text-anchor':'middle', fill:'#9aa0ad', transform:`rotate(-90 6 ${h/2})`}, axisYLabel); yLabel.style.fontSize='11px';
+  // подписи осей
+  const xLabel = textElem({x:String(w/2), y:String(h-6), 'text-anchor':'middle', fill:'#9aa0ad'}, axisXLabel);
+  xLabel.style.fontSize='11px'; xLabel.classList.add('axis-label');
+  const yLabel = textElem({x:'6', y:String(h/2), 'text-anchor':'middle', fill:'#9aa0ad', transform:`rotate(-90 6 ${h/2})`}, axisYLabel);
+  yLabel.style.fontSize='11px'; yLabel.classList.add('axis-label');
   svg.append(xLabel, yLabel);
 
+  // путь
   const d = arr.map((v,i)=>{
     const x = p + (i * (w - p*2)) / (arr.length - 1);
     const y = h - p - ((v - min)/span) * (h - p*2);
     return (i===0?'M':'L') + x + ',' + y;
   }).join(' ');
+
+  // заливка
   const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
   defs.append(makeFade('detailFade', cssVar('--cyan'))); svg.appendChild(defs);
   const area = document.createElementNS('http://www.w3.org/2000/svg','path');
   area.setAttribute('d', d + ` L ${w-p},${h-p} L ${p},${h-p} Z`);
-  area.setAttribute('fill','url(#detailFade)'); svg.appendChild(area);
-  svg.append(svgPath(d, cssVar('--cyan'), 2));
+  area.setAttribute('fill','url(#detailFade)');
+  area.classList.add('detail-area');
+  svg.appendChild(area);
+  requestAnimationFrame(()=> area.classList.add('show'));
+
+  // линия
+  const line = svgPath(d, cssVar('--cyan'), 2);
+  line.classList.add('detail-path');
+  svg.append(line);
+
+  // hover-гид
+  const guide = document.createElementNS('http://www.w3.org/2000/svg','line');
+  guide.setAttribute('y1', p); guide.setAttribute('y2', h-p);
+  guide.setAttribute('stroke','rgba(255,255,255,0.28)');
+  guide.classList.add('guide-line');
+  guide.style.display='none';
+  svg.appendChild(guide);
+
+  const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  dot.setAttribute('r','4');  dot.setAttribute('fill', cssVar('--cyan'));  dot.style.display='none';
+  svg.appendChild(dot);
+
+  function xy(i){
+    const x = p + (i * (w - p*2)) / (arr.length - 1);
+    const y = h - p - ((arr[i] - min)/span) * (h - p*2);
+    return {x,y};
+  }
+  function moveGuideAt(clientX){
+    const rect = svg.getBoundingClientRect();
+    const wpx = rect.width;
+    const xLocal = clientX - rect.left;
+    const i = Math.round(((xLocal - p) / (wpx - p*2)) * (arr.length - 1));
+    if (i<0 || i>=arr.length){ hideGuide(); return; }
+    const {x,y} = xy(i);
+    guide.setAttribute('x1', x); guide.setAttribute('x2', x);
+    guide.style.display='block';
+    dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.style.display='block';
+    if(typeof onPoint==='function') onPoint(i, arr[i]);
+  }
+  function hideGuide(){
+    guide.style.display='none'; dot.style.display='none';
+    if(typeof onPoint==='function') onPoint(null, null);
+  }
+
+  svg.onmousemove = (e)=> moveGuideAt(e.clientX);
+  svg.onmouseleave = hideGuide;
+  svg.addEventListener('touchstart', (e)=> { if(e.touches[0]) moveGuideAt(e.touches[0].clientX); }, {passive:true});
+  svg.addEventListener('touchmove',  (e)=> { if(e.touches[0]) moveGuideAt(e.touches[0].clientX); }, {passive:true});
 }
 </script>
 </body>
