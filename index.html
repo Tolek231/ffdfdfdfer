@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>WandLead · Личный кабинет (обновлён v2)</title>
+<title>WandLead · Личный кабинет (обновлён v3)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -187,9 +187,7 @@ th{color:#cfd7e6;font-weight:600}
       </div>
       <div class="sub" id="modal-sub"></div>
       <div class="sep"></div>
-      <div id="modal-body">
-        <div class="chart-box tall"><canvas id="modal-chart"></canvas></div>
-      </div>
+      <div id="modal-body"></div>
       <div class="legend" id="modal-legend"></div>
       <div class="foot" id="modal-foot"></div>
     </div>
@@ -220,12 +218,12 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.getElementById(t.dataset.tab).classList.remove('hidden');
 }));
 
-// Info
+// Info clicks
 document.addEventListener('click', (e)=>{
   if(e.target.classList.contains('info')){
     const key = e.target.dataset.info;
-    if(key==='funnel'){ return openFunnelDetails(); }
-    openModal({ title:'Что означает блок', sub: INFO[key] });
+    if(key==='funnel'){ openFunnelDetails(); }
+    else { openModal({ title:'Что означает блок', sub: INFO[key] }); }
     e.stopPropagation();
   }
 });
@@ -298,6 +296,7 @@ function initOverview(){
   spark('replies-mini', S.replies, 'rgba(235,182,87,.95)');
   spark('bounces-mini', S.bounces, 'rgba(255,107,107,.95)');
 
+  // Clicking metric cards -> single modal with one chart (как и раньше)
   document.querySelectorAll('.card.clickable').forEach(c=>{
     c.addEventListener('click', ()=> openMetricModal(c.dataset.metric));
   });
@@ -337,7 +336,7 @@ function initFunnel(){
   const calcWidth = (val)=>{
     if(!s) return 35;
     const pct = (val/s)*100;
-    return Math.max(35, Math.min(100, pct)); // не уже 35%
+    return Math.max(35, Math.min(100, pct)); // минимум 35%
   };
 
   const box = document.getElementById('funnel-box');
@@ -407,6 +406,8 @@ function arrow(diff){
 
 // Modal helpers
 let modalChart=null;
+
+// Single-metric modal (как раньше)
 function openMetricModal(key){
   const conf = {
     sent: {title:'Отправлено', color:'rgba(113,164,255,.95)'},
@@ -420,6 +421,7 @@ function openMetricModal(key){
   openModal({
     title: conf.title + ' (7 дней)',
     sub: INFO[key],
+    mode: 'single',
     builder: (canvas)=>{
       const ctx = canvas.getContext('2d');
       if(modalChart) modalChart.destroy();
@@ -442,47 +444,56 @@ function openMetricModal(key){
   });
 }
 
+// ONLY for Funnel info: 3 charts
 function openFunnelDetails(){
-  // build modal with 3 charts
-  const body = document.getElementById('modal-body');
-  body.innerHTML = `
-    <div class="grid3">
-      <div class="mini"><div class="title">Отправлено</div><canvas id="c1"></canvas></div>
-      <div class="mini"><div class="title">Открытия</div><canvas id="c2"></canvas></div>
-      <div class="mini"><div class="title">Ответы ЛПР</div><canvas id="c3"></canvas></div>
-    </div>
-  `;
-  openModal({title:'Воронка · детали за 7 дней', sub:'Три отдельных графика: отправлено, открытия, ответы ЛПР.'});
-  // After modal open, draw charts
-  const draw = (id, arr, color)=>{
-    const {labels, values} = toXY(arr);
-    const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
-    const ctx = document.getElementById(id).getContext('2d');
-    new Chart(ctx, {
-      type:'line',
-      data:{labels:shortLabels, datasets:[{data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]},
-      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))}}},
-               scales:{x:{ticks:{color:'#9aa3b2'}}, y:{ticks:{color:'#9aa3b2'}}}}
-    });
-  };
-  draw('c1', DATA.series.sent, 'rgba(113,164,255,.95)');
-  draw('c2', DATA.series.opens, 'rgba(113,164,255,.95)');
-  draw('c3', DATA.series.replies, 'rgba(235,182,87,.95)');
+  openModal({title:'Воронка · детали за 7 дней', sub:'Три отдельных графика: отправлено, открытия, ответы ЛПР.', mode:'multi', builder: ()=>{
+    const body = document.getElementById('modal-body');
+    body.innerHTML = `
+      <div class="grid3">
+        <div class="mini"><div class="title">Отправлено</div><canvas id="c1"></canvas></div>
+        <div class="mini"><div class="title">Открытия</div><canvas id="c2"></canvas></div>
+        <div class="mini"><div class="title">Ответы ЛПР</div><canvas id="c3"></canvas></div>
+      </div>
+    `;
+    const draw = (id, arr, color)=>{
+      const {labels, values} = toXY(arr);
+      const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
+      const ctx = document.getElementById(id).getContext('2d');
+      new Chart(ctx, {
+        type:'line',
+        data:{labels:shortLabels, datasets:[{data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]},
+        options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))}}},
+                 scales:{x:{ticks:{color:'#9aa3b2'}}, y:{ticks:{color:'#9aa3b2'}}}}
+      });
+    };
+    draw('c1', DATA.series.sent, 'rgba(113,164,255,.95)');
+    draw('c2', DATA.series.opens, 'rgba(113,164,255,.95)');
+    draw('c3', DATA.series.replies, 'rgba(235,182,87,.95)');
+  }});
 }
 
-function openModal({title, sub, builder, foot=[]}){
+// Universal modal
+function openModal({title, sub, builder, foot=[], mode='single'}){
   const m = document.getElementById('modal');
   document.getElementById('modal-title').textContent = title || '';
   document.getElementById('modal-sub').textContent = sub || '';
-  // reset default body if builder expects single canvas
   const body = document.getElementById('modal-body');
-  if(!body.querySelector('canvas')){
+
+  // reset body every time
+  if(!builder){ body.innerHTML = ''; }
+  else if(mode === 'single'){
     body.innerHTML = '<div class="chart-box tall"><canvas id="modal-chart"></canvas></div>';
+    const canvas = document.getElementById('modal-chart');
+    builder(canvas);
+  }else if(mode === 'multi'){
+    body.innerHTML = ''; // builder will fill in
+    builder();
   }
-  const canvas = document.getElementById('modal-chart');
-  if(builder && canvas){ builder(canvas); }
+
+  // footer
   const footBox = document.getElementById('modal-foot'); footBox.innerHTML='';
   foot.forEach(f=>{ const el = document.createElement('div'); el.innerHTML = `<div class="sub" style="font-size:11px">${f.label}</div><div style="font-weight:800">${f.value}</div>`; footBox.appendChild(el); });
+
   m.classList.add('open');
 }
 document.getElementById('modal-close').addEventListener('click', ()=> document.getElementById('modal').classList.remove('open'));
