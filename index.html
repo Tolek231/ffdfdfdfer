@@ -496,12 +496,12 @@ function openQualityModal(){
 
 // ONLY for Funnel info: 3 charts
 function openFunnelDetails(){
-  openModal({title:'Воронка · детали за 7 дней', sub:'Три отдельных графика: отправлено, открытия, ответы ЛПР.', mode:'multi', builder: ()=>{
+  openModal({title:'Воронка · детали за 7 дней', sub:'Отправлено, открытия, ответы ЛПР.', mode:'multi', builder: ()=>{
     const body = document.getElementById('modal-body');
     body.innerHTML = `
       <div class="grid3">
-        <div class="mini"><div class="title">Отправлено</div><canvas id="c1"></canvas></div>
-        <div class="mini"><div class="title">Открытия</div><canvas id="c2"></canvas></div>
+        <div class="mini"><div class="title">Отправлено писем</div><canvas id="c1"></canvas></div>
+        <div class="mini"><div class="title">Открытия писем</div><canvas id="c2"></canvas></div>
         <div class="mini"><div class="title">Ответы ЛПР</div><canvas id="c3"></canvas></div>
       </div>
     `;
