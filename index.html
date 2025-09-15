@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>WandLead · Личный кабинет (обновлён v4)</title>
+<title>WandLead · Личный кабинет (v5 · переключатель периодов)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,20 +11,14 @@
 <style>
 :root{
   --bg:#0a0d12;
-  --surface:#0f141b;
-  --panel:#0c1117;
-  --card:#101720;
   --text:#e9eef6;
   --muted:#9aa3b2;
-  --line:#161e28;
   --accent:#71a4ff;
   --accent2:#8a5cf6;
   --good:#1fce7a;
-  --warn:#ebb657;
   --bad:#ff6b6b;
-  --ring:rgba(113,164,255,.4);
   --radius:16px;
-  --shadow: 0 10px 30px rgba(0,0,0,.35);
+  --shadow:0 10px 30px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -48,6 +42,19 @@ body{
 .tab{padding:10px 14px;border-radius:12px;background:linear-gradient(180deg,#141b25,#0f151d);border:1px solid rgba(255,255,255,.07); color:#cfd5e1; cursor:pointer; transition:.15s}
 .tab:hover{box-shadow:0 0 0 6px rgba(113,164,255,.08)}
 .tab.active{background:linear-gradient(180deg,#1a2230,#121923); color:var(--text); box-shadow:var(--shadow)}
+
+/* Toggle */
+.toggle{
+  display:flex; gap:6px; align-items:center;
+  background:linear-gradient(180deg,#141b25,#0f151d);
+  border:1px solid rgba(255,255,255,.07);
+  padding:4px; border-radius:12px;
+}
+.tbtn{
+  padding:6px 10px; border-radius:8px; font-size:12px; color:#cfd5e1; cursor:pointer;
+  background:transparent; border:none;
+}
+.tbtn.active{background:linear-gradient(180deg,#1a2230,#121923); color:#fff; box-shadow:0 0 0 2px rgba(113,164,255,.18) inset;}
 
 /* Layout */
 .main{max-width:1200px;margin:0 auto;padding:6px 18px 48px}
@@ -87,11 +94,6 @@ table{width:100%;border-collapse:collapse;margin-top:8px}
 th,td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left}
 th{color:#cfd7e6;font-weight:600}
 
-/* Arrows */
-.arrow{display:inline-flex;align-items:center;gap:6px;font-weight:600}
-.arrow.up{color:var(--good)}
-.arrow.down{color:var(--bad)}
-
 /* Modal */
 .modal{position:fixed;inset:0;background:rgba(5,8,12,.7);display:none;align-items:center;justify-content:center;z-index:50}
 .modal.open{display:flex}
@@ -116,9 +118,15 @@ th{color:#cfd7e6;font-weight:600}
 <body>
   <div class="header">
     <div class="container">
-      <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
         <div class="brand"><div class="logo"></div><div>WandLead · Личный кабинет</div></div>
-        <div class="sub" id="period">Период: —</div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div class="sub" id="period">Период: —</div>
+          <div class="toggle" id="range-toggle">
+            <button class="tbtn active" data-mode="week">Неделя</button>
+            <button class="tbtn" data-mode="all">За всё время</button>
+          </div>
+        </div>
       </div>
       <div class="tabs">
         <div class="tab active" data-tab="overview">Обзор</div>
@@ -131,38 +139,38 @@ th{color:#cfd7e6;font-weight:600}
     <section id="overview" class="grid">
       <div class="card small clickable" data-metric="sent">
         <div class="card-title">Отправлено <span class="info" data-info="sent">i</span></div>
-        <div class="kpi"><div class="big" id="sent-total">—</div><span class="muted">за 7 дней</span></div>
+        <div class="kpi"><div class="big" id="sent-total">—</div><span class="muted" id="lbl-range-1">за 7 дней</span></div>
         <div class="chart-box"><canvas id="sent-mini"></canvas></div>
       </div>
       <div class="card small clickable" data-metric="delivered">
         <div class="card-title">Доставлено <span class="info" data-info="delivered">i</span></div>
-        <div class="kpi"><div class="big" id="delivered-total">—</div><span class="muted">за 7 дней</span></div>
+        <div class="kpi"><div class="big" id="delivered-total">—</div><span class="muted" id="lbl-range-2">за 7 дней</span></div>
         <div class="chart-box"><canvas id="delivered-mini"></canvas></div>
       </div>
       <div class="card small clickable" data-metric="replies">
         <div class="card-title">Ответы ЛПР <span class="info" data-info="replies">i</span></div>
-        <div class="kpi"><div class="big" id="replies-total">—</div><span class="muted">за 7 дней</span></div>
+        <div class="kpi"><div class="big" id="replies-total">—</div><span class="muted" id="lbl-range-3">за 7 дней</span></div>
         <div class="chart-box"><canvas id="replies-mini"></canvas></div>
       </div>
       <div class="card small clickable" data-metric="bounces">
         <div class="card-title">Ошибки доставки <span class="info" data-info="bounces">i</span></div>
-        <div class="kpi"><div class="big" id="bounces-total">—</div><span class="muted">за 7 дней</span></div>
+        <div class="kpi"><div class="big" id="bounces-total">—</div><span class="muted" id="lbl-range-4">за 7 дней</span></div>
         <div class="chart-box"><canvas id="bounces-mini"></canvas></div>
       </div>
 
       <div class="card full">
-        <div class="card-title">Динамика (7 дней): открытия vs ответы <span class="info" data-info="dynamics">i</span></div>
-        <div class="card-sub">Конверсия отправленных писем и открытий.</div>
+        <div class="card-title">Динамика: открытия vs ответы <span class="info" data-info="dynamics">i</span></div>
+        <div class="card-sub" id="dyn-sub">Компактные даты и аккуратные подсказки — без лишнего текста.</div>
         <div class="chart-box tall"><canvas id="dynamics"></canvas></div>
       </div>
 
       <div class="card">
-        <div class="card-title">Воронка за 7 дней <span class="info" data-info="funnel">i</span></div>
+        <div class="card-title">Воронка <span class="info" data-info="funnel">i</span></div>
         <div class="chart-box" id="funnel-box"></div>
       </div>
       <div class="card">
         <div class="card-title">Качество доставки <span class="info" data-info="quality">i</span></div>
-        <div class="kpi"><div class="big" id="quality-val">—%</div><span class="muted">успешных доставок</span></div>
+        <div class="kpi"><div class="big" id="quality-val">—%</div><span class="muted" id="lbl-range-5">за 7 дней</span></div>
         <div class="chart-box pie"><canvas id="quality"></canvas></div>
       </div>
     </section>
@@ -195,20 +203,23 @@ th{color:#cfd7e6;font-weight:600}
 
 <script>
 const INFO = {
-  sent: "Исходящие письма за последние 7 дней.",
-  delivered: "Успешно доставленные письма за 7 дней.",
-  replies: "Уникальные ответы ЛПР за 7 дней.",
-  bounces: "Ошибки доставки за 7 дней.",
-  dynamics: "Открытия и ответы по дням за неделю.",
-  funnel: "Отправлено → Открыто → Ответы ЛПР за неделю. Ширина — доля от отправленных.",
-  quality: "Доля доставленных: Доставлено / Отправлено за 7 дней.",
-  sectors: "Процентное соотношение отклонения от среднего значения."
+  sent: "Исходящие письма.",
+  delivered: "Успешно доставленные письма (без bounce).",
+  replies: "Уникальные ответы ЛПР.",
+  bounces: "Ошибки доставки.",
+  dynamics: "Открытия и ответы по дням.",
+  funnel: "Отправлено → Открыто → Ответы ЛПР. Ширина — доля от отправленных.",
+  quality: "Доля доставленных: Доставлено / Отправлено.",
+  sectors: "Сферы. Стрелки показывают отклонение от среднего."
 };
 
 const fmt = new Intl.NumberFormat('ru-RU');
 const dateShort = new Intl.DateTimeFormat('ru-RU',{day:'2-digit', month:'2-digit'});
 const dateTooltip = new Intl.DateTimeFormat('ru-RU',{day:'2-digit', month:'short'});
-let DATA = null;
+const dateFull = new Intl.DateTimeFormat('ru-RU',{day:'2-digit', month:'short', year:'numeric'});
+
+let ORIGINAL = null; // неизменённые данные
+let MODE = 'week';   // 'week' | 'all'
 
 // Tabs
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
@@ -217,6 +228,18 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('main > section').forEach(s=>s.classList.add('hidden'));
   document.getElementById(t.dataset.tab).classList.remove('hidden');
 }));
+
+// Toggle
+document.addEventListener('click', (e)=>{
+  if(e.target.classList.contains('tbtn')){
+    const mode = e.target.dataset.mode;
+    if(mode && MODE!==mode){
+      MODE = mode;
+      document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('active', b.dataset.mode===MODE));
+      renderAll();
+    }
+  }
+});
 
 // Info clicks routing
 document.addEventListener('click', (e)=>{
@@ -238,58 +261,77 @@ function loadData(){
   }).catch(()=> fetch('data (4).txt').then(r=>r.json()));
 }
 loadData().then(json=>{
-  DATA = json;
-  hydrateLast7();
-  initOverview();
-  initDynamics();
-  initFunnel();
-  initQuality();
-  initSectors();
+  ORIGINAL = json; // не мутируем
+  renderAll();
+  // card clicks -> single modal
+  document.querySelectorAll('.card.clickable').forEach(c=>{
+    c.addEventListener('click', ()=> openMetricModal(c.dataset.metric));
+  });
 }).catch(()=> alert('Не удалось загрузить данные'));
 
 // --- Helpers ---
+function cloneSeries(s){ return JSON.parse(JSON.stringify(s)); }
+function getSeries(){
+  const S = cloneSeries(ORIGINAL.series);
+  if(MODE==='week'){
+    Object.keys(S).forEach(k=>{ S[k] = S[k].slice(-7); });
+  }
+  return S;
+}
 function toXY(arr){ return { labels: arr.map(p=>p.date), values: arr.map(p=>p.value) }; }
 function sum(arr){ return arr.reduce((a,b)=>a+b,0); }
 function avg(arr){ return sum(arr)/arr.length; }
 function last(arr){ return arr[arr.length-1]; }
 function forecast7(arr){ const sl = arr.slice(-7).map(x=>x.value); return Math.round(avg(sl)*7); }
+function grad(ctx, color){ const g = ctx.createLinearGradient(0,0,0,300); g.addColorStop(0,color); g.addColorStop(1,'rgba(0,0,0,0)'); return g; }
+function resetCanvas(id){ const el=document.getElementById(id); const p=el.parentNode; p.innerHTML=`<canvas id="${id}"></canvas>`; return document.getElementById(id); }
 
-function grad(ctx, color){
-  const g = ctx.createLinearGradient(0,0,0,300);
-  g.addColorStop(0,color);
-  g.addColorStop(1,'rgba(0,0,0,0)');
-  return g;
+function renderAll(){
+  renderPeriodLabel();
+  renderOverview();
+  renderDynamics();
+  renderFunnel();
+  renderQuality();
+  renderSectors();
 }
 
-// Keep only last 7 days + compact period label
-function hydrateLast7(){
-  const S = DATA.series;
-  Object.keys(S).forEach(k=>{ S[k] = S[k].slice(-7); });
-  const start = new Date(DATA.series.sent[0].date);
-  const end = new Date(DATA.series.sent.at(-1).date);
-  const monthShort = new Intl.DateTimeFormat('ru-RU',{month:'short'});
-  const range = `${start.getDate()}–${end.getDate()} ${monthShort.format(end)}`;
-  document.getElementById('period').textContent = 'Последние 7 дней: ' + range;
+function renderPeriodLabel(){
+  const S = getSeries();
+  const arr = S.sent;
+  const start = new Date(arr[0].date);
+  const end = new Date(arr.at(-1).date);
+  let label = '';
+  if(MODE==='week'){
+    const monthShort = new Intl.DateTimeFormat('ru-RU',{month:'short'});
+    label = `${start.getDate()}–${end.getDate()} ${monthShort.format(end)}`;
+  }else{
+    label = `с ${dateFull.format(start)} по ${dateFull.format(end)}`;
+  }
+  document.getElementById('period').textContent = 'Период: ' + label;
+  document.querySelectorAll('[id^="lbl-range-"]').forEach((el)=>{
+    el.textContent = MODE==='week' ? 'за 7 дней' : 'за всё время';
+  });
+  document.getElementById('dyn-sub').textContent = MODE==='week' ? 'Последние 7 дней.' : 'За всё время.';
 }
 
 function spark(canvasId, arr, color){
   const {labels, values} = toXY(arr);
   const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
-  const ctx = document.getElementById(canvasId).getContext('2d');
+  const ctx = resetCanvas(canvasId).getContext('2d');
   return new Chart(ctx, {
     type:'line',
     data:{labels:shortLabels, datasets:[{data:values, tension:.35, borderWidth:2, borderColor:color, pointRadius:0, fill:true, backgroundColor:grad(ctx, color.replace('.95', '.22'))}]},
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{legend:{display:false}, tooltip:{mode:'index', intersect:false, backgroundColor:'#111827',
-        callbacks:{title:(it)=> dateTooltip.format(new Date(DATA.series.sent[it[0].dataIndex].date))}}},
+        callbacks:{title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))}}},
       scales:{x:{display:false},y:{display:false}}
     }
   });
 }
 
-function initOverview(){
-  const S = DATA.series;
+function renderOverview(){
+  const S = getSeries();
   document.getElementById('sent-total').textContent = fmt.format(sum(S.sent.map(x=>x.value)));
   document.getElementById('delivered-total').textContent = fmt.format(sum(S.delivered.map(x=>x.value)));
   document.getElementById('replies-total').textContent = fmt.format(sum(S.replies.map(x=>x.value)));
@@ -298,20 +340,16 @@ function initOverview(){
   spark('delivered-mini', S.delivered, 'rgba(31,206,122,.95)');
   spark('replies-mini', S.replies, 'rgba(235,182,87,.95)');
   spark('bounces-mini', S.bounces, 'rgba(255,107,107,.95)');
-
-  // Clicking metric cards -> single modal with one chart
-  document.querySelectorAll('.card.clickable').forEach(c=>{
-    c.addEventListener('click', ()=> openMetricModal(c.dataset.metric));
-  });
 }
 
-function initDynamics(){
-  const open = DATA.series.opens;
-  const rep = DATA.series.replies;
+function renderDynamics(){
+  const S = getSeries();
+  const open = S.opens;
+  const rep = S.replies;
   const {labels, values: v1} = toXY(open);
   const {values: v2} = toXY(rep);
   const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
-  const ctx = document.getElementById('dynamics').getContext('2d');
+  const ctx = resetCanvas('dynamics').getContext('2d');
   new Chart(ctx, {
     type:'line',
     data:{labels:shortLabels, datasets:[
@@ -321,58 +359,45 @@ function initDynamics(){
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{legend:{labels:{color:'#d6deea'}}, tooltip:{mode:'index', intersect:false, callbacks:{
-        title:(it)=> dateTooltip.format(new Date(DATA.series.opens[it[0].dataIndex].date))
+        title:(it)=> dateTooltip.format(new Date(open[it[0].dataIndex].date))
       }}},
-      scales:{ x:{ticks:{color:'#9aa3b2', maxRotation:0, autoSkip:true, maxTicksLimit:7}, grid:{color:'rgba(255,255,255,.05)'}},
+      scales:{ x:{ticks:{color:'#9aa3b2', maxRotation:0, autoSkip:true, maxTicksLimit:MODE==='week'?7:12}, grid:{color:'rgba(255,255,255,.05)'}},
                y:{ticks:{color:'#9aa3b2'}, grid:{color:'rgba(255,255,255,.05)'}} }
     }
   });
 }
 
-function initFunnel(){
-  const s = sum(DATA.series.sent.map(x=>x.value));
-  const o = sum(DATA.series.opens.map(x=>x.value));
-  const r = sum(DATA.series.replies.map(x=>x.value));
+function renderFunnel(){
+  const S = getSeries();
+  const s = sum(S.sent.map(x=>x.value));
+  const o = sum(S.opens.map(x=>x.value));
+  const r = sum(S.replies.map(x=>x.value));
   const openRate = s ? (o/s) : 0;
   const replyRate = s ? (r/s) : 0;
 
   const calcWidth = (val)=>{
     if(!s) return 35;
     const pct = (val/s)*100;
-    return Math.max(35, Math.min(100, pct)); // минимум 35%
+    return Math.max(35, Math.min(100, pct));
   };
 
   const box = document.getElementById('funnel-box');
   box.innerHTML = `
     <div class="funnel">
-      <div class="row">
-        <div class="bar" style="width:100%">
-          <div class="shape"></div>
-          <div class="label"><span class="name">Отправлено</span><span class="val">${fmt.format(s)} <span class="muted">(100%)</span></span></div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="bar" style="width:${calcWidth(o).toFixed(1)}%">
-          <div class="shape"></div>
-          <div class="label"><span class="name">Открыто</span><span class="val">${fmt.format(o)} <span class="muted">(${(openRate*100).toFixed(1)}%)</span></span></div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="bar" style="width:${calcWidth(r).toFixed(1)}%">
-          <div class="shape"></div>
-          <div class="label"><span class="name">Ответы ЛПР</span><span class="val">${fmt.format(r)} <span class="muted">(${(replyRate*100).toFixed(1)}%)</span></span></div>
-        </div>
-      </div>
+      <div class="row"><div class="bar" style="width:100%"><div class="shape"></div><div class="label"><span class="name">Отправлено</span><span class="val">${fmt.format(s)} <span class="muted">(100%)</span></span></div></div></div>
+      <div class="row"><div class="bar" style="width:${calcWidth(o).toFixed(1)}%"><div class="shape"></div><div class="label"><span class="name">Открыто</span><span class="val">${fmt.format(o)} <span class="muted">(${(openRate*100).toFixed(1)}%)</span></span></div></div></div>
+      <div class="row"><div class="bar" style="width:${calcWidth(r).toFixed(1)}%"><div class="shape"></div><div class="label"><span class="name">Ответы ЛПР</span><span class="val">${fmt.format(r)} <span class="muted">(${(replyRate*100).toFixed(1)}%)</span></span></div></div></div>
     </div>
   `;
 }
 
-function initQuality(){
-  const sent = sum(DATA.series.sent.map(x=>x.value));
-  const delivered = sum(DATA.series.delivered.map(x=>x.value));
+function renderQuality(){
+  const S = getSeries();
+  const sent = sum(S.sent.map(x=>x.value));
+  const delivered = sum(S.delivered.map(x=>x.value));
   const rate = sent ? (delivered/sent) : 0;
   document.getElementById('quality-val').textContent = (rate*100).toFixed(1)+'%';
-  const ctx = document.getElementById('quality').getContext('2d');
+  const ctx = resetCanvas('quality').getContext('2d');
   new Chart(ctx, {
     type:'doughnut',
     data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]},
@@ -380,9 +405,9 @@ function initQuality(){
   });
 }
 
-function initSectors(){
+function renderSectors(){
   const tbody = document.querySelector('#sectors-table tbody');
-  const arr = DATA.industries;
+  const arr = ORIGINAL.industries;
   const avgOpen = arr.reduce((a,b)=>a+b.open_rate,0)/arr.length;
   const avgReply = arr.reduce((a,b)=>a+b.reply_rate,0)/arr.length;
   tbody.innerHTML = '';
@@ -400,17 +425,10 @@ function initSectors(){
     tbody.appendChild(tr);
   });
 }
+function arrow(diff){ const cls = diff>=0 ? 'up' : 'down'; const sign = diff>=0 ? '▲' : '▼'; return `<span class="arrow ${cls}">${sign} ${(Math.abs(diff)*100).toFixed(1)}%</span>`; }
 
-function arrow(diff){
-  const cls = diff>=0 ? 'up' : 'down';
-  const sign = diff>=0 ? '▲' : '▼';
-  return `<span class="arrow ${cls}">${sign} ${(Math.abs(diff)*100).toFixed(1)}%</span>`;
-}
-
-// Modal helpers
+// --- Modals (respect MODE) ---
 let modalChart=null;
-
-// Single-metric modal (карточки)
 function openMetricModal(key){
   const conf = {
     sent: {title:'Отправлено', color:'rgba(113,164,255,.95)'},
@@ -418,11 +436,11 @@ function openMetricModal(key){
     replies: {title:'Ответы ЛПР', color:'rgba(235,182,87,.95)'},
     bounces: {title:'Ошибки доставки', color:'rgba(255,107,107,.95)'},
   }[key];
-  const arr = DATA.series[key];
+  const arr = getSeries()[key];
   const {labels, values} = toXY(arr);
   const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
   openModal({
-    title: conf.title + ' (7 дней)',
+    title: conf.title + (MODE==='week'?' (7 дней)':' (за всё время)'),
     sub: INFO[key],
     mode: 'single',
     builder: (canvas)=>{
@@ -434,7 +452,7 @@ function openMetricModal(key){
         options:{
           responsive:true, maintainAspectRatio:false,
           plugins:{legend:{display:false}, tooltip:{mode:'index', intersect:false, callbacks:{
-            title:(it)=> dateTooltip.format(new Date(DATA.series[key][it[0].dataIndex].date))
+            title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))
           }}},
           scales:{ x:{ticks:{color:'#9aa3b2'}}, y:{ticks:{color:'#9aa3b2'}} }
         }
@@ -442,21 +460,21 @@ function openMetricModal(key){
     },
     foot:[
       {label:'Текущее (последний день)', value: fmt.format(last(arr).value)},
-      {label:'Среднее за день (7 дней)', value: fmt.format(Math.round(avg(arr.map(x=>x.value))))},
-      {label:'Прогноз на неделю при сохранении темпа', value: fmt.format(forecast7(arr))}
+      {label: MODE==='week' ? 'Среднее за день (7 дней)' : 'Среднее за день (всё время)', value: fmt.format(Math.round(avg(arr.map(x=>x.value))))},
+      {label:'Прогноз на неделю', value: fmt.format(forecast7(arr))}
     ]
   });
 }
 
-// Dynamics modal (две линии)
 function openDynamicsModal(){
-  const open = DATA.series.opens;
-  const rep = DATA.series.replies;
+  const S = getSeries();
+  const open = S.opens;
+  const rep = S.replies;
   const {labels, values: v1} = toXY(open);
   const {values: v2} = toXY(rep);
   const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
   openModal({
-    title:'Динамика (7 дней)',
+    title:'Динамика ' + (MODE==='week'?'(7 дней)':'(за всё время)'),
     sub:'Открытия и ответы по дням',
     mode:'single',
     builder:(canvas)=>{
@@ -474,13 +492,13 @@ function openDynamicsModal(){
   });
 }
 
-// Quality modal (донат)
 function openQualityModal(){
-  const sent = sum(DATA.series.sent.map(x=>x.value));
-  const delivered = sum(DATA.series.delivered.map(x=>x.value));
+  const S = getSeries();
+  const sent = sum(S.sent.map(x=>x.value));
+  const delivered = sum(S.delivered.map(x=>x.value));
   openModal({
-    title:'Качество доставки',
-    sub:'Доля доставленных писем за 7 дней',
+    title:'Качество доставки ' + (MODE==='week'?'(7 дней)':'(за всё время)'),
+    sub:'Доля доставленных',
     mode:'single',
     builder:(canvas)=>{
       const ctx = canvas.getContext('2d');
@@ -494,14 +512,14 @@ function openQualityModal(){
   });
 }
 
-// ONLY for Funnel info: 3 charts
 function openFunnelDetails(){
-  openModal({title:'Воронка · детали за 7 дней', sub:'Отправлено, открытия, ответы ЛПР.', mode:'multi', builder: ()=>{
+  const S = getSeries();
+  openModal({title:'Воронка · детали ' + (MODE==='week'?'(7 дней)':'(за всё время)'), sub:'Три отдельных графика: отправлено, открытия, ответы ЛПР.', mode:'multi', builder: ()=>{
     const body = document.getElementById('modal-body');
     body.innerHTML = `
       <div class="grid3">
-        <div class="mini"><div class="title">Отправлено писем</div><canvas id="c1"></canvas></div>
-        <div class="mini"><div class="title">Открытия писем</div><canvas id="c2"></canvas></div>
+        <div class="mini"><div class="title">Отправлено</div><canvas id="c1"></canvas></div>
+        <div class="mini"><div class="title">Открытия</div><canvas id="c2"></canvas></div>
         <div class="mini"><div class="title">Ответы ЛПР</div><canvas id="c3"></canvas></div>
       </div>
     `;
@@ -516,9 +534,9 @@ function openFunnelDetails(){
                  scales:{x:{ticks:{color:'#9aa3b2'}}, y:{ticks:{color:'#9aa3b2'}}}}
       });
     };
-    draw('c1', DATA.series.sent, 'rgba(113,164,255,.95)');
-    draw('c2', DATA.series.opens, 'rgba(113,164,255,.95)');
-    draw('c3', DATA.series.replies, 'rgba(235,182,87,.95)');
+    draw('c1', S.sent, 'rgba(113,164,255,.95)');
+    draw('c2', S.opens, 'rgba(113,164,255,.95)');
+    draw('c3', S.replies, 'rgba(235,182,87,.95)');
   }});
 }
 
@@ -529,17 +547,15 @@ function openModal({title, sub, builder, foot=[], mode='single'}){
   document.getElementById('modal-sub').textContent = sub || '';
   const body = document.getElementById('modal-body');
 
-  // reset body every time
   if(mode === 'single'){
     body.innerHTML = '<div class="chart-box tall"><canvas id="modal-chart"></canvas></div>';
     const canvas = document.getElementById('modal-chart');
     if(builder) builder(canvas);
   }else if(mode === 'multi'){
-    body.innerHTML = ''; // builder will fill in
+    body.innerHTML = '';
     if(builder) builder();
   }
 
-  // footer
   const footBox = document.getElementById('modal-foot'); footBox.innerHTML='';
   foot.forEach(f=>{ const el = document.createElement('div'); el.innerHTML = `<div class="sub" style="font-size:11px">${f.label}</div><div style="font-weight:800">${f.value}</div>`; footBox.appendChild(el); });
 
