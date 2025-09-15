@@ -461,7 +461,7 @@ function openMetricModal(key){
     foot:[
       {label:'Текущее (последний день)', value: fmt.format(last(arr).value)},
       {label: MODE==='week' ? 'Среднее за день (7 дней)' : 'Среднее за день (всё время)', value: fmt.format(Math.round(avg(arr.map(x=>x.value))))},
-      {label:'Прогноз на неделю', value: fmt.format(forecast7(arr))}
+      {label:'Прогноз на неделю при сохранении текущего темпа', value: fmt.format(forecast7(arr))}
     ]
   });
 }
