@@ -1,510 +1,390 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Brush,
-  Legend,
-  FunnelChart,
-  Funnel,
-  LabelList,
-} from "recharts";
-import { Info, TrendingUp, TrendingDown, Loader2, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>WandLead — Личный кабинет клиента</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root { color-scheme: dark; }
+      body { background:#0b0b0f; }
+      .card { background:rgba(255,255,255,.05); backdrop-filter:blur(6px); border-radius:16px; }
+      .btn { background:#1f2937; border:1px solid rgba(255,255,255,.08); padding:.4rem .8rem; border-radius:.7rem; }
+      .btn:hover { background:#273244; }
+      .muted { color:rgba(255,255,255,.65) }
+      .badge { background:rgba(255,255,255,.08); padding:.25rem .5rem; border-radius:.5rem; font-size:.75rem }
+      .i-btn { width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; border-radius:999px; background:rgba(255,255,255,.08); font-weight:700 }
+      dialog::backdrop { background:rgba(0,0,0,.6) }
+      dialog { border:none; border-radius:16px; padding:0; width:min(900px,96vw); background:#0f1117; color:white }
+    </style>
 
-// -----------------------------
-// Типы данных (ожидаемый формат data.txt)
-// -----------------------------
-// data.txt должен быть в формате JSON и находиться в корне сборки (public/data.txt).
-// {
-//   "timeline": [
-//     { "date": "2025-09-01", "sent": 120, "delivered": 110, "opens": 80, "replies": 12, "lpr_replies": 5, "bounces": 10 },
-//     ...
-//   ],
-//   "spheres": [
-//     { "name": "Fintech", "sent": 1000, "open_rate": 0.34, "reply_rate": 0.07 },
-//     { "name": "SaaS",    "sent": 800,  "open_rate": 0.28, "reply_rate": 0.05 }
-//   ]
-// }
-// Ничего не хардкодим — все метрики берутся из data.txt.
+    <!-- React + ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Recharts (включая Funnel) -->
+    <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+  </head>
+  <body class="min-h-screen">
+    <div id="root" class="max-w-7xl mx-auto p-6"></div>
 
-// -----------------------------
-// Утилиты
-// -----------------------------
-function formatNumber(n?: number) {
-  if (n == null || Number.isNaN(n)) return "—";
-  return new Intl.NumberFormat("ru-RU").format(n);
-}
-function pct(n?: number) {
-  if (n == null || Number.isNaN(n)) return "—";
-  return `${(n * 100).toFixed(1)}%`;
-}
-function parseDate(d: string) {
-  return new Date(d);
-}
-function lastN<T>(arr: T[], n: number): T[] {
-  return arr.slice(Math.max(0, arr.length - n));
-}
+    <script>
+      const {useState,useEffect,useMemo} = React;
+      const {
+        AreaChart,Area,XAxis,YAxis,CartesianGrid,Tooltip,ResponsiveContainer,Brush,Legend,
+        FunnelChart,Funnel,LabelList
+      } = Recharts;
 
-// Прогноз на неделю при сохранении текущего темпа.
-function weeklyForecast(series: Array<{ date: string }>, valueKey: keyof any) {
-  if (!series?.length) return 0;
-  const last7 = lastN(series, 7);
-  const sum = last7.reduce((acc: number, d: any) => acc + (Number(d[valueKey]) || 0), 0);
-  const dailyAvg = last7.length ? sum / last7.length : 0;
-  return Math.round(dailyAvg * 7);
-}
+      // ---------- Утилиты ----------
+      const nf = new Intl.NumberFormat('ru-RU');
+      const fmtN = n => (n==null || isNaN(n)) ? '—' : nf.format(n);
+      const pct = n => (n==null || isNaN(n)) ? '—' : (n*100).toFixed(1)+'%';
+      const lastN = (arr,n)=>arr.slice(Math.max(0,arr.length-n));
+      const forecast7 = (series,key)=>{
+        if(!series?.length) return 0;
+        const l7 = lastN(series,7);
+        const sum = l7.reduce((a,d)=>a+(+d[key]||0),0);
+        return Math.round(sum/Math.max(l7.length,1)*7);
+      };
 
-// Тултип для графиков
-const ChartTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-xl bg-background/90 backdrop-blur px-3 py-2 shadow-lg border text-sm">
-      <div className="font-medium">{new Date(label).toLocaleDateString("ru-RU")}</div>
-      {payload.map((p: any) => (
-        <div key={p.dataKey} className="flex items-center gap-2">
-          <span className="inline-block h-2 w-2 rounded-full" style={{ background: p.color }} />
-          <span className="text-muted-foreground">{p.name}:</span>
-          <span className="font-medium">{formatNumber(p.value)}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// Инфо бейдж
-function InfoBadge({ text }: { text: string }) {
-  return (
-    <div className="flex items-center gap-2 text-muted-foreground text-xs">
-      <Info className="h-3.5 w-3.5" />
-      <span>{text}</span>
-    </div>
-  );
-}
-
-// Модалка метрики с красивым графиком
-function MetricDialog({
-  title,
-  data,
-  valueKey,
-  color,
-  help,
-}: {
-  title: string;
-  data: any[];
-  valueKey: keyof any;
-  color: string; // css color
-  help: string;
-}) {
-  const current = useMemo(() => (data?.length ? Number(data.at(-1)?.[valueKey]) || 0 : 0), [data, valueKey]);
-  const forecast = useMemo(() => weeklyForecast(data, valueKey), [data, valueKey]);
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="secondary" className="h-8 rounded-xl">Открыть метрику</Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-4xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {title}
-            <Badge variant="outline" className="rounded-lg">Интерактивный график</Badge>
-          </DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4">
-          <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-                <defs>
-                  <linearGradient id={`grad-${String(valueKey)}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={color} stopOpacity={0.35} />
-                    <stop offset="90%" stopColor={color} stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="date" tickFormatter={(d) => new Date(d).toLocaleDateString("ru-RU")} />
-                <YAxis allowDecimals={false} />
-                <Tooltip content={<ChartTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey={String(valueKey)}
-                  name={title}
-                  stroke={color}
-                  fill={`url(#grad-${String(valueKey)})`}
-                  strokeWidth={2}
-                  dot={false}
-                />
-                <Brush dataKey="date" height={22} tickFormatter={(d) => new Date(d).toLocaleDateString("ru-RU")} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="rounded-2xl">
-              <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Текущее значение</CardTitle></CardHeader>
-              <CardContent className="text-2xl font-semibold">{formatNumber(current)}</CardContent>
-            </Card>
-            <Card className="rounded-2xl">
-              <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Прогноз на неделю</CardTitle></CardHeader>
-              <CardContent className="text-2xl font-semibold">{formatNumber(forecast)}</CardContent>
-            </Card>
-            <Card className="rounded-2xl">
-              <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Описание</CardTitle></CardHeader>
-              <CardContent className="text-sm text-muted-foreground leading-relaxed">{help}</CardContent>
-            </Card>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// Карточка метрики (кликабельный блок)
-function MetricCard({
-  title,
-  value,
-  delta,
-  color,
-  help,
-  children,
-}: {
-  title: string;
-  value: number;
-  delta?: number; // тренд (например, за 7д)
-  color: string;
-  help: string;
-  children: React.ReactNode;
-}) {
-  const Up = delta && delta >= 0;
-  return (
-    <Card className="rounded-2xl bg-card/70 backdrop-blur border-muted/40">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-          {title}
-          <Info className="h-4 w-4 opacity-60" />
-        </CardTitle>
-        {typeof delta === "number" && (
-          <Badge variant="secondary" className={cn("rounded-lg flex items-center gap-1", Up ? "text-emerald-600" : "text-rose-600")}> 
-            {Up ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />} {Math.abs(delta).toFixed(1)}%
-          </Badge>
-        )}
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-end justify-between">
-          <div className="text-3xl font-semibold" style={{ color }}>{formatNumber(value)}</div>
-          <div>{children}</div>
-        </div>
-        <div className="mt-3"><InfoBadge text={help} /></div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Блок динамики: Открытия и Ответы на одном графике
-function DynamicsBlock({ data }: { data: any[] }) {
-  return (
-    <Card className="rounded-2xl">
-      <CardHeader className="pb-2"><CardTitle>Динамика: Открытия и Ответы</CardTitle></CardHeader>
-      <CardContent>
-        <div className="h-80 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-              <defs>
-                <linearGradient id="grad-opens" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#60a5fa" stopOpacity={0.35} />
-                  <stop offset="90%" stopColor="#60a5fa" stopOpacity={0.02} />
-                </linearGradient>
-                <linearGradient id="grad-replies" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#34d399" stopOpacity={0.35} />
-                  <stop offset="90%" stopColor="#34d399" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-              <XAxis dataKey="date" tickFormatter={(d) => new Date(d).toLocaleDateString("ru-RU")} />
-              <YAxis allowDecimals={false} />
-              <Tooltip content={<ChartTooltip />} />
-              <Legend />
-              <Area type="monotone" dataKey="opens" name="Открытия" stroke="#60a5fa" fill="url(#grad-opens)" strokeWidth={2} dot={false} />
-              <Area type="monotone" dataKey="replies" name="Ответы" stroke="#34d399" fill="url(#grad-replies)" strokeWidth={2} dot={false} />
-              <Brush dataKey="date" height={22} tickFormatter={(d) => new Date(d).toLocaleDateString("ru-RU")} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="mt-3"><InfoBadge text="Интерактив: наведите мышкой на точки графика или потяните бегунок снизу, чтобы посмотреть период." /></div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Воронка: отправлено → открыто → ответ
-function FunnelBlock({ totalSent, totalOpens, totalReplies }: { totalSent: number; totalOpens: number; totalReplies: number }) {
-  const data = [
-    { name: "Отправлено", value: totalSent },
-    { name: "Открыто", value: totalOpens },
-    { name: "Ответы", value: totalReplies },
-  ];
-  return (
-    <Card className="rounded-2xl">
-      <CardHeader className="pb-2"><CardTitle>Воронка взаимодействия</CardTitle></CardHeader>
-      <CardContent>
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <FunnelChart>
-              <Tooltip formatter={(v: any) => formatNumber(Number(v))} />
-              <Funnel dataKey="value" data={data} isAnimationActive>
-                <LabelList dataKey="name" position="left" />
-                <LabelList dataKey="value" position="right" formatter={(v: any) => formatNumber(Number(v))} />
-              </Funnel>
-            </FunnelChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="mt-3"><InfoBadge text="Показывает переходы по этапам: отправлено → открыто → ответ." /></div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Качество доставки: успешные vs ошибки
-function DeliveryQuality({ delivered, bounces }: { delivered: number; bounces: number }) {
-  const total = delivered + bounces;
-  const successRate = total ? delivered / total : 0;
-  return (
-    <Card className="rounded-2xl">
-      <CardHeader className="pb-2"><CardTitle>Качество доставки</CardTitle></CardHeader>
-      <CardContent className="space-y-3">
-        <div className="text-3xl font-semibold">{pct(successRate)} <span className="text-sm text-muted-foreground font-normal">успешных доставок</span></div>
-        <div className="grid grid-cols-2 gap-3">
-          <Card className="rounded-xl"><CardContent className="pt-4"><div className="text-sm text-muted-foreground">Успешно доставлено</div><div className="text-xl font-semibold">{formatNumber(delivered)}</div></CardContent></Card>
-          <Card className="rounded-xl"><CardContent className="pt-4"><div className="text-sm text-muted-foreground">Ошибки доставки</div><div className="text-xl font-semibold">{formatNumber(bounces)}</div></CardContent></Card>
-        </div>
-        <InfoBadge text="Рассчитывается как Delivered / (Delivered + Bounces)." />
-      </CardContent>
-    </Card>
-  );
-}
-
-// Блок сферы
-function SphereCard({ name, sent, open_rate, reply_rate, avgOpenRate, avgReplyRate }: any) {
-  const openDelta = (open_rate ?? 0) - (avgOpenRate ?? 0);
-  const replyDelta = (reply_rate ?? 0) - (avgReplyRate ?? 0);
-  return (
-    <Card className="rounded-2xl">
-      <CardHeader className="pb-2"><CardTitle className="flex items-center justify-between w-full"><span>{name}</span><span className="text-sm text-muted-foreground">Отправлено: {formatNumber(sent)}</span></CardTitle></CardHeader>
-      <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="flex items-center justify-between rounded-xl border p-3">
-          <div>
-            <div className="text-xs text-muted-foreground">Открытия</div>
-            <div className="text-xl font-semibold">{pct(open_rate)}</div>
-          </div>
-          <div className={cn("flex items-center gap-1 text-sm", openDelta >= 0 ? "text-emerald-600" : "text-rose-600")}> 
-            {openDelta >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />} {Math.abs(openDelta * 100).toFixed(1)}%
-          </div>
-        </div>
-        <div className="flex items-center justify-between rounded-xl border p-3">
-          <div>
-            <div className="text-xs text-muted-foreground">Ответы</div>
-            <div className="text-xl font-semibold">{pct(reply_rate)}</div>
-          </div>
-          <div className={cn("flex items-center gap-1 text-sm", replyDelta >= 0 ? "text-emerald-600" : "text-rose-600")}> 
-            {replyDelta >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />} {Math.abs(replyDelta * 100).toFixed(1)}%
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// -----------------------------
-// Основной компонент
-// -----------------------------
-export default function ClientDashboard() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<any | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      try {
-        const res = await fetch("/data.txt", { cache: "no-store" });
-        if (!res.ok) throw new Error(`Не удалось загрузить data.txt (${res.status})`);
-        const text = await res.text();
-        const json = JSON.parse(text);
-        if (mounted) setData(json);
-      } catch (e: any) {
-        setError(e?.message || "Ошибка загрузки данных");
-      } finally {
-        if (mounted) setLoading(false);
+      // ---------- Простой модал ----------
+      function Modal({open,setOpen,title,children}){
+        return (
+          <dialog open={open} onClose={()=>setOpen(false)}>
+            <div class="p-5">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold">{title}</h3>
+                <button class="btn" onClick={()=>setOpen(false)}>Закрыть</button>
+              </div>
+              {children}
+            </div>
+          </dialog>
+        )
       }
-    }
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
-  const timeline = useMemo(() => data?.timeline ?? [], [data]);
-  const totals = useMemo(() => {
-    const sum = (k: string) => timeline.reduce((a: number, d: any) => a + (Number(d[k]) || 0), 0);
-    return {
-      sent: sum("sent"),
-      delivered: sum("delivered"),
-      opens: sum("opens"),
-      replies: sum("replies"),
-      lpr_replies: sum("lpr_replies"),
-      bounces: sum("bounces"),
-    };
-  }, [timeline]);
+      function MetricDialog({title,data,keyName,color,help}){
+        const [open,setOpen]=useState(false);
+        const current = data?.length ? (+data.at(-1)[keyName]||0) : 0;
+        const fc = forecast7(data,keyName);
+        return (
+          <>
+            <button class="btn" onClick={()=>setOpen(true)}>Открыть метрику</button>
+            <Modal open={open} setOpen={setOpen} title={title}>
+              <div class="space-y-4">
+                <div class="h-72 w-full">
+                  <div style="width:100%;height:100%">
+                    <div id={title+"-chart"} style="width:100%;height:100%">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={data} margin={{top:10,right:20,left:0,bottom:10}}>
+                          <defs>
+                            <linearGradient id={"g-"+keyName} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stop-color={color} stop-opacity="0.35"/>
+                              <stop offset="90%" stop-color={color} stop-opacity="0.02"/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.12)"/>
+                          <XAxis dataKey="date" tickFormatter={d=>new Date(d).toLocaleDateString('ru-RU')}/>
+                          <YAxis allowDecimals={false}/>
+                          <Tooltip formatter={v=>fmtN(+v)} labelFormatter={l=>new Date(l).toLocaleDateString('ru-RU')}/>
+                          <Area type="monotone" dataKey={keyName} name={title} stroke={color} fill={`url(#g-${keyName})`} strokeWidth={2} dot={false}/>
+                          <Brush dataKey="date" height={24}/>
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div class="card p-4">
+                    <div class="muted text-sm mb-1">Текущее значение</div>
+                    <div class="text-2xl font-semibold">{fmtN(current)}</div>
+                  </div>
+                  <div class="card p-4">
+                    <div class="muted text-sm mb-1">Прогноз на неделю</div>
+                    <div class="text-2xl font-semibold">{fmtN(fc)}</div>
+                  </div>
+                    <div class="card p-4">
+                      <div class="muted text-sm mb-1">Описание</div>
+                      <div class="text-sm muted">{help}</div>
+                    </div>
+                </div>
+                <div class="muted text-xs">Подсказка: водите мышкой по точкам и выделяйте период бегунком снизу.</div>
+              </div>
+            </Modal>
+          </>
+        )
+      }
 
-  const last = timeline.at(-1) || {};
-  const deltas7 = useMemo(() => {
-    const last7 = lastN(timeline, 7);
-    const first7 = last7[0];
-    const last7Last = last7.at(-1);
-    const calc = (k: string) => {
-      if (!first7 || !last7Last) return 0;
-      const prev = Number(first7[k]) || 0;
-      const curr = Number(last7Last[k]) || 0;
-      if (prev === 0) return 0;
-      return ((curr - prev) / Math.max(prev, 1)) * 100;
-    };
-    return {
-      sent: calc("sent"),
-      delivered: calc("delivered"),
-      lpr_replies: calc("lpr_replies"),
-      bounces: calc("bounces"),
-    };
-  }, [timeline]);
+      function MetricCard({title,value,delta,color,help,dialog}){
+        const up = typeof delta==='number' ? delta>=0 : null;
+        return (
+          <div class="card p-4">
+            <div class="flex items-center justify-between">
+              <div class="muted text-sm flex items-center gap-2">
+                {title}
+                <span title={help} class="i-btn">i</span>
+              </div>
+              {delta!=null && (
+                <span class={"badge "+(up?"text-emerald-400":"text-rose-400")}>
+                  {up?"▲":"▼"} {Math.abs(delta).toFixed(1)}%
+                </span>
+              )}
+            </div>
+            <div class="flex items-end justify-between mt-2">
+              <div class="text-3xl font-semibold" style={{color}}>{fmtN(value)}</div>
+              {dialog}
+            </div>
+          </div>
+        )
+      }
 
-  const spheres = useMemo(() => data?.spheres ?? [], [data]);
-  const avgOpenRate = useMemo(() => {
-    if (!spheres.length) return 0;
-    const sum = spheres.reduce((a: number, s: any) => a + (Number(s.open_rate) || 0), 0);
-    return sum / spheres.length;
-  }, [spheres]);
-  const avgReplyRate = useMemo(() => {
-    if (!spheres.length) return 0;
-    const sum = spheres.reduce((a: number, s: any) => a + (Number(s.reply_rate) || 0), 0);
-    return sum / spheres.length;
-  }, [spheres]);
+      function DynamicsBlock({data}){
+        return (
+          <div class="card p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <h3 class="font-semibold">Динамика: Открытия и Ответы</h3>
+              <span class="i-btn" title="Показывает суммарные открытия и ответы по периодам. Внизу — бегунок выбора периода.">i</span>
+            </div>
+            <div style="width:100%;height:320px">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data} margin={{top:10,right:20,left:0,bottom:10}}>
+                  <defs>
+                    <linearGradient id="g-opens" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.35"/>
+                      <stop offset="90%" stop-color="#60a5fa" stop-opacity="0.02"/>
+                    </linearGradient>
+                    <linearGradient id="g-replies" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#34d399" stop-opacity="0.35"/>
+                      <stop offset="90%" stop-color="#34d399" stop-opacity="0.02"/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.12)"/>
+                  <XAxis dataKey="date" tickFormatter={d=>new Date(d).toLocaleDateString('ru-RU')}/>
+                  <YAxis allowDecimals={false}/>
+                  <Tooltip formatter={v=>fmtN(+v)} labelFormatter={l=>new Date(l).toLocaleDateString('ru-RU')}/>
+                  <Legend />
+                  <Area type="monotone" dataKey="opens" name="Открытия" stroke="#60a5fa" fill="url(#g-opens)" strokeWidth="2" dot={false}/>
+                  <Area type="monotone" dataKey="replies" name="Ответы" stroke="#34d399" fill="url(#g-replies)" strokeWidth="2" dot={false}/>
+                  <Brush dataKey="date" height={24}/>
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )
+      }
 
-  return (
-    <div className="min-h-screen bg-[#0b0b0f] text-foreground">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <header className="flex items-center justify-between">
+      function FunnelBlock({sent,opens,replies}){
+        const data = [
+          { name:'Отправлено', value: sent },
+          { name:'Открыто',   value: opens },
+          { name:'Ответы',    value: replies },
+        ];
+        return (
+          <div class="card p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <h3 class="font-semibold">Воронка взаимодействия</h3>
+              <span class="i-btn" title="Этапы: отправлено → открыто → ответ. Значения — суммарно за период.">i</span>
+            </div>
+            <div style="width:100%;height:280px">
+              <ResponsiveContainer width="100%" height="100%">
+                <FunnelChart>
+                  <Tooltip formatter={v=>fmtN(+v)} />
+                  <Funnel dataKey="value" data={data} isAnimationActive>
+                    <LabelList dataKey="name" position="left" />
+                    <LabelList dataKey="value" position="right" formatter={v=>fmtN(+v)} />
+                  </Funnel>
+                </FunnelChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )
+      }
+
+      function DeliveryQuality({delivered,bounces}){
+        const total = delivered + bounces;
+        const rate = total ? delivered/total : 0;
+        return (
+          <div class="card p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <h3 class="font-semibold">Качество доставки</h3>
+              <span class="i-btn" title="Доля успешно доставленных писем среди доставленных + ошибок.">i</span>
+            </div>
+            <div class="text-3xl font-semibold mb-3">{pct(rate)} <span class="muted text-base font-normal">успешных</span></div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="card p-3">
+                <div class="muted text-sm">Успешно доставлено</div>
+                <div class="text-xl font-semibold">{fmtN(delivered)}</div>
+              </div>
+              <div class="card p-3">
+                <div class="muted text-sm">Ошибки доставки</div>
+                <div class="text-xl font-semibold">{fmtN(bounces)}</div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      function Spheres({spheres}){
+        const avgOpen = useMemo(()=>{
+          if(!spheres?.length) return 0;
+          return spheres.reduce((a,s)=>a+(+s.open_rate||0),0)/spheres.length;
+        },[spheres]);
+        const avgReply = useMemo(()=>{
+          if(!spheres?.length) return 0;
+          return spheres.reduce((a,s)=>a+(+s.reply_rate||0),0)/spheres.length;
+        },[spheres]);
+
+        return (
+          <div class="space-y-3">
+            <div class="muted text-sm">Сравнение со средними по аккаунту: open {pct(avgOpen)}, reply {pct(avgReply)}.</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {spheres.map(s=>{
+                const openDelta = (+s.open_rate||0) - avgOpen;
+                const replyDelta = (+s.reply_rate||0) - avgReply;
+                return (
+                  <div class="card p-4" key={s.name}>
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="font-semibold">{s.name}</div>
+                      <div class="muted text-sm">Отправлено: {fmtN(+s.sent||0)}</div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="card p-3">
+                        <div class="muted text-xs">Открытия</div>
+                        <div class="text-xl font-semibold">{pct(+s.open_rate||0)}</div>
+                        <div class={(openDelta>=0?'text-emerald-400':'text-rose-400')+' text-sm mt-1'}>
+                          {openDelta>=0?'▲':'▼'} {Math.abs(openDelta*100).toFixed(1)}%
+                        </div>
+                      </div>
+                      <div class="card p-3">
+                        <div class="muted text-xs">Ответы</div>
+                        <div class="text-xl font-semibold">{pct(+s.reply_rate||0)}</div>
+                        <div class={(replyDelta>=0?'text-emerald-400':'text-rose-400')+' text-sm mt-1'}>
+                          {replyDelta>=0?'▲':'▼'} {Math.abs(replyDelta*100).toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      }
+
+      function Tabs({tab,setTab}){
+        return (
+          <div class="inline-flex gap-2 bg-[rgba(255,255,255,.06)] p-1 rounded-xl">
+            <button class={"btn "+(tab==='overview'?'ring-2 ring-white/20':'')} onClick={()=>setTab('overview')}>Обзор</button>
+            <button class={"btn "+(tab==='spheres'?'ring-2 ring-white/20':'')} onClick={()=>setTab('spheres')}>Сферы</button>
+          </div>
+        )
+      }
+
+      function App(){
+        const [tab,setTab]=useState('overview');
+        const [data,setData]=useState(null);
+        const [err,setErr]=useState(null);
+
+        useEffect(()=>{
+          fetch('data.txt').then(r=>{
+            if(!r.ok) throw new Error('Не найден data.txt');
+            return r.text();
+          }).then(t=>{
+            try { setData(JSON.parse(t)); }
+            catch(e){ throw new Error('Некорректный JSON в data.txt'); }
+          }).catch(e=>setErr(e.message||'Ошибка загрузки'));
+        },[]);
+
+        if(err) return <div class="text-red-400">Ошибка: {err}</div>;
+        if(!data) return <div class="muted">Загрузка данных…</div>;
+
+        const timeline = data.timeline || [];
+        const totals = {
+          sent: timeline.reduce((a,d)=>a+(+d.sent||0),0),
+          delivered: timeline.reduce((a,d)=>a+(+d.delivered||0),0),
+          opens: timeline.reduce((a,d)=>a+(+d.opens||0),0),
+          replies: timeline.reduce((a,d)=>a+(+d.replies||0),0),
+          lpr_replies: timeline.reduce((a,d)=>a+(+d.lpr_replies||0),0),
+          bounces: timeline.reduce((a,d)=>a+(+d.bounces||0),0),
+        };
+        const last = timeline.at(-1) || {};
+        const last7 = lastN(timeline,7);
+        const delta = k=>{
+          if(last7.length<2) return 0;
+          const prev = +last7[0][k]||0, curr = +last7.at(-1)[k]||0;
+          return prev===0 ? 0 : ( (curr-prev)/Math.max(prev,1) )*100;
+        };
+
+        return (
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">WandLead — Обзор рассылок</h1>
-            <p className="text-sm text-muted-foreground">Личный кабинет клиента. Все метрики подгружаются из <code>data.txt</code>.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" className="rounded-xl">Запросить пилот</Button>
-          </div>
-        </header>
-        <Separator className="my-6" />
-
-        {loading && (
-          <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Загрузка данных…</div>
-        )}
-        {error && (
-          <div className="flex items-center gap-2 text-rose-500"><AlertCircle className="h-4 w-4" />{error}</div>
-        )}
-
-        {!loading && !error && (
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="rounded-2xl">
-              <TabsTrigger value="overview">Обзор</TabsTrigger>
-              <TabsTrigger value="spheres">Сферы</TabsTrigger>
-            </TabsList>
-
-            {/* ---------------- Обзор ---------------- */}
-            <TabsContent value="overview" className="space-y-6 mt-6">
-              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                <MetricCard
-                  title="Отправлено писем"
-                  value={Number(last?.sent) || 0}
-                  delta={deltas7.sent}
-                  color="#a78bfa"
-                  help="Сколько писем было отправлено за выбранные даты. Нажмите, чтобы открыть график."
-                >
-                  <MetricDialog title="Отправлено" data={timeline} valueKey="sent" color="#a78bfa" help="Количество отправленных писем по дням. Под графиком доступен выбор периода." />
-                </MetricCard>
-
-                <MetricCard
-                  title="Доставлено"
-                  value={Number(last?.delivered) || 0}
-                  delta={deltas7.delivered}
-                  color="#60a5fa"
-                  help="Сообщения, принятые почтовым сервером получателя."
-                >
-                  <MetricDialog title="Доставлено" data={timeline} valueKey="delivered" color="#60a5fa" help="Количество успешно доставленных писем." />
-                </MetricCard>
-
-                <MetricCard
-                  title="Ответы от ЛПР"
-                  value={Number(last?.lpr_replies) || 0}
-                  delta={deltas7.lpr_replies}
-                  color="#34d399"
-                  help="Ответы именно от лиц, принимающих решения."
-                >
-                  <MetricDialog title="Ответы от ЛПР" data={timeline} valueKey="lpr_replies" color="#34d399" help="Считаем ответы, классифицированные как ЛПР." />
-                </MetricCard>
-
-                <MetricCard
-                  title="Ошибки доставки"
-                  value={Number(last?.bounces) || 0}
-                  delta={deltas7.bounces}
-                  color="#f87171"
-                  help="Сервер получателя вернул ошибку (hard/soft bounce)."
-                >
-                  <MetricDialog title="Ошибки доставки" data={timeline} valueKey="bounces" color="#f87171" help="Обратные ошибки доставки по дням." />
-                </MetricCard>
-              </motion.div>
-
-              <DynamicsBlock data={timeline} />
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <FunnelBlock totalSent={totals.sent} totalOpens={totals.opens} totalReplies={totals.replies} />
-                <DeliveryQuality delivered={totals.delivered} bounces={totals.bounces} />
+            <header class="flex items-center justify-between">
+              <div>
+                <h1 class="text-2xl font-semibold">WandLead — Личный кабинет</h1>
+                <div class="muted text-sm">Все метрики подгружаются из <code>data.txt</code>.</div>
               </div>
-            </TabsContent>
+              <Tabs tab={tab} setTab={setTab}/>
+            </header>
 
-            {/* ---------------- Сферы ---------------- */}
-            <TabsContent value="spheres" className="mt-6 space-y-4">
-              <InfoBadge text="Сравниваем показатели каждой сферы со средними по аккаунту." />
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {spheres.map((s: any) => (
-                  <SphereCard key={s.name} {...s} avgOpenRate={avgOpenRate} avgReplyRate={avgReplyRate} />
-                ))}
+            {tab==='overview' && (
+              <div class="space-y-6 mt-6">
+                <!-- четыре метрики -->
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                  <MetricCard
+                    title="Отправлено писем"
+                    value={+last.sent||0}
+                    delta={delta('sent')}
+                    color="#a78bfa"
+                    help="Сколько писем отправлено за день. Нажмите, чтобы открыть подробный график."
+                    dialog={<MetricDialog title="Отправлено" data={timeline} keyName="sent" color="#a78bfa" help="Количество отправленных писем по дням. Внизу — выбор периода."/>}
+                  />
+                  <MetricCard
+                    title="Доставлено"
+                    value={+last.delivered||0}
+                    delta={delta('delivered')}
+                    color="#60a5fa"
+                    help="Сообщения, принятые сервером получателя."
+                    dialog={<MetricDialog title="Доставлено" data={timeline} keyName="delivered" color="#60a5fa" help="Успешно доставленные письма по дням."/>}
+                  />
+                  <MetricCard
+                    title="Ответы от ЛПР"
+                    value={+last.lpr_replies||0}
+                    delta={delta('lpr_replies')}
+                    color="#34d399"
+                    help="Ответы именно от лиц, принимающих решения."
+                    dialog={<MetricDialog title="Ответы от ЛПР" data={timeline} keyName="lpr_replies" color="#34d399" help="Считаем только ответы, классифицированные как ЛПР."/>}
+                  />
+                  <MetricCard
+                    title="Ошибки доставки"
+                    value={+last.bounces||0}
+                    delta={delta('bounces')}
+                    color="#f87171"
+                    help="Hard/soft bounces — ошибки доставки."
+                    dialog={<MetricDialog title="Ошибки доставки" data={timeline} keyName="bounces" color="#f87171" help="Ошибки доставки по дням."/>}
+                  />
+                </div>
+
+                <DynamicsBlock data={timeline}/>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <FunnelBlock sent={totals.sent} opens={totals.opens} replies={totals.replies}/>
+                  <DeliveryQuality delivered={totals.delivered} bounces={totals.bounces}/>
+                </div>
               </div>
-            </TabsContent>
-          </Tabs>
-        )}
+            )}
 
-        <footer className="mt-10 text-center text-xs text-muted-foreground">
-          Данные подгружаются из <code>public/data.txt</code>. Обновляйте файл — графики и метрики синхронизируются автоматически без правок кода.
-        </footer>
-      </div>
-    </div>
-  );
-}
+            {tab==='spheres' && (
+              <div class="mt-6">
+                <Spheres spheres={data.spheres||[]}/>
+              </div>
+            )}
+
+            <footer class="mt-10 text-center muted text-xs">
+              Обновляйте <code>data.txt</code> — графики и метрики подтянутся автоматически.
+            </footer>
+          </div>
+        )
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+    </script>
+  </body>
+</html>
