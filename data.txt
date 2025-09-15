@@ -1,10 +1,14 @@
 {
   "timeline": [
-    { "date": "2025-09-01", "sent": 120, "delivered": 110, "opens": 80, "replies": 12, "lpr_replies": 5, "bounces": 10 }
-    // ... ежедневно или по вашему шагу
+    { "date": "2025-09-01", "sent": 120, "delivered": 110, "opens": 80, "replies": 12, "lpr_replies": 5, "bounces": 10 },
+    { "date": "2025-09-02", "sent": 140, "delivered": 130, "opens": 95, "replies": 15, "lpr_replies": 6, "bounces": 8 },
+    { "date": "2025-09-03", "sent": 180, "delivered": 170, "opens": 130, "replies": 20, "lpr_replies": 8, "bounces": 6 },
+    { "date": "2025-09-04", "sent": 160, "delivered": 150, "opens": 120, "replies": 18, "lpr_replies": 7, "bounces": 5 },
+    { "date": "2025-09-05", "sent": 200, "delivered": 190, "opens": 150, "replies": 25, "lpr_replies": 10, "bounces": 6 }
   ],
   "spheres": [
-    { "name": "Fintech", "sent": 1000, "open_rate": 0.34, "reply_rate": 0.07 },
-    { "name": "SaaS",    "sent": 800,  "open_rate": 0.28, "reply_rate": 0.05 }
+    { "name": "Fintech", "sent": 1200, "open_rate": 0.36, "reply_rate": 0.08 },
+    { "name": "SaaS",    "sent": 900,  "open_rate": 0.28, "reply_rate": 0.06 },
+    { "name": "E-commerce", "sent": 700, "open_rate": 0.31, "reply_rate": 0.05 }
   ]
 }
