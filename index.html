@@ -4,84 +4,78 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>ЛК клиента — Email кампании</title>
+  <title>WandLead — кабинет клиента</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
-    :root {
-      --bg: #0b0e13;
-      --card: #121723;
-      --muted: #9aa4b2;
-      --text: #e6ecf2;
-      --primary: #7c9aff;
-      --accent: #72e0a8;
-      --danger: #ff6b6b;
-      --warning: #ffd166;
-      --surface: #0f1420;
-      --border: #1f2737;
-      --good: #27d980;
-      --bad: #ff5d5d;
+    :root{
+      --bg:#0b0f15;
+      --panel:#0f1521;
+      --card:#12192a;
+      --surface:#0f1520;
+      --border:#1f2b42;
+      --text:#e8eef5;
+      --muted:#9da9bb;
+      --primary:#8aa4ff;
+      --accent:#67e3a1;
+      --danger:#ff6b6b;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-    header{position:sticky;top:0;background:linear-gradient(180deg,#0b0e13,rgba(11,14,19,.7));backdrop-filter: blur(6px);z-index:50;border-bottom:1px solid var(--border)}
-    .wrap{max-width:1200px;margin:0 auto;padding:24px}
-    .title{font-size:28px;font-weight:800;letter-spacing:.3px}
-    .tabs{display:flex;gap:8px;margin-top:16px}
-    .tab{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);cursor:pointer;font-weight:600;color:var(--muted)}
-    .tab.active{color:var(--text);border-color:#2c354a;box-shadow:0 0 0 1px rgba(124,154,255,.2) inset}
+    body{margin:0;background:radial-gradient(1200px 500px at 20% -10%,rgba(103,227,161,.08),transparent), radial-gradient(1200px 600px at 100% -20%,rgba(138,164,255,.10),transparent), var(--bg); color:var(--text); font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    header{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,rgba(11,15,21,.95),rgba(11,15,21,.7));backdrop-filter: blur(6px);border-bottom:1px solid var(--border)}
+    .wrap{max-width:1200px;margin:0 auto;padding:20px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand .logo{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));box-shadow:0 0 20px rgba(138,164,255,.35)}
+    .brand h1{margin:0;font-size:22px;letter-spacing:.3px}
+    .toolbar{display:flex;align-items:center;gap:10px;margin-top:10px}
+    .tab{padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel);cursor:pointer;color:var(--muted);font-weight:600}
+    .tab.active{color:var(--text);box-shadow:inset 0 0 0 1px rgba(138,164,255,.3)}
+    main{padding-top:10px}
     .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-    .card{grid-column:span 3;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;position:relative;overflow:hidden}
-    .card:hover{border-color:#2f3a54}
-    .card h3{margin:0 0 6px 0;font-size:14px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:8px}
-    .value{font-size:26px;font-weight:800;margin:2px 0 10px}
-    .btn{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);cursor:pointer;color:var(--text);font-weight:600}
-    .btn:hover{border-color:#40507a}
-    .muted{color:var(--muted);font-size:13px}
-    .chart-mini{height:80px}
-    .row-12{grid-column:span 12}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+    .card:hover{border-color:#334465}
+    .kpi{grid-column:span 3;min-height:220px}
     .row-6{grid-column:span 6}
-    .kpi{display:flex;gap:12px;flex-wrap:wrap}
-    .kpi span{padding:6px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:12px;color:var(--muted)}
-    .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:#0f1828;border:1px solid #1d2840;font-size:12px}
-    .i{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:50%;cursor:pointer}
-    .i:hover{border-color:#5b6b92}
-    .legend{display:flex;gap:12px;font-size:12px;color:var(--muted)}
+    .row-12{grid-column:span 12}
+    h3{margin:0 0 8px 0;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px}
+    .value{font-size:28px;font-weight:800;margin:4px 0 12px}
+    .chart-mini{width:100%;height:120px;display:block}
+    .btn{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--panel);cursor:pointer;color:var(--text);font-weight:600}
+    .legend{display:flex;gap:12px;font-size:12px;color:var(--muted);margin-bottom:6px}
     .legend .dot{width:10px;height:10px;border-radius:50%}
-    /* modal */
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);padding:20px;z-index:99}
+    .pill{padding:6px 10px;border-radius:10px;background:var(--panel);border:1px solid var(--border);font-size:13px}
+    .muted{color:var(--muted)}
+    /* info popover */
+    .info{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:1px solid var(--border);border-radius:50%;cursor:pointer}
+    .popover{position:absolute;right:12px;top:42px;min-width:260px;max-width:340px;background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:12px;display:none;z-index:5}
+    .popover.show{display:block;animation:pop .15s ease-out}
+    @keyframes pop{from{transform:translateY(-6px);opacity:.0}to{transform:translateY(0);opacity:1}}
+    /* metric modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:20px;z-index:80}
     .modal.open{display:flex}
-    .modal .inner{width:min(980px,96vw);background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px}
+    .modal .inner{width:min(980px,96vw);background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
     .modal .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-    .modal .head h2{margin:0;font-size:20px}
-    .close{cursor:pointer;border:1px solid var(--border);padding:6px 10px;border-radius:8px;background:var(--surface)}
+    .close{cursor:pointer;border:1px solid var(--border);padding:6px 10px;border-radius:8px;background:var(--panel)}
     .two-col{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
-    .stat{display:flex;flex-direction:column;gap:8px}
-    .stat .big{font-size:32px;font-weight:800}
-    @media (max-width: 900px){
-      .card{grid-column:span 6}
-      .two-col{grid-template-columns:1fr}
-    }
-    @media (max-width: 600px){
-      .card{grid-column:span 12}
-    }
-    /* table for spheres */
+    .big{font-size:32px;font-weight:800}
     table{width:100%;border-collapse:collapse}
     th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;font-size:14px}
     th{color:var(--muted);font-weight:600}
-    .up{color:var(--good);font-weight:700}
-    .down{color:var(--bad);font-weight:700}
-    .pill{padding:4px 8px;border-radius:8px;background:var(--surface);border:1px solid var(--border);font-size:12px}
+    .up{color:#27d980;font-weight:700}
+    .down{color:#ff5d5d;font-weight:700}
     footer{opacity:.7;font-size:12px;padding:24px;text-align:center}
+    @media (max-width:1000px){ .kpi{grid-column:span 6} .two-col{grid-template-columns:1fr} }
+    @media (max-width:600px){ .kpi, .row-6, .row-12{grid-column:span 12} }
   </style>
 </head>
 <body>
   <header>
     <div class="wrap">
-      <div class="title">WandLead — кабинет клиента</div>
-      <div class="tabs">
+      <div class="brand"><div class="logo"></div><h1>WandLead — кабинет клиента</h1></div>
+      <div class="toolbar">
         <button class="tab active" data-tab="overview">Обзор</button>
         <button class="tab" data-tab="spheres">Сферы</button>
       </div>
@@ -90,53 +84,43 @@
 
   <main class="wrap">
     <section id="overview" class="tabpane">
-      <div class="grid" id="kpi-grid">
-        <!-- KPI cards injected here -->
-      </div>
+      <div id="kpis" class="grid"></div>
 
-      <div class="grid" style="margin-top:10px">
+      <div class="grid" style="margin-top:12px">
         <div class="card row-12">
-          <h3>График динамики — Открытия и Ответы
-            <span class="i" data-info-key="opens_replies">i</span>
-          </h3>
+          <h3>График динамики — Открытия и Ответы <span class="info" data-pop="opens_replies">i</span></h3>
+          <div class="popover" id="pop-opens_replies"></div>
           <div class="legend">
             <div><span class="dot" id="dot-open"></span> Открытия</div>
             <div><span class="dot" id="dot-reply"></span> Ответы</div>
           </div>
-          <canvas id="comboChart" height="120"></canvas>
+          <canvas id="comboChart" height="160"></canvas>
         </div>
       </div>
 
-      <div class="grid" style="margin-top:10px">
+      <div class="grid" style="margin-top:12px">
         <div class="card row-6">
-          <h3>Воронка <span class="i" data-info-key="funnel">i</span></h3>
-          <div id="funnel" class="kpi"></div>
+          <h3>Воронка <span class="info" data-pop="funnel">i</span></h3>
+          <div class="popover" id="pop-funnel"></div>
+          <div id="funnel" style="display:flex;gap:10px;flex-wrap:wrap"></div>
         </div>
         <div class="card row-6">
-          <h3>Качество доставки <span class="i" data-info-key="delivery_quality">i</span></h3>
-          <div class="stat">
-            <div id="quality" class="big">—</div>
-            <div class="muted" id="qualityCaption"></div>
-          </div>
+          <h3>Качество доставки <span class="info" data-pop="delivery_quality">i</span></h3>
+          <div class="popover" id="pop-delivery_quality"></div>
+          <div class="big" id="quality">—</div>
+          <div class="muted" id="qualityCaption"></div>
         </div>
       </div>
     </section>
 
     <section id="spheres" class="tabpane" style="display:none">
       <div class="card row-12">
-        <h3>Сферы и эффективность <span class="i" data-info-key="spheres">i</span></h3>
+        <h3>Сферы и эффективность <span class="info" data-pop="spheres">i</span></h3>
+        <div class="popover" id="pop-spheres"></div>
         <div class="muted" id="avgLine"></div>
         <div style="overflow:auto;margin-top:10px">
           <table id="spheresTable">
-            <thead>
-              <tr>
-                <th>Сфера</th>
-                <th>Отправлено</th>
-                <th>% открытий</th>
-                <th>% ответов</th>
-                <th>Эффективность vs среднее</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Сфера</th><th>Отправлено</th><th>% открытий</th><th>% ответов</th><th>Эффективность vs среднее</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -147,18 +131,16 @@
   <div class="modal" id="metricModal">
     <div class="inner">
       <div class="head">
-        <h2 id="modalTitle">Метрика</h2>
+        <h2 id="modalTitle" style="margin:0">Метрика</h2>
         <button class="close" id="closeModal">Закрыть</button>
       </div>
       <div class="two-col">
+        <div><canvas id="modalChart" height="200"></canvas></div>
         <div>
-          <canvas id="modalChart" height="180"></canvas>
-        </div>
-        <div class="stat">
-          <div id="modalNow" class="big">—</div>
-          <div id="modalForecast" class="pill">—</div>
-          <div class="muted" id="modalLabels">—</div>
-          <div class="muted" id="modalInfo">—</div>
+          <div class="big" id="modalNow">—</div>
+          <div class="pill" id="modalForecast">—</div>
+          <div class="muted" id="modalLabels" style="margin-top:8px">—</div>
+          <div class="muted" id="modalInfo" style="margin-top:6px">—</div>
         </div>
       </div>
     </div>
@@ -166,212 +148,211 @@
 
   <footer>Обновлено: <span id="updatedAt">—</span></footer>
 
-  <script>
-  const state = { data: null, charts: {}, theme: { line: '#7c9aff', green:'#72e0a8', red:'#ff6b6b' } };
-  const df = (n)=>n.toLocaleString('ru-RU');
+<script>
+const state = { data:null, charts:{}};
+const df = n => n.toLocaleString('ru-RU');
 
-  async function loadData(){
-    const res = await fetch('data.txt?_=' + Date.now());
-    const json = await res.json();
-    state.data = json;
-    document.getElementById('updatedAt').textContent = new Date(json.meta.updated_at).toLocaleString('ru-RU');
-    buildKPI();
-    buildCombo();
-    buildFunnel();
-    buildQuality();
-    buildSpheres();
+async function loadData(){
+  const res = await fetch('data.txt?_=' + Date.now());
+  const json = await res.json();
+  state.data = json;
+  document.getElementById('updatedAt').textContent = new Date(json.meta.updated_at).toLocaleString('ru-RU');
+  buildKpis();
+  buildCombo();
+  buildFunnel();
+  buildQuality();
+  buildSpheres();
+  initPopovers();
+}
+
+function rgba(hex, a){
+  const v = hex.replace('#','');
+  const r = parseInt(v.substring(0,2),16);
+  const g = parseInt(v.substring(2,4),16);
+  const b = parseInt(v.substring(4,6),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function gradient(ctx, hex){
+  const g = ctx.createLinearGradient(0,0,0,200);
+  g.addColorStop(0, rgba(hex, .35));
+  g.addColorStop(1, rgba(hex, 0));
+  return g;
+}
+
+function baseOptions(x,y){
+  return {
+    responsive:true,
+    maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    scales:{
+      x:{grid:{color:'#1b2436'},ticks:{color:'#8ea0b6'},title:{display:!!x,text:x,color:'#8ea0b6'}},
+      y:{grid:{color:'#1b2436'},ticks:{color:'#8ea0b6'},title:{display:!!y,text:y,color:'#8ea0b6'}}
+    },
+    plugins:{
+      legend:{display:false},
+      tooltip:{backgroundColor:'#0f1520',borderColor:'#2c3b5a',borderWidth:1,titleColor:'#e8eef5',bodyColor:'#e8eef5'}
+    }
   }
+}
 
-  function gradient(ctx, color){
-    const g = ctx.createLinearGradient(0,0,0,180);
-    g.addColorStop(0, color + '90'); // ~56% opacity
-    g.addColorStop(1, color + '00');
-    return g;
-  }
+function miniSpark(canvasId, series, colorHex){
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  const opt = baseOptions('', '');
+  opt.scales.x.display=false; opt.scales.y.display=false;
+  return new Chart(ctx, {
+    type:'line',
+    data:{ labels: state.data.timeseries.dates, datasets:[{ data: series, tension:.35, borderColor: colorHex, borderWidth:2, pointRadius:0, fill:true, backgroundColor: c=>gradient(c.chart.ctx, colorHex)}]},
+    options: opt
+  });
+}
 
-  function baseOptions(xLabel, yLabel){
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      scales: {
-        x: { grid: { color: '#1b2436' }, ticks: { color: '#8c97a6' }, title: { display:true, text:xLabel, color:'#8c97a6'} },
-        y: { grid: { color: '#1b2436' }, ticks: { color: '#8c97a6' }, title: { display:true, text:yLabel, color:'#8c97a6'} }
-      },
-      plugins: {
-        legend: { display:false },
-        tooltip: { mode:'index', intersect:false, backgroundColor:'#0f1420', borderColor:'#2c354a', borderWidth:1, titleColor:'#e6ecf2', bodyColor:'#e6ecf2' }
-      }
-    };
-  }
-
-  function miniSpark(id, series){
-    const ctx = document.getElementById(id).getContext('2d');
-    const color = state.theme.line;
-    const opt = baseOptions('', '');
-    opt.scales.x.display=false; opt.scales.y.display=false;
-    return new Chart(ctx, {
-      type: 'line',
-      data: { labels: state.data.timeseries.dates, datasets:[{ data: series, tension:.3, borderColor: color, fill:true, backgroundColor:(ctx)=>gradient(ctx.chart.ctx, '#7c9aff'), borderWidth:2, pointRadius:0 }] },
-      options: opt
-    });
-  }
-
-  function buildCard(key, title, color){
-    const card = document.createElement('div');
-    card.className='card';
-    card.innerHTML = `
-      <h3>${title} <span class="i" data-info-key="${key}">i</span></h3>
+function cardTemplate(key, title, color){
+  return `
+    <div class="card kpi" data-open="${key}">
+      <h3>${title} <span class="info" data-pop="${key}">i</span></h3>
+      <div class="popover" id="pop-${key}"></div>
       <div class="value" id="${key}-value">—</div>
       <canvas class="chart-mini" id="${key}-chart"></canvas>
-      <button class="btn" data-open="${key}">Открыть метрику</button>
-    `;
-    return card;
-  }
+      <div style="margin-top:10px"><button class="btn">Открыть метрику</button></div>
+    </div>
+  `;
+}
 
-  function buildKPI(){
-    const grid = document.getElementById('kpi-grid');
-    grid.innerHTML='';
-    const defs = [
-      ['sent','Отправлено писем'],
-      ['delivered','Доставлено'],
-      ['lpr_replies','Ответы ЛПР'],
-      ['bounces','Ошибки доставки']
-    ];
-    defs.forEach(([key,title])=>{
-      const card = buildCard(key,title);
-      grid.appendChild(card);
-      const series = state.data.timeseries[key];
-      document.getElementById(`${key}-value`).textContent = df(state.data.blocks[key].current_total);
-      state.charts[key] = miniSpark(`${key}-chart`, series);
-    });
+function buildKpis(){
+  const grid = document.getElementById('kpis');
+  grid.innerHTML='';
+  const defs = [
+    ['sent','Отправлено писем','#8aa4ff'],
+    ['delivered','Доставлено','#67e3a1'],
+    ['lpr_replies','Ответы ЛПР','#8aa4ff'],
+    ['bounces','Ошибки доставки','#ff6b6b']
+  ];
+  defs.forEach(([k,t,c])=> grid.insertAdjacentHTML('beforeend', cardTemplate(k,t,c)));
 
-    grid.querySelectorAll('[data-open]').forEach(btn=>{
-      btn.addEventListener('click', ()=>openModal(btn.dataset.open));
-    });
-
-    document.querySelectorAll('.i').forEach(el=>{
-      el.addEventListener('click', ()=>{
-        const k = el.dataset.infoKey;
-        alert(state.data.info[k]);
-      });
-    });
-  }
-
-  function openModal(key){
-    const modal = document.getElementById('metricModal');
-    const cfg = state.data.blocks[key];
-    const titleMap = {
-      sent:'Отправлено писем', delivered:'Доставлено', lpr_replies:'Ответы ЛПР', bounces:'Ошибки доставки'
-    };
-    document.getElementById('modalTitle').textContent = titleMap[key] || key;
-    document.getElementById('modalNow').textContent = 'Текущее значение: ' + df(cfg.current_total);
-    document.getElementById('modalForecast').textContent = 'Прогноз на неделю при текущем темпе: ' + df(cfg.weekly_forecast);
-    document.getElementById('modalLabels').textContent = cfg.axis_labels.y + ' / ' + cfg.axis_labels.x;
-    document.getElementById('modalInfo').textContent = state.data.info[key] || '';
-
-    if(state.charts.modal) state.charts.modal.destroy();
-    const ctx = document.getElementById('modalChart').getContext('2d');
-    const color = '#7c9aff';
-    const options = baseOptions(cfg.axis_labels.x, cfg.axis_labels.y);
-    state.charts.modal = new Chart(ctx, {
-      type: 'line',
-      data: { labels: state.data.timeseries.dates, datasets:[{
-        label: titleMap[key],
-        data: state.data.timeseries[key],
-        borderColor: color,
-        backgroundColor: (c)=>gradient(c.chart.ctx, '#7c9aff'),
-        fill:true, tension:.35, borderWidth:2, pointRadius:0
-      }]},
-      options
-    });
-
-    modal.classList.add('open');
-  }
-
-  document.getElementById('closeModal').addEventListener('click',()=>document.getElementById('metricModal').classList.remove('open'));
-  document.getElementById('metricModal').addEventListener('click',(e)=>{ if(e.target.id==='metricModal') e.currentTarget.classList.remove('open'); });
-
-  function buildCombo(){
-    const { dates, opens, replies } = state.data.timeseries;
-    const ctx = document.getElementById('comboChart').getContext('2d');
-    if(state.charts.combo) state.charts.combo.destroy();
-    state.charts.combo = new Chart(ctx, {
-      type:'line',
-      data:{
-        labels: dates,
-        datasets:[
-          { label:'Открытия', data: opens, borderColor:'#72e0a8', backgroundColor:(c)=>gradient(c.chart.ctx,'#72e0a8'), fill:true, tension:.35, pointRadius:0 },
-          { label:'Ответы', data: replies, borderColor:'#7c9aff', backgroundColor:(c)=>gradient(c.chart.ctx,'#7c9aff'), fill:true, tension:.35, pointRadius:0 }
-        ]
-      },
-      options: baseOptions(state.data.blocks.opens_replies.axis_labels.x, state.data.blocks.opens_replies.axis_labels.y)
-    });
-    document.getElementById('dot-open').style.background='#72e0a8';
-    document.getElementById('dot-reply').style.background='#7c9aff';
-  }
-
-  function buildFunnel(){
-    const f = state.data.funnel;
-    const el = document.getElementById('funnel');
-    el.innerHTML='';
-    const steps = [
-      ['Отправлено', f.sent],
-      ['Открыто', f.opened],
-      ['Ответ ЛПР', f.lpr_replies]
-    ];
-    steps.forEach(([name,val],i)=>{
-      const rate = i===0 ? 1 : (val/steps[i-1][1]);
-      const pill = document.createElement('span');
-      pill.className='pill';
-      pill.innerHTML = `<strong>${name}:</strong> ${df(val)} <span class="muted">(${(rate*100).toFixed(1)}%)</span>`;
-      el.appendChild(pill);
-    });
-  }
-
-  function buildQuality(){
-    const q = state.data.delivery_quality;
-    const pct = (q.success/(q.success+q.errors))*100;
-    document.getElementById('quality').textContent = pct.toFixed(2) + '%';
-    document.getElementById('qualityCaption').textContent = `Успешно: ${df(q.success)} • Ошибки: ${df(q.errors)}`;
-  }
-
-  function buildSpheres(){
-    const t = document.querySelector('#spheresTable tbody');
-    t.innerHTML='';
-    const avgO = state.data.averages.open_rate;
-    const avgR = state.data.averages.reply_rate;
-    document.getElementById('avgLine').textContent = `Средние значения по всем сферам: открытия ${(avgO*100).toFixed(1)}% • ответы ${(avgR*100).toFixed(1)}%`;
-    state.data.spheres.forEach(s=>{
-      const oDelta = (s.open_rate-avgO)/avgO*100;
-      const rDelta = (s.reply_rate-avgR)/avgR*100;
-      const eff = ((oDelta+rDelta)/2);
-      const cls = eff>=0 ? 'up' : 'down';
-      const arrow = eff>=0 ? '▲' : '▼';
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${s.name}</td>
-        <td>${df(s.sent)}</td>
-        <td>${(s.open_rate*100).toFixed(1)}%</td>
-        <td>${(s.reply_rate*100).toFixed(1)}%</td>
-        <td class="${cls}">${arrow} ${eff.toFixed(1)}%</td>
-      `;
-      t.appendChild(tr);
-    });
-  }
-
-  // Tabs
-  document.querySelectorAll('.tab').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      const id = btn.dataset.tab;
-      document.querySelectorAll('.tabpane').forEach(p=>p.style.display='none');
-      document.getElementById(id).style.display='block';
-    });
+  defs.forEach(([k,_,c])=>{
+    document.getElementById(`${k}-value`).textContent = df(state.data.blocks[k].current_total);
+    state.charts[k] = miniSpark(`${k}-chart`, state.data.timeseries[k], c);
   });
 
-  loadData();
-  </script>
+  // open metric modal
+  document.querySelectorAll('.kpi').forEach(card=>{
+    card.addEventListener('click', e=>{
+      if(e.target.classList.contains('info')) return; // handled by popover
+      openModal(card.dataset.open);
+    });
+  });
+}
+
+function openModal(key){
+  const modal = document.getElementById('metricModal');
+  const cfg = state.data.blocks[key];
+  const map = { sent:'Отправлено писем', delivered:'Доставлено', lpr_replies:'Ответы ЛПР', bounces:'Ошибки доставки'};
+  document.getElementById('modalTitle').textContent = map[key] || key;
+  document.getElementById('modalNow').textContent = 'Текущее значение: ' + df(cfg.current_total);
+  document.getElementById('modalForecast').textContent = 'Прогноз на неделю при текущем темпе: ' + df(cfg.weekly_forecast);
+  document.getElementById('modalLabels').textContent = cfg.axis_labels.y + ' / ' + cfg.axis_labels.x;
+  document.getElementById('modalInfo').textContent = state.data.info[key] || '';
+
+  if(state.charts.modal) state.charts.modal.destroy();
+  const ctx = document.getElementById('modalChart').getContext('2d');
+  state.charts.modal = new Chart(ctx, {
+    type:'line',
+    data:{ labels: state.data.timeseries.dates, datasets:[{
+      data: state.data.timeseries[key], borderColor:'#8aa4ff', borderWidth:2, pointRadius:0, fill:true, backgroundColor:c=>gradient(c.chart.ctx,'#8aa4ff'), tension:.35
+    }]},
+    options: baseOptions(cfg.axis_labels.x, cfg.axis_labels.y)
+  });
+  modal.classList.add('open');
+}
+document.getElementById('closeModal').addEventListener('click',()=>document.getElementById('metricModal').classList.remove('open'));
+document.getElementById('metricModal').addEventListener('click',e=>{ if(e.target.id==='metricModal') e.currentTarget.classList.remove('open'); });
+
+function buildCombo(){
+  const { dates, opens, replies } = state.data.timeseries;
+  const ctx = document.getElementById('comboChart').getContext('2d');
+  if(state.charts.combo) state.charts.combo.destroy();
+  state.charts.combo = new Chart(ctx, {
+    type:'line',
+    data:{ labels:dates, datasets:[
+      {label:'Открытия', data:opens, borderColor:'#67e3a1', pointRadius:0, borderWidth:2, tension:.35, fill:true, backgroundColor:c=>gradient(c.chart.ctx,'#67e3a1')},
+      {label:'Ответы', data:replies, borderColor:'#8aa4ff', pointRadius:0, borderWidth:2, tension:.35, fill:true, backgroundColor:c=>gradient(c.chart.ctx,'#8aa4ff')}
+    ]},
+    options: baseOptions('Дата','Кол-во')
+  });
+  document.getElementById('dot-open').style.background='#67e3a1';
+  document.getElementById('dot-reply').style.background='#8aa4ff';
+}
+
+function buildFunnel(){
+  const f = state.data.funnel;
+  const steps = [['Отправлено',f.sent],['Открыто',f.opened],['Ответ ЛПР',f.lpr_replies]];
+  const el = document.getElementById('funnel'); el.innerHTML='';
+  steps.forEach(([name,val],i)=>{
+    const rate = i===0?1:val/steps[i-1][1];
+    const div = document.createElement('div');
+    div.className='pill';
+    div.innerHTML = `<strong>${name}:</strong> ${df(val)} <span class="muted">(${(rate*100).toFixed(1)}%)</span>`;
+    el.appendChild(div);
+  });
+}
+
+function buildQuality(){
+  const q = state.data.delivery_quality;
+  const pct = (q.success/(q.success+q.errors))*100;
+  document.getElementById('quality').textContent = pct.toFixed(2) + '%';
+  document.getElementById('qualityCaption').textContent = `Успешно: ${df(q.success)} • Ошибки: ${df(q.errors)}`;
+}
+
+function buildSpheres(){
+  const t = document.querySelector('#spheresTable tbody'); t.innerHTML='';
+  const aO = state.data.averages.open_rate; const aR = state.data.averages.reply_rate;
+  document.getElementById('avgLine').textContent = `Средние значения по всем сферам: открытия ${(aO*100).toFixed(1)}% • ответы ${(aR*100).toFixed(1)}%`;
+  state.data.spheres.forEach(s=>{
+    const oDelta = (s.open_rate-aO)/aO*100;
+    const rDelta = (s.reply_rate-aR)/aR*100;
+    const eff = (oDelta+rDelta)/2;
+    const cls = eff>=0? 'up' : 'down';
+    const arrow = eff>=0? '▲' : '▼';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${s.name}</td><td>${df(s.sent)}</td><td>${(s.open_rate*100).toFixed(1)}%</td><td>${(s.reply_rate*100).toFixed(1)}%</td><td class="${cls}">${arrow} ${eff.toFixed(1)}%</td>`;
+    t.appendChild(tr);
+  });
+}
+
+function initPopovers(){
+  // fill popover texts
+  document.querySelectorAll('.popover').forEach(p=>{
+    const key = p.id.replace('pop-','');
+    p.textContent = state.data.info[key] || '';
+  });
+  // toggle popovers
+  document.querySelectorAll('.info').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const key = btn.dataset.pop;
+      const pop = document.getElementById('pop-'+key);
+      const open = pop.classList.contains('show');
+      document.querySelectorAll('.popover').forEach(p=>p.classList.remove('show'));
+      if(!open) pop.classList.add('show');
+    });
+  });
+  // close popovers on outside click
+  document.addEventListener('click', ()=> document.querySelectorAll('.popover').forEach(p=>p.classList.remove('show')));
+}
+
+// Tabs
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const id = btn.dataset.tab;
+    document.querySelectorAll('.tabpane').forEach(p=>p.style.display='none');
+    document.getElementById(id).style.display='block';
+  });
+});
+
+loadData();
+</script>
 </body>
 </html>
