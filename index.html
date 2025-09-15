@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>WandLead · Личный кабинет (обновлён)</title>
+<title>WandLead · Личный кабинет (обновлён v2)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -26,7 +26,6 @@
   --radius:16px;
   --shadow: 0 10px 30px rgba(0,0,0,.35);
 }
-
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -38,60 +37,31 @@ body{
     radial-gradient(900px 480px at 90% -10%, rgba(138,92,246,.12), transparent),
     var(--bg);
 }
-
-/* Top bar */
-.header{
-  position:sticky;top:0;z-index:40;
-  background:linear-gradient(180deg, rgba(10,13,18,.9), rgba(10,13,18,.6), transparent);
-  backdrop-filter: blur(6px);
-  border-bottom:1px solid rgba(255,255,255,.06);
-}
+.header{position:sticky;top:0;z-index:40;background:linear-gradient(180deg, rgba(10,13,18,.9), rgba(10,13,18,.6), transparent);backdrop-filter: blur(6px);border-bottom:1px solid rgba(255,255,255,.06)}
 .container{max-width:1200px;margin:0 auto;padding:18px 18px 0}
-.brand{
-  display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px
-}
-.brand .logo{
-  width:26px;height:26px;border-radius:8px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  box-shadow:0 0 0 8px rgba(113,164,255,.12);
-}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
+.brand .logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 0 8px rgba(113,164,255,.12)}
 .sub{color:var(--muted);font-size:12px}
 
 /* Tabs */
 .tabs{display:flex;gap:8px;margin:12px 0 16px}
-.tab{
-  padding:10px 14px;border-radius:12px;
-  background:linear-gradient(180deg,#141b25,#0f151d);
-  border:1px solid rgba(255,255,255,.07); color:#cfd5e1; cursor:pointer; transition:.15s;
-}
+.tab{padding:10px 14px;border-radius:12px;background:linear-gradient(180deg,#141b25,#0f151d);border:1px solid rgba(255,255,255,.07); color:#cfd5e1; cursor:pointer; transition:.15s}
 .tab:hover{box-shadow:0 0 0 6px rgba(113,164,255,.08)}
 .tab.active{background:linear-gradient(180deg,#1a2230,#121923); color:var(--text); box-shadow:var(--shadow)}
 
 /* Layout */
 .main{max-width:1200px;margin:0 auto;padding:6px 18px 48px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-.card{
-  grid-column:span 6;
-  background:linear-gradient(180deg,#121a25,#0e151f);
-  border:1px solid rgba(255,255,255,.07);
-  border-radius:var(--radius);
-  box-shadow: var(--shadow);
-  padding:14px; position:relative; overflow:hidden;
-}
+.card{grid-column:span 6;background:linear-gradient(180deg,#121a25,#0e151f);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);box-shadow: var(--shadow);padding:14px; position:relative; overflow:hidden}
 .card.small{grid-column:span 6}
-@media (min-width: 900px){
-  .card.small{grid-column:span 3}
-}
+@media (min-width: 900px){.card.small{grid-column:span 3}}
 .card.full{grid-column:span 12}
 .card-title{display:flex;align-items:center;gap:10px;margin:0 0 6px 0;font-size:14px;font-weight:800;color:#dce4f1}
 .card-sub{color:#aab3c2;font-size:12px;margin-top:-2px}
 .kpi{display:flex;align-items:end;gap:10px;margin-bottom:8px}
 .kpi .big{font-size:28px;font-weight:800;letter-spacing:.3px}
 .muted{color:var(--muted);font-size:12px}
-.info{
-  width:18px;height:18px;border-radius:999px;display:grid;place-items:center;font-size:12px;cursor:pointer;
-  background:linear-gradient(180deg,#1a2330,#121922);border:1px solid rgba(255,255,255,.08);color:#aeb9c9
-}
+.info{width:18px;height:18px;border-radius:999px;display:grid;place-items:center;font-size:12px;cursor:pointer;background:linear-gradient(180deg,#1a2330,#121922);border:1px solid rgba(255,255,255,.08);color:#aeb9c9}
 .info:hover{box-shadow:0 0 0 6px rgba(113,164,255,.08); color:#fff}
 
 /* Chart wrappers */
@@ -101,27 +71,16 @@ body{
 .chart-box canvas{width:100%!important;height:100%!important}
 
 /* Funnel */
-.funnel{
-  display:flex;flex-direction:column;justify-content:center;gap:10px;height:100%;
-}
-.funnel .row{position:relative;height:64px;display:flex;align-items:center;justify-content:center}
-.funnel .shape{
-  height:100%; margin:0 auto; border-radius:14px;
-  background:linear-gradient(135deg, rgba(113,164,255,.35), rgba(138,92,246,.25));
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 18px rgba(0,0,0,.25);
-}
+.funnel{display:flex;flex-direction:column;gap:12px;height:100%;padding-top:6px}
+.funnel .row{height:58px;display:flex;align-items:center;justify-content:center}
+.funnel .bar{height:100%;position:relative;margin:0 auto;border-radius:16px}
+.funnel .shape{position:absolute;inset:0;border-radius:16px;background:linear-gradient(135deg, rgba(113,164,255,.35), rgba(138,92,246,.25));border:1px solid rgba(255,255,255,.08);box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 18px rgba(0,0,0,.25)}
 .funnel .row:nth-child(2) .shape{ background:linear-gradient(135deg, rgba(113,164,255,.28), rgba(138,92,246,.18)); }
 .funnel .row:nth-child(3) .shape{ background:linear-gradient(135deg, rgba(235,182,87,.35), rgba(138,92,246,.18)); }
-.funnel .label{
-  position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between;
-  padding:0 14px; font-weight:700; font-size:13px; color:#e9eef6;
-}
-.funnel .label .muted{font-size:11px}
-/* tapered illusion */
-.funnel .row:nth-child(1) .shape{width:92%}
-.funnel .row:nth-child(2) .shape{width:74%}
-.funnel .row:nth-child(3) .shape{width:44%}
+.funnel .label{position:absolute;inset:0;display:grid;grid-template-columns:1fr auto;align-items:center;padding:0 14px;font-weight:700;font-size:13px;color:#e9eef6;white-space:nowrap;overflow:hidden}
+.funnel .label .name{overflow:hidden;text-overflow:ellipsis}
+.funnel .label .val{display:flex;gap:8px;align-items:center}
+@media (max-width:560px){.funnel .row{height:50px}.funnel .label{font-size:12px}}
 
 /* Table */
 table{width:100%;border-collapse:collapse;margin-top:8px}
@@ -136,7 +95,7 @@ th{color:#cfd7e6;font-weight:600}
 /* Modal */
 .modal{position:fixed;inset:0;background:rgba(5,8,12,.7);display:none;align-items:center;justify-content:center;z-index:50}
 .modal.open{display:flex}
-.modal .box{width:min(940px,92vw);background:linear-gradient(180deg,#141c28,#0f1620);border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);padding:18px 18px 14px}
+.modal .box{width:min(980px,92vw);background:linear-gradient(180deg,#141c28,#0f1620);border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);padding:18px 18px 14px}
 .modal .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .modal .title{font-size:18px;font-weight:800}
 .modal .close{background:#182131;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 10px;color:#cfd5e1;cursor:pointer}
@@ -145,6 +104,13 @@ th{color:#cfd7e6;font-weight:600}
 .foot div{background:#0f161f;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 12px}
 .hidden{display:none}
 .sep{height:1px;background:rgba(255,255,255,.06);margin:10px 0}
+
+/* three charts in modal */
+.grid3{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width: 840px){.grid3{grid-template-columns:1fr 1fr 1fr}}
+.grid3 .mini{height:220px;border:1px solid rgba(255,255,255,.06);border-radius:14px;background:#0f161f;padding:10px}
+.grid3 .mini canvas{width:100%!important;height:170px!important}
+.grid3 .title{font-size:13px;font-weight:700;margin:2px 0 8px}
 </style>
 </head>
 <body>
@@ -192,9 +158,7 @@ th{color:#cfd7e6;font-weight:600}
 
       <div class="card">
         <div class="card-title">Воронка за 7 дней <span class="info" data-info="funnel">i</span></div>
-        <div class="chart-box" id="funnel-box">
-          <!-- Будет отрисовано как наглядная воронка -->
-        </div>
+        <div class="chart-box" id="funnel-box"></div>
       </div>
       <div class="card">
         <div class="card-title">Качество доставки <span class="info" data-info="quality">i</span></div>
@@ -223,14 +187,15 @@ th{color:#cfd7e6;font-weight:600}
       </div>
       <div class="sub" id="modal-sub"></div>
       <div class="sep"></div>
-      <div class="chart-box tall"><canvas id="modal-chart"></canvas></div>
+      <div id="modal-body">
+        <div class="chart-box tall"><canvas id="modal-chart"></canvas></div>
+      </div>
       <div class="legend" id="modal-legend"></div>
       <div class="foot" id="modal-foot"></div>
     </div>
   </div>
 
 <script>
-// Info texts (короче и понятнее)
 const INFO = {
   sent: "Исходящие письма за последние 7 дней.",
   delivered: "Успешно доставленные письма (без bounce) за 7 дней.",
@@ -259,12 +224,12 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
 document.addEventListener('click', (e)=>{
   if(e.target.classList.contains('info')){
     const key = e.target.dataset.info;
+    if(key==='funnel'){ return openFunnelDetails(); }
     openModal({ title:'Что означает блок', sub: INFO[key] });
     e.stopPropagation();
   }
 });
 
-// Load data with graceful fallback filename
 function loadData(){
   return fetch('data.txt').then(r=>{
     if(!r.ok) throw new Error('no data.txt');
@@ -295,12 +260,10 @@ function grad(ctx, color){
   return g;
 }
 
-// Keep only last 7 days across series + compact period label
+// Keep only last 7 days + compact period label
 function hydrateLast7(){
   const S = DATA.series;
-  Object.keys(S).forEach(k=>{
-    S[k] = S[k].slice(-7);
-  });
+  Object.keys(S).forEach(k=>{ S[k] = S[k].slice(-7); });
   const start = new Date(DATA.series.sent[0].date);
   const end = new Date(DATA.series.sent.at(-1).date);
   const monthShort = new Intl.DateTimeFormat('ru-RU',{month:'short'});
@@ -308,7 +271,7 @@ function hydrateLast7(){
   document.getElementById('period').textContent = 'Последние 7 дней: ' + range;
 }
 
-function spark(canvasId, arr, color='rgba(113,164,255,.95)'){
+function spark(canvasId, arr, color){
   const {labels, values} = toXY(arr);
   const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
   const ctx = document.getElementById(canvasId).getContext('2d');
@@ -368,23 +331,35 @@ function initFunnel(){
   const s = sum(DATA.series.sent.map(x=>x.value));
   const o = sum(DATA.series.opens.map(x=>x.value));
   const r = sum(DATA.series.replies.map(x=>x.value));
-  const openRate = o/s;
-  const replyRate = r/s;
+  const openRate = s ? (o/s) : 0;
+  const replyRate = s ? (r/s) : 0;
+
+  const calcWidth = (val)=>{
+    if(!s) return 35;
+    const pct = (val/s)*100;
+    return Math.max(35, Math.min(100, pct)); // не уже 35%
+  };
 
   const box = document.getElementById('funnel-box');
   box.innerHTML = `
     <div class="funnel">
       <div class="row">
-        <div class="shape"></div>
-        <div class="label"><span>Отправлено</span><span>${fmt.format(s)} <span class="muted">(100%)</span></span></div>
+        <div class="bar" style="width:100%">
+          <div class="shape"></div>
+          <div class="label"><span class="name">Отправлено</span><span class="val">${fmt.format(s)} <span class="muted">(100%)</span></span></div>
+        </div>
       </div>
       <div class="row">
-        <div class="shape"></div>
-        <div class="label"><span>Открыто</span><span>${fmt.format(o)} <span class="muted">(${(openRate*100).toFixed(1)}%)</span></span></div>
+        <div class="bar" style="width:${calcWidth(o).toFixed(1)}%">
+          <div class="shape"></div>
+          <div class="label"><span class="name">Открыто</span><span class="val">${fmt.format(o)} <span class="muted">(${(openRate*100).toFixed(1)}%)</span></span></div>
+        </div>
       </div>
       <div class="row">
-        <div class="shape"></div>
-        <div class="label"><span>Ответы ЛПР</span><span>${fmt.format(r)} <span class="muted">(${(replyRate*100).toFixed(1)}%)</span></span></div>
+        <div class="bar" style="width:${calcWidth(r).toFixed(1)}%">
+          <div class="shape"></div>
+          <div class="label"><span class="name">Ответы ЛПР</span><span class="val">${fmt.format(r)} <span class="muted">(${(replyRate*100).toFixed(1)}%)</span></span></div>
+        </div>
       </div>
     </div>
   `;
@@ -393,12 +368,12 @@ function initFunnel(){
 function initQuality(){
   const sent = sum(DATA.series.sent.map(x=>x.value));
   const delivered = sum(DATA.series.delivered.map(x=>x.value));
-  const rate = delivered/sent;
+  const rate = sent ? (delivered/sent) : 0;
   document.getElementById('quality-val').textContent = (rate*100).toFixed(1)+'%';
   const ctx = document.getElementById('quality').getContext('2d');
   new Chart(ctx, {
     type:'doughnut',
-    data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, sent-delivered], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]},
+    data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]},
     options:{ plugins:{legend:{position:'bottom', labels:{color:'#d6deea'}}}, responsive:true, maintainAspectRatio:false }
   });
 }
@@ -430,7 +405,7 @@ function arrow(diff){
   return `<span class="arrow ${cls}">${sign} ${(Math.abs(diff)*100).toFixed(1)}%</span>`;
 }
 
-// Modal
+// Modal helpers
 let modalChart=null;
 function openMetricModal(key){
   const conf = {
@@ -467,12 +442,45 @@ function openMetricModal(key){
   });
 }
 
+function openFunnelDetails(){
+  // build modal with 3 charts
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <div class="grid3">
+      <div class="mini"><div class="title">Отправлено</div><canvas id="c1"></canvas></div>
+      <div class="mini"><div class="title">Открытия</div><canvas id="c2"></canvas></div>
+      <div class="mini"><div class="title">Ответы ЛПР</div><canvas id="c3"></canvas></div>
+    </div>
+  `;
+  openModal({title:'Воронка · детали за 7 дней', sub:'Три отдельных графика: отправлено, открытия, ответы ЛПР.'});
+  // After modal open, draw charts
+  const draw = (id, arr, color)=>{
+    const {labels, values} = toXY(arr);
+    const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
+    const ctx = document.getElementById(id).getContext('2d');
+    new Chart(ctx, {
+      type:'line',
+      data:{labels:shortLabels, datasets:[{data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]},
+      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))}}},
+               scales:{x:{ticks:{color:'#9aa3b2'}}, y:{ticks:{color:'#9aa3b2'}}}}
+    });
+  };
+  draw('c1', DATA.series.sent, 'rgba(113,164,255,.95)');
+  draw('c2', DATA.series.opens, 'rgba(113,164,255,.95)');
+  draw('c3', DATA.series.replies, 'rgba(235,182,87,.95)');
+}
+
 function openModal({title, sub, builder, foot=[]}){
   const m = document.getElementById('modal');
   document.getElementById('modal-title').textContent = title || '';
   document.getElementById('modal-sub').textContent = sub || '';
+  // reset default body if builder expects single canvas
+  const body = document.getElementById('modal-body');
+  if(!body.querySelector('canvas')){
+    body.innerHTML = '<div class="chart-box tall"><canvas id="modal-chart"></canvas></div>';
+  }
   const canvas = document.getElementById('modal-chart');
-  if(builder) builder(canvas);
+  if(builder && canvas){ builder(canvas); }
   const footBox = document.getElementById('modal-foot'); footBox.innerHTML='';
   foot.forEach(f=>{ const el = document.createElement('div'); el.innerHTML = `<div class="sub" style="font-size:11px">${f.label}</div><div style="font-weight:800">${f.value}</div>`; footBox.appendChild(el); });
   m.classList.add('open');
