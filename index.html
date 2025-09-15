@@ -480,7 +480,7 @@ function openQualityModal(){
   const delivered = sum(DATA.series.delivered.map(x=>x.value));
   openModal({
     title:'Качество доставки',
-    sub:'Доля доставленных за 7 дней',
+    sub:'Доля доставленных писем за 7 дней',
     mode:'single',
     builder:(canvas)=>{
       const ctx = canvas.getContext('2d');
