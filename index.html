@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>WandLead · Личный кабинет (обновлён v3)</title>
+<title>WandLead · Личный кабинет (обновлён v4)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -218,11 +218,14 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.getElementById(t.dataset.tab).classList.remove('hidden');
 }));
 
-// Info clicks
+// Info clicks routing
 document.addEventListener('click', (e)=>{
   if(e.target.classList.contains('info')){
     const key = e.target.dataset.info;
     if(key==='funnel'){ openFunnelDetails(); }
+    else if(['sent','delivered','replies','bounces'].includes(key)){ openMetricModal(key); }
+    else if(key==='dynamics'){ openDynamicsModal(); }
+    else if(key==='quality'){ openQualityModal(); }
     else { openModal({ title:'Что означает блок', sub: INFO[key] }); }
     e.stopPropagation();
   }
@@ -296,7 +299,7 @@ function initOverview(){
   spark('replies-mini', S.replies, 'rgba(235,182,87,.95)');
   spark('bounces-mini', S.bounces, 'rgba(255,107,107,.95)');
 
-  // Clicking metric cards -> single modal with one chart (как и раньше)
+  // Clicking metric cards -> single modal with one chart
   document.querySelectorAll('.card.clickable').forEach(c=>{
     c.addEventListener('click', ()=> openMetricModal(c.dataset.metric));
   });
@@ -407,7 +410,7 @@ function arrow(diff){
 // Modal helpers
 let modalChart=null;
 
-// Single-metric modal (как раньше)
+// Single-metric modal (карточки)
 function openMetricModal(key){
   const conf = {
     sent: {title:'Отправлено', color:'rgba(113,164,255,.95)'},
@@ -439,8 +442,55 @@ function openMetricModal(key){
     },
     foot:[
       {label:'Текущее (последний день)', value: fmt.format(last(arr).value)},
+      {label:'Среднее за день (7 дней)', value: fmt.format(Math.round(avg(arr.map(x=>x.value))))},
       {label:'Прогноз на неделю', value: fmt.format(forecast7(arr))}
     ]
+  });
+}
+
+// Dynamics modal (две линии)
+function openDynamicsModal(){
+  const open = DATA.series.opens;
+  const rep = DATA.series.replies;
+  const {labels, values: v1} = toXY(open);
+  const {values: v2} = toXY(rep);
+  const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
+  openModal({
+    title:'Динамика (7 дней)',
+    sub:'Открытия и ответы по дням',
+    mode:'single',
+    builder:(canvas)=>{
+      const ctx = canvas.getContext('2d');
+      if(modalChart) modalChart.destroy();
+      modalChart = new Chart(ctx,{
+        type:'line',
+        data:{labels:shortLabels, datasets:[
+          {label:'Открытия', data:v1, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(113,164,255,.95)', backgroundColor:grad(ctx,'rgba(113,164,255,.22)'), fill:true},
+          {label:'Ответы', data:v2, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(235,182,87,.95)', backgroundColor:grad(ctx,'rgba(235,182,87,.22)'), fill:true},
+        ]},
+        options:{responsive:true, maintainAspectRatio:false, plugins:{tooltip:{mode:'index',intersect:false}}, scales:{x:{ticks:{color:'#9aa3b2'}},y:{ticks:{color:'#9aa3b2'}}}}
+      });
+    }
+  });
+}
+
+// Quality modal (донат)
+function openQualityModal(){
+  const sent = sum(DATA.series.sent.map(x=>x.value));
+  const delivered = sum(DATA.series.delivered.map(x=>x.value));
+  openModal({
+    title:'Качество доставки',
+    sub:'Доля доставленных за 7 дней',
+    mode:'single',
+    builder:(canvas)=>{
+      const ctx = canvas.getContext('2d');
+      if(modalChart) modalChart.destroy();
+      modalChart = new Chart(ctx, {
+        type:'doughnut',
+        data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]},
+        options:{ plugins:{legend:{position:'bottom', labels:{color:'#d6deea'}}}, responsive:true, maintainAspectRatio:false }
+      });
+    }
   });
 }
 
@@ -480,14 +530,13 @@ function openModal({title, sub, builder, foot=[], mode='single'}){
   const body = document.getElementById('modal-body');
 
   // reset body every time
-  if(!builder){ body.innerHTML = ''; }
-  else if(mode === 'single'){
+  if(mode === 'single'){
     body.innerHTML = '<div class="chart-box tall"><canvas id="modal-chart"></canvas></div>';
     const canvas = document.getElementById('modal-chart');
-    builder(canvas);
+    if(builder) builder(canvas);
   }else if(mode === 'multi'){
     body.innerHTML = ''; // builder will fill in
-    builder();
+    if(builder) builder();
   }
 
   // footer
