@@ -42,6 +42,9 @@
     h3{margin:0 0 8px 0;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px}
     .value{font-size:28px;font-weight:800;margin:4px 0 12px}
     .chart-mini{width:100%;height:120px;display:block}
+    canvas{max-height:100%;display:block} 
+    #comboChart{height:200px !important}
+    #modalChart{height:220px !important}
     .btn{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--panel);cursor:pointer;color:var(--text);font-weight:600}
     .legend{display:flex;gap:12px;font-size:12px;color:var(--muted);margin-bottom:6px}
     .legend .dot{width:10px;height:10px;border-radius:50%}
@@ -68,7 +71,12 @@
     footer{opacity:.7;font-size:12px;padding:24px;text-align:center}
     @media (max-width:1000px){ .kpi{grid-column:span 6} .two-col{grid-template-columns:1fr} }
     @media (max-width:600px){ .kpi, .row-6, .row-12{grid-column:span 12} }
-  </style>
+  
+    .chart-mini{height:120px!important;}
+    #comboChart{height:180px!important;}
+    #modalChart{height:220px!important;}
+
+</style>
 </head>
 <body>
   <header>
@@ -182,7 +190,7 @@ function gradient(ctx, hex){
 function baseOptions(x,y){
   return {
     responsive:true,
-    maintainAspectRatio:false,
+    
     interaction:{mode:'index',intersect:false},
     scales:{
       x:{grid:{color:'#1b2436'},ticks:{color:'#8ea0b6'},title:{display:!!x,text:x,color:'#8ea0b6'}},
@@ -197,7 +205,6 @@ function baseOptions(x,y){
 
 function miniSpark(canvasId, series, colorHex){
   const el = document.getElementById(canvasId);
-  el.height = 120; // hard lock height to avoid stretch on first paint
   const ctx = el.getContext('2d');
   const ctx = document.getElementById(canvasId).getContext('2d');
   const opt = baseOptions('', '');
@@ -205,7 +212,7 @@ function miniSpark(canvasId, series, colorHex){
   return new Chart(ctx, {
     type:'line',
     data:{ labels: state.data.timeseries.dates, datasets:[{ data: series, tension:.35, borderColor: colorHex, borderWidth:2, pointRadius:0, fill:true, backgroundColor: c=>gradient(c.chart.ctx, colorHex)}]},
-    options: opt
+    options: Object.assign({}, opt, {responsive:false})
   });
 }
 
@@ -257,14 +264,13 @@ function openModal(key){
   document.getElementById('modalInfo').textContent = state.data.info[key] || '';
 
   if(state.charts.modal) state.charts.modal.destroy();
-  const mEl = document.getElementById('modalChart'); mEl.height = 220; 
-  const ctx = mEl.getContext('2d');
+  const mEl = document.getElementById('modalChart'); const ctx = mEl.getContext('2d');
   state.charts.modal = new Chart(ctx, {
     type:'line',
     data:{ labels: state.data.timeseries.dates, datasets:[{
       data: state.data.timeseries[key], borderColor:'#8aa4ff', borderWidth:2, pointRadius:0, fill:true, backgroundColor:c=>gradient(c.chart.ctx,'#8aa4ff'), tension:.35
     }]},
-    options: baseOptions(cfg.axis_labels.x, cfg.axis_labels.y)
+    options: Object.assign(baseOptions(cfg.axis_labels.x, cfg.axis_labels.y), {responsive:false})
   });
   modal.classList.add('open');
 }
@@ -273,8 +279,7 @@ document.getElementById('metricModal').addEventListener('click',e=>{ if(e.target
 
 function buildCombo(){
   const { dates, opens, replies } = state.data.timeseries;
-  const comboEl = document.getElementById('comboChart'); comboEl.height = 180;
-  const ctx = comboEl.getContext('2d');
+  const comboEl = document.getElementById('comboChart'); const ctx = comboEl.getContext('2d');
   if(state.charts.combo) state.charts.combo.destroy();
   state.charts.combo = new Chart(ctx, {
     type:'line',
@@ -282,7 +287,7 @@ function buildCombo(){
       {label:'Открытия', data:opens, borderColor:'#67e3a1', pointRadius:0, borderWidth:2, tension:.35, fill:true, backgroundColor:c=>gradient(c.chart.ctx,'#67e3a1')},
       {label:'Ответы', data:replies, borderColor:'#8aa4ff', pointRadius:0, borderWidth:2, tension:.35, fill:true, backgroundColor:c=>gradient(c.chart.ctx,'#8aa4ff')}
     ]},
-    options: baseOptions('Дата','Кол-во')
+    options: Object.assign(baseOptions('Дата','Кол-во'), {responsive:false})
   });
   document.getElementById('dot-open').style.background='#67e3a1';
   document.getElementById('dot-reply').style.background='#8aa4ff';
