@@ -1,390 +1,377 @@
-<!DOCTYPE html>
+
+<!doctype html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <title>WandLead — Личный кабинет клиента</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      :root { color-scheme: dark; }
-      body { background:#0b0b0f; }
-      .card { background:rgba(255,255,255,.05); backdrop-filter:blur(6px); border-radius:16px; }
-      .btn { background:#1f2937; border:1px solid rgba(255,255,255,.08); padding:.4rem .8rem; border-radius:.7rem; }
-      .btn:hover { background:#273244; }
-      .muted { color:rgba(255,255,255,.65) }
-      .badge { background:rgba(255,255,255,.08); padding:.25rem .5rem; border-radius:.5rem; font-size:.75rem }
-      .i-btn { width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; border-radius:999px; background:rgba(255,255,255,.08); font-weight:700 }
-      dialog::backdrop { background:rgba(0,0,0,.6) }
-      dialog { border:none; border-radius:16px; padding:0; width:min(900px,96vw); background:#0f1117; color:white }
-    </style>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ЛК клиента — Email кампании</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b0e13;
+      --card: #121723;
+      --muted: #9aa4b2;
+      --text: #e6ecf2;
+      --primary: #7c9aff;
+      --accent: #72e0a8;
+      --danger: #ff6b6b;
+      --warning: #ffd166;
+      --surface: #0f1420;
+      --border: #1f2737;
+      --good: #27d980;
+      --bad: #ff5d5d;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    header{position:sticky;top:0;background:linear-gradient(180deg,#0b0e13,rgba(11,14,19,.7));backdrop-filter: blur(6px);z-index:50;border-bottom:1px solid var(--border)}
+    .wrap{max-width:1200px;margin:0 auto;padding:24px}
+    .title{font-size:28px;font-weight:800;letter-spacing:.3px}
+    .tabs{display:flex;gap:8px;margin-top:16px}
+    .tab{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);cursor:pointer;font-weight:600;color:var(--muted)}
+    .tab.active{color:var(--text);border-color:#2c354a;box-shadow:0 0 0 1px rgba(124,154,255,.2) inset}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    .card{grid-column:span 3;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;position:relative;overflow:hidden}
+    .card:hover{border-color:#2f3a54}
+    .card h3{margin:0 0 6px 0;font-size:14px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:8px}
+    .value{font-size:26px;font-weight:800;margin:2px 0 10px}
+    .btn{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);cursor:pointer;color:var(--text);font-weight:600}
+    .btn:hover{border-color:#40507a}
+    .muted{color:var(--muted);font-size:13px}
+    .chart-mini{height:80px}
+    .row-12{grid-column:span 12}
+    .row-6{grid-column:span 6}
+    .kpi{display:flex;gap:12px;flex-wrap:wrap}
+    .kpi span{padding:6px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:12px;color:var(--muted)}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:#0f1828;border:1px solid #1d2840;font-size:12px}
+    .i{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:50%;cursor:pointer}
+    .i:hover{border-color:#5b6b92}
+    .legend{display:flex;gap:12px;font-size:12px;color:var(--muted)}
+    .legend .dot{width:10px;height:10px;border-radius:50%}
+    /* modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);padding:20px;z-index:99}
+    .modal.open{display:flex}
+    .modal .inner{width:min(980px,96vw);background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px}
+    .modal .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .modal .head h2{margin:0;font-size:20px}
+    .close{cursor:pointer;border:1px solid var(--border);padding:6px 10px;border-radius:8px;background:var(--surface)}
+    .two-col{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+    .stat{display:flex;flex-direction:column;gap:8px}
+    .stat .big{font-size:32px;font-weight:800}
+    @media (max-width: 900px){
+      .card{grid-column:span 6}
+      .two-col{grid-template-columns:1fr}
+    }
+    @media (max-width: 600px){
+      .card{grid-column:span 12}
+    }
+    /* table for spheres */
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;font-size:14px}
+    th{color:var(--muted);font-weight:600}
+    .up{color:var(--good);font-weight:700}
+    .down{color:var(--bad);font-weight:700}
+    .pill{padding:4px 8px;border-radius:8px;background:var(--surface);border:1px solid var(--border);font-size:12px}
+    footer{opacity:.7;font-size:12px;padding:24px;text-align:center}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="title">WandLead — кабинет клиента</div>
+      <div class="tabs">
+        <button class="tab active" data-tab="overview">Обзор</button>
+        <button class="tab" data-tab="spheres">Сферы</button>
+      </div>
+    </div>
+  </header>
 
-    <!-- React + ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Recharts (включая Funnel) -->
-    <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
-  </head>
-  <body class="min-h-screen">
-    <div id="root" class="max-w-7xl mx-auto p-6"></div>
+  <main class="wrap">
+    <section id="overview" class="tabpane">
+      <div class="grid" id="kpi-grid">
+        <!-- KPI cards injected here -->
+      </div>
 
-    <script>
-      const {useState,useEffect,useMemo} = React;
-      const {
-        AreaChart,Area,XAxis,YAxis,CartesianGrid,Tooltip,ResponsiveContainer,Brush,Legend,
-        FunnelChart,Funnel,LabelList
-      } = Recharts;
-
-      // ---------- Утилиты ----------
-      const nf = new Intl.NumberFormat('ru-RU');
-      const fmtN = n => (n==null || isNaN(n)) ? '—' : nf.format(n);
-      const pct = n => (n==null || isNaN(n)) ? '—' : (n*100).toFixed(1)+'%';
-      const lastN = (arr,n)=>arr.slice(Math.max(0,arr.length-n));
-      const forecast7 = (series,key)=>{
-        if(!series?.length) return 0;
-        const l7 = lastN(series,7);
-        const sum = l7.reduce((a,d)=>a+(+d[key]||0),0);
-        return Math.round(sum/Math.max(l7.length,1)*7);
-      };
-
-      // ---------- Простой модал ----------
-      function Modal({open,setOpen,title,children}){
-        return (
-          <dialog open={open} onClose={()=>setOpen(false)}>
-            <div class="p-5">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-semibold">{title}</h3>
-                <button class="btn" onClick={()=>setOpen(false)}>Закрыть</button>
-              </div>
-              {children}
-            </div>
-          </dialog>
-        )
-      }
-
-      function MetricDialog({title,data,keyName,color,help}){
-        const [open,setOpen]=useState(false);
-        const current = data?.length ? (+data.at(-1)[keyName]||0) : 0;
-        const fc = forecast7(data,keyName);
-        return (
-          <>
-            <button class="btn" onClick={()=>setOpen(true)}>Открыть метрику</button>
-            <Modal open={open} setOpen={setOpen} title={title}>
-              <div class="space-y-4">
-                <div class="h-72 w-full">
-                  <div style="width:100%;height:100%">
-                    <div id={title+"-chart"} style="width:100%;height:100%">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={data} margin={{top:10,right:20,left:0,bottom:10}}>
-                          <defs>
-                            <linearGradient id={"g-"+keyName} x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stop-color={color} stop-opacity="0.35"/>
-                              <stop offset="90%" stop-color={color} stop-opacity="0.02"/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.12)"/>
-                          <XAxis dataKey="date" tickFormatter={d=>new Date(d).toLocaleDateString('ru-RU')}/>
-                          <YAxis allowDecimals={false}/>
-                          <Tooltip formatter={v=>fmtN(+v)} labelFormatter={l=>new Date(l).toLocaleDateString('ru-RU')}/>
-                          <Area type="monotone" dataKey={keyName} name={title} stroke={color} fill={`url(#g-${keyName})`} strokeWidth={2} dot={false}/>
-                          <Brush dataKey="date" height={24}/>
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div class="card p-4">
-                    <div class="muted text-sm mb-1">Текущее значение</div>
-                    <div class="text-2xl font-semibold">{fmtN(current)}</div>
-                  </div>
-                  <div class="card p-4">
-                    <div class="muted text-sm mb-1">Прогноз на неделю</div>
-                    <div class="text-2xl font-semibold">{fmtN(fc)}</div>
-                  </div>
-                    <div class="card p-4">
-                      <div class="muted text-sm mb-1">Описание</div>
-                      <div class="text-sm muted">{help}</div>
-                    </div>
-                </div>
-                <div class="muted text-xs">Подсказка: водите мышкой по точкам и выделяйте период бегунком снизу.</div>
-              </div>
-            </Modal>
-          </>
-        )
-      }
-
-      function MetricCard({title,value,delta,color,help,dialog}){
-        const up = typeof delta==='number' ? delta>=0 : null;
-        return (
-          <div class="card p-4">
-            <div class="flex items-center justify-between">
-              <div class="muted text-sm flex items-center gap-2">
-                {title}
-                <span title={help} class="i-btn">i</span>
-              </div>
-              {delta!=null && (
-                <span class={"badge "+(up?"text-emerald-400":"text-rose-400")}>
-                  {up?"▲":"▼"} {Math.abs(delta).toFixed(1)}%
-                </span>
-              )}
-            </div>
-            <div class="flex items-end justify-between mt-2">
-              <div class="text-3xl font-semibold" style={{color}}>{fmtN(value)}</div>
-              {dialog}
-            </div>
+      <div class="grid" style="margin-top:10px">
+        <div class="card row-12">
+          <h3>График динамики — Открытия и Ответы
+            <span class="i" data-info-key="opens_replies">i</span>
+          </h3>
+          <div class="legend">
+            <div><span class="dot" id="dot-open"></span> Открытия</div>
+            <div><span class="dot" id="dot-reply"></span> Ответы</div>
           </div>
-        )
-      }
+          <canvas id="comboChart" height="120"></canvas>
+        </div>
+      </div>
 
-      function DynamicsBlock({data}){
-        return (
-          <div class="card p-4">
-            <div class="flex items-center gap-2 mb-2">
-              <h3 class="font-semibold">Динамика: Открытия и Ответы</h3>
-              <span class="i-btn" title="Показывает суммарные открытия и ответы по периодам. Внизу — бегунок выбора периода.">i</span>
-            </div>
-            <div style="width:100%;height:320px">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data} margin={{top:10,right:20,left:0,bottom:10}}>
-                  <defs>
-                    <linearGradient id="g-opens" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.35"/>
-                      <stop offset="90%" stop-color="#60a5fa" stop-opacity="0.02"/>
-                    </linearGradient>
-                    <linearGradient id="g-replies" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#34d399" stop-opacity="0.35"/>
-                      <stop offset="90%" stop-color="#34d399" stop-opacity="0.02"/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.12)"/>
-                  <XAxis dataKey="date" tickFormatter={d=>new Date(d).toLocaleDateString('ru-RU')}/>
-                  <YAxis allowDecimals={false}/>
-                  <Tooltip formatter={v=>fmtN(+v)} labelFormatter={l=>new Date(l).toLocaleDateString('ru-RU')}/>
-                  <Legend />
-                  <Area type="monotone" dataKey="opens" name="Открытия" stroke="#60a5fa" fill="url(#g-opens)" strokeWidth="2" dot={false}/>
-                  <Area type="monotone" dataKey="replies" name="Ответы" stroke="#34d399" fill="url(#g-replies)" strokeWidth="2" dot={false}/>
-                  <Brush dataKey="date" height={24}/>
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+      <div class="grid" style="margin-top:10px">
+        <div class="card row-6">
+          <h3>Воронка <span class="i" data-info-key="funnel">i</span></h3>
+          <div id="funnel" class="kpi"></div>
+        </div>
+        <div class="card row-6">
+          <h3>Качество доставки <span class="i" data-info-key="delivery_quality">i</span></h3>
+          <div class="stat">
+            <div id="quality" class="big">—</div>
+            <div class="muted" id="qualityCaption"></div>
           </div>
-        )
+        </div>
+      </div>
+    </section>
+
+    <section id="spheres" class="tabpane" style="display:none">
+      <div class="card row-12">
+        <h3>Сферы и эффективность <span class="i" data-info-key="spheres">i</span></h3>
+        <div class="muted" id="avgLine"></div>
+        <div style="overflow:auto;margin-top:10px">
+          <table id="spheresTable">
+            <thead>
+              <tr>
+                <th>Сфера</th>
+                <th>Отправлено</th>
+                <th>% открытий</th>
+                <th>% ответов</th>
+                <th>Эффективность vs среднее</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="metricModal">
+    <div class="inner">
+      <div class="head">
+        <h2 id="modalTitle">Метрика</h2>
+        <button class="close" id="closeModal">Закрыть</button>
+      </div>
+      <div class="two-col">
+        <div>
+          <canvas id="modalChart" height="180"></canvas>
+        </div>
+        <div class="stat">
+          <div id="modalNow" class="big">—</div>
+          <div id="modalForecast" class="pill">—</div>
+          <div class="muted" id="modalLabels">—</div>
+          <div class="muted" id="modalInfo">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Обновлено: <span id="updatedAt">—</span></footer>
+
+  <script>
+  const state = { data: null, charts: {}, theme: { line: '#7c9aff', green:'#72e0a8', red:'#ff6b6b' } };
+  const df = (n)=>n.toLocaleString('ru-RU');
+
+  async function loadData(){
+    const res = await fetch('data.txt?_=' + Date.now());
+    const json = await res.json();
+    state.data = json;
+    document.getElementById('updatedAt').textContent = new Date(json.meta.updated_at).toLocaleString('ru-RU');
+    buildKPI();
+    buildCombo();
+    buildFunnel();
+    buildQuality();
+    buildSpheres();
+  }
+
+  function gradient(ctx, color){
+    const g = ctx.createLinearGradient(0,0,0,180);
+    g.addColorStop(0, color + '90'); // ~56% opacity
+    g.addColorStop(1, color + '00');
+    return g;
+  }
+
+  function baseOptions(xLabel, yLabel){
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { grid: { color: '#1b2436' }, ticks: { color: '#8c97a6' }, title: { display:true, text:xLabel, color:'#8c97a6'} },
+        y: { grid: { color: '#1b2436' }, ticks: { color: '#8c97a6' }, title: { display:true, text:yLabel, color:'#8c97a6'} }
+      },
+      plugins: {
+        legend: { display:false },
+        tooltip: { mode:'index', intersect:false, backgroundColor:'#0f1420', borderColor:'#2c354a', borderWidth:1, titleColor:'#e6ecf2', bodyColor:'#e6ecf2' }
       }
+    };
+  }
 
-      function FunnelBlock({sent,opens,replies}){
-        const data = [
-          { name:'Отправлено', value: sent },
-          { name:'Открыто',   value: opens },
-          { name:'Ответы',    value: replies },
-        ];
-        return (
-          <div class="card p-4">
-            <div class="flex items-center gap-2 mb-2">
-              <h3 class="font-semibold">Воронка взаимодействия</h3>
-              <span class="i-btn" title="Этапы: отправлено → открыто → ответ. Значения — суммарно за период.">i</span>
-            </div>
-            <div style="width:100%;height:280px">
-              <ResponsiveContainer width="100%" height="100%">
-                <FunnelChart>
-                  <Tooltip formatter={v=>fmtN(+v)} />
-                  <Funnel dataKey="value" data={data} isAnimationActive>
-                    <LabelList dataKey="name" position="left" />
-                    <LabelList dataKey="value" position="right" formatter={v=>fmtN(+v)} />
-                  </Funnel>
-                </FunnelChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )
-      }
+  function miniSpark(id, series){
+    const ctx = document.getElementById(id).getContext('2d');
+    const color = state.theme.line;
+    const opt = baseOptions('', '');
+    opt.scales.x.display=false; opt.scales.y.display=false;
+    return new Chart(ctx, {
+      type: 'line',
+      data: { labels: state.data.timeseries.dates, datasets:[{ data: series, tension:.3, borderColor: color, fill:true, backgroundColor:(ctx)=>gradient(ctx.chart.ctx, '#7c9aff'), borderWidth:2, pointRadius:0 }] },
+      options: opt
+    });
+  }
 
-      function DeliveryQuality({delivered,bounces}){
-        const total = delivered + bounces;
-        const rate = total ? delivered/total : 0;
-        return (
-          <div class="card p-4">
-            <div class="flex items-center gap-2 mb-2">
-              <h3 class="font-semibold">Качество доставки</h3>
-              <span class="i-btn" title="Доля успешно доставленных писем среди доставленных + ошибок.">i</span>
-            </div>
-            <div class="text-3xl font-semibold mb-3">{pct(rate)} <span class="muted text-base font-normal">успешных</span></div>
-            <div class="grid grid-cols-2 gap-3">
-              <div class="card p-3">
-                <div class="muted text-sm">Успешно доставлено</div>
-                <div class="text-xl font-semibold">{fmtN(delivered)}</div>
-              </div>
-              <div class="card p-3">
-                <div class="muted text-sm">Ошибки доставки</div>
-                <div class="text-xl font-semibold">{fmtN(bounces)}</div>
-              </div>
-            </div>
-          </div>
-        )
-      }
+  function buildCard(key, title, color){
+    const card = document.createElement('div');
+    card.className='card';
+    card.innerHTML = `
+      <h3>${title} <span class="i" data-info-key="${key}">i</span></h3>
+      <div class="value" id="${key}-value">—</div>
+      <canvas class="chart-mini" id="${key}-chart"></canvas>
+      <button class="btn" data-open="${key}">Открыть метрику</button>
+    `;
+    return card;
+  }
 
-      function Spheres({spheres}){
-        const avgOpen = useMemo(()=>{
-          if(!spheres?.length) return 0;
-          return spheres.reduce((a,s)=>a+(+s.open_rate||0),0)/spheres.length;
-        },[spheres]);
-        const avgReply = useMemo(()=>{
-          if(!spheres?.length) return 0;
-          return spheres.reduce((a,s)=>a+(+s.reply_rate||0),0)/spheres.length;
-        },[spheres]);
+  function buildKPI(){
+    const grid = document.getElementById('kpi-grid');
+    grid.innerHTML='';
+    const defs = [
+      ['sent','Отправлено писем'],
+      ['delivered','Доставлено'],
+      ['lpr_replies','Ответы ЛПР'],
+      ['bounces','Ошибки доставки']
+    ];
+    defs.forEach(([key,title])=>{
+      const card = buildCard(key,title);
+      grid.appendChild(card);
+      const series = state.data.timeseries[key];
+      document.getElementById(`${key}-value`).textContent = df(state.data.blocks[key].current_total);
+      state.charts[key] = miniSpark(`${key}-chart`, series);
+    });
 
-        return (
-          <div class="space-y-3">
-            <div class="muted text-sm">Сравнение со средними по аккаунту: open {pct(avgOpen)}, reply {pct(avgReply)}.</div>
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {spheres.map(s=>{
-                const openDelta = (+s.open_rate||0) - avgOpen;
-                const replyDelta = (+s.reply_rate||0) - avgReply;
-                return (
-                  <div class="card p-4" key={s.name}>
-                    <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold">{s.name}</div>
-                      <div class="muted text-sm">Отправлено: {fmtN(+s.sent||0)}</div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                      <div class="card p-3">
-                        <div class="muted text-xs">Открытия</div>
-                        <div class="text-xl font-semibold">{pct(+s.open_rate||0)}</div>
-                        <div class={(openDelta>=0?'text-emerald-400':'text-rose-400')+' text-sm mt-1'}>
-                          {openDelta>=0?'▲':'▼'} {Math.abs(openDelta*100).toFixed(1)}%
-                        </div>
-                      </div>
-                      <div class="card p-3">
-                        <div class="muted text-xs">Ответы</div>
-                        <div class="text-xl font-semibold">{pct(+s.reply_rate||0)}</div>
-                        <div class={(replyDelta>=0?'text-emerald-400':'text-rose-400')+' text-sm mt-1'}>
-                          {replyDelta>=0?'▲':'▼'} {Math.abs(replyDelta*100).toFixed(1)}%
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )
-      }
+    grid.querySelectorAll('[data-open]').forEach(btn=>{
+      btn.addEventListener('click', ()=>openModal(btn.dataset.open));
+    });
 
-      function Tabs({tab,setTab}){
-        return (
-          <div class="inline-flex gap-2 bg-[rgba(255,255,255,.06)] p-1 rounded-xl">
-            <button class={"btn "+(tab==='overview'?'ring-2 ring-white/20':'')} onClick={()=>setTab('overview')}>Обзор</button>
-            <button class={"btn "+(tab==='spheres'?'ring-2 ring-white/20':'')} onClick={()=>setTab('spheres')}>Сферы</button>
-          </div>
-        )
-      }
+    document.querySelectorAll('.i').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const k = el.dataset.infoKey;
+        alert(state.data.info[k]);
+      });
+    });
+  }
 
-      function App(){
-        const [tab,setTab]=useState('overview');
-        const [data,setData]=useState(null);
-        const [err,setErr]=useState(null);
+  function openModal(key){
+    const modal = document.getElementById('metricModal');
+    const cfg = state.data.blocks[key];
+    const titleMap = {
+      sent:'Отправлено писем', delivered:'Доставлено', lpr_replies:'Ответы ЛПР', bounces:'Ошибки доставки'
+    };
+    document.getElementById('modalTitle').textContent = titleMap[key] || key;
+    document.getElementById('modalNow').textContent = 'Текущее значение: ' + df(cfg.current_total);
+    document.getElementById('modalForecast').textContent = 'Прогноз на неделю при текущем темпе: ' + df(cfg.weekly_forecast);
+    document.getElementById('modalLabels').textContent = cfg.axis_labels.y + ' / ' + cfg.axis_labels.x;
+    document.getElementById('modalInfo').textContent = state.data.info[key] || '';
 
-        useEffect(()=>{
-          fetch('data.txt').then(r=>{
-            if(!r.ok) throw new Error('Не найден data.txt');
-            return r.text();
-          }).then(t=>{
-            try { setData(JSON.parse(t)); }
-            catch(e){ throw new Error('Некорректный JSON в data.txt'); }
-          }).catch(e=>setErr(e.message||'Ошибка загрузки'));
-        },[]);
+    if(state.charts.modal) state.charts.modal.destroy();
+    const ctx = document.getElementById('modalChart').getContext('2d');
+    const color = '#7c9aff';
+    const options = baseOptions(cfg.axis_labels.x, cfg.axis_labels.y);
+    state.charts.modal = new Chart(ctx, {
+      type: 'line',
+      data: { labels: state.data.timeseries.dates, datasets:[{
+        label: titleMap[key],
+        data: state.data.timeseries[key],
+        borderColor: color,
+        backgroundColor: (c)=>gradient(c.chart.ctx, '#7c9aff'),
+        fill:true, tension:.35, borderWidth:2, pointRadius:0
+      }]},
+      options
+    });
 
-        if(err) return <div class="text-red-400">Ошибка: {err}</div>;
-        if(!data) return <div class="muted">Загрузка данных…</div>;
+    modal.classList.add('open');
+  }
 
-        const timeline = data.timeline || [];
-        const totals = {
-          sent: timeline.reduce((a,d)=>a+(+d.sent||0),0),
-          delivered: timeline.reduce((a,d)=>a+(+d.delivered||0),0),
-          opens: timeline.reduce((a,d)=>a+(+d.opens||0),0),
-          replies: timeline.reduce((a,d)=>a+(+d.replies||0),0),
-          lpr_replies: timeline.reduce((a,d)=>a+(+d.lpr_replies||0),0),
-          bounces: timeline.reduce((a,d)=>a+(+d.bounces||0),0),
-        };
-        const last = timeline.at(-1) || {};
-        const last7 = lastN(timeline,7);
-        const delta = k=>{
-          if(last7.length<2) return 0;
-          const prev = +last7[0][k]||0, curr = +last7.at(-1)[k]||0;
-          return prev===0 ? 0 : ( (curr-prev)/Math.max(prev,1) )*100;
-        };
+  document.getElementById('closeModal').addEventListener('click',()=>document.getElementById('metricModal').classList.remove('open'));
+  document.getElementById('metricModal').addEventListener('click',(e)=>{ if(e.target.id==='metricModal') e.currentTarget.classList.remove('open'); });
 
-        return (
-          <div>
-            <header class="flex items-center justify-between">
-              <div>
-                <h1 class="text-2xl font-semibold">WandLead — Личный кабинет</h1>
-                <div class="muted text-sm">Все метрики подгружаются из <code>data.txt</code>.</div>
-              </div>
-              <Tabs tab={tab} setTab={setTab}/>
-            </header>
+  function buildCombo(){
+    const { dates, opens, replies } = state.data.timeseries;
+    const ctx = document.getElementById('comboChart').getContext('2d');
+    if(state.charts.combo) state.charts.combo.destroy();
+    state.charts.combo = new Chart(ctx, {
+      type:'line',
+      data:{
+        labels: dates,
+        datasets:[
+          { label:'Открытия', data: opens, borderColor:'#72e0a8', backgroundColor:(c)=>gradient(c.chart.ctx,'#72e0a8'), fill:true, tension:.35, pointRadius:0 },
+          { label:'Ответы', data: replies, borderColor:'#7c9aff', backgroundColor:(c)=>gradient(c.chart.ctx,'#7c9aff'), fill:true, tension:.35, pointRadius:0 }
+        ]
+      },
+      options: baseOptions(state.data.blocks.opens_replies.axis_labels.x, state.data.blocks.opens_replies.axis_labels.y)
+    });
+    document.getElementById('dot-open').style.background='#72e0a8';
+    document.getElementById('dot-reply').style.background='#7c9aff';
+  }
 
-            {tab==='overview' && (
-              <div class="space-y-6 mt-6">
-                <!-- четыре метрики -->
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                  <MetricCard
-                    title="Отправлено писем"
-                    value={+last.sent||0}
-                    delta={delta('sent')}
-                    color="#a78bfa"
-                    help="Сколько писем отправлено за день. Нажмите, чтобы открыть подробный график."
-                    dialog={<MetricDialog title="Отправлено" data={timeline} keyName="sent" color="#a78bfa" help="Количество отправленных писем по дням. Внизу — выбор периода."/>}
-                  />
-                  <MetricCard
-                    title="Доставлено"
-                    value={+last.delivered||0}
-                    delta={delta('delivered')}
-                    color="#60a5fa"
-                    help="Сообщения, принятые сервером получателя."
-                    dialog={<MetricDialog title="Доставлено" data={timeline} keyName="delivered" color="#60a5fa" help="Успешно доставленные письма по дням."/>}
-                  />
-                  <MetricCard
-                    title="Ответы от ЛПР"
-                    value={+last.lpr_replies||0}
-                    delta={delta('lpr_replies')}
-                    color="#34d399"
-                    help="Ответы именно от лиц, принимающих решения."
-                    dialog={<MetricDialog title="Ответы от ЛПР" data={timeline} keyName="lpr_replies" color="#34d399" help="Считаем только ответы, классифицированные как ЛПР."/>}
-                  />
-                  <MetricCard
-                    title="Ошибки доставки"
-                    value={+last.bounces||0}
-                    delta={delta('bounces')}
-                    color="#f87171"
-                    help="Hard/soft bounces — ошибки доставки."
-                    dialog={<MetricDialog title="Ошибки доставки" data={timeline} keyName="bounces" color="#f87171" help="Ошибки доставки по дням."/>}
-                  />
-                </div>
+  function buildFunnel(){
+    const f = state.data.funnel;
+    const el = document.getElementById('funnel');
+    el.innerHTML='';
+    const steps = [
+      ['Отправлено', f.sent],
+      ['Открыто', f.opened],
+      ['Ответ ЛПР', f.lpr_replies]
+    ];
+    steps.forEach(([name,val],i)=>{
+      const rate = i===0 ? 1 : (val/steps[i-1][1]);
+      const pill = document.createElement('span');
+      pill.className='pill';
+      pill.innerHTML = `<strong>${name}:</strong> ${df(val)} <span class="muted">(${(rate*100).toFixed(1)}%)</span>`;
+      el.appendChild(pill);
+    });
+  }
 
-                <DynamicsBlock data={timeline}/>
+  function buildQuality(){
+    const q = state.data.delivery_quality;
+    const pct = (q.success/(q.success+q.errors))*100;
+    document.getElementById('quality').textContent = pct.toFixed(2) + '%';
+    document.getElementById('qualityCaption').textContent = `Успешно: ${df(q.success)} • Ошибки: ${df(q.errors)}`;
+  }
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <FunnelBlock sent={totals.sent} opens={totals.opens} replies={totals.replies}/>
-                  <DeliveryQuality delivered={totals.delivered} bounces={totals.bounces}/>
-                </div>
-              </div>
-            )}
+  function buildSpheres(){
+    const t = document.querySelector('#spheresTable tbody');
+    t.innerHTML='';
+    const avgO = state.data.averages.open_rate;
+    const avgR = state.data.averages.reply_rate;
+    document.getElementById('avgLine').textContent = `Средние значения по всем сферам: открытия ${(avgO*100).toFixed(1)}% • ответы ${(avgR*100).toFixed(1)}%`;
+    state.data.spheres.forEach(s=>{
+      const oDelta = (s.open_rate-avgO)/avgO*100;
+      const rDelta = (s.reply_rate-avgR)/avgR*100;
+      const eff = ((oDelta+rDelta)/2);
+      const cls = eff>=0 ? 'up' : 'down';
+      const arrow = eff>=0 ? '▲' : '▼';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${s.name}</td>
+        <td>${df(s.sent)}</td>
+        <td>${(s.open_rate*100).toFixed(1)}%</td>
+        <td>${(s.reply_rate*100).toFixed(1)}%</td>
+        <td class="${cls}">${arrow} ${eff.toFixed(1)}%</td>
+      `;
+      t.appendChild(tr);
+    });
+  }
 
-            {tab==='spheres' && (
-              <div class="mt-6">
-                <Spheres spheres={data.spheres||[]}/>
-              </div>
-            )}
+  // Tabs
+  document.querySelectorAll('.tab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const id = btn.dataset.tab;
+      document.querySelectorAll('.tabpane').forEach(p=>p.style.display='none');
+      document.getElementById(id).style.display='block';
+    });
+  });
 
-            <footer class="mt-10 text-center muted text-xs">
-              Обновляйте <code>data.txt</code> — графики и метрики подтянутся автоматически.
-            </footer>
-          </div>
-        )
-      }
-
-      ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
-    </script>
-  </body>
+  loadData();
+  </script>
+</body>
 </html>
