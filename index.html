@@ -102,6 +102,14 @@ th{color:#cfd7e6;font-weight:600}
 .modal .title{font-size:18px;font-weight:800}
 .modal .close{background:#182131;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 10px;color:#cfd5e1;cursor:pointer}
 .legend{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:8px 0 2px}
+/* Чёткие кликабельные чипы (вместо мыльных) */
+.chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.14);user-select:none;cursor:pointer;-webkit-font-smoothing: antialiased;text-shadow:none}
+.chip .dot{width:10px;height:10px;border-radius:999px;border:1px solid rgba(0,0,0,.25)}
+.chip.blue{background:#0f1a2a;color:#dbe7ff}
+.chip.blue .dot{background:#71a4ff}
+.chip.yellow{background:#2a2210;color:#ffe6b8}
+.chip.yellow .dot{background:#ebb657}
+.chip.off{opacity:.6}
 .foot{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
 .foot div{background:#0f161f;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 12px}
 .hidden{display:none}
@@ -177,11 +185,13 @@ th{color:#cfd7e6;font-weight:600}
         <div class="hint">Сколько писем вернулось с ошибками.</div>
       </div>
 
-      <div class="card full">
-        <div class="card-title">Динамика: открытия vs ответы <span class="info" data-info="dynamics">i</span></div>
-        <div class="card-sub" id="dyn-sub">Компактные даты — без перегруза.</div>
-        <div class="chart-box tall"><canvas id="dynamics"></canvas></div>
-      </div>
+      <div class=\"card full\">
+        <div class=\"card-title\">Динамика: открытия vs ответы <span class=\"info\" data-info=\"dynamics\">i<\/span><\/div>
+        <div class=\"card-sub\" id=\"dyn-sub\">Компактные даты — без перегруза.<\/div>
+        <div class=\"chart-box tall\"><canvas id=\"dynamics\"><\/canvas><\/div>
+        <div id=\"dyn-legend\" style=\"display:flex;gap:8px;flex-wrap:wrap;margin-top:8px\"><\/div>
+        <div class=\"inline-info\" data-inline=\"dynamics\"><div class=\"box\"><div class=\"ttl\">Что такое «Динамика: открытия vs ответы»<\/div><p>Сравнение двух рядов по дням: <b>Открытия<\/b> показывают интерес к письмам, <b>Ответы<\/b> — вовлечение ЛПР в диалог. Оба показателя важны: рост открытий без ответов намекает на заголовок/оффер, ответы без открытий — на качество базы.<\/p><p class=\"muted\" style=\"margin-top:6px\">Подсказка: используйте кнопки ниже, чтобы временно скрывать ряд и рассматривать каждый в отдельности.<\/p><\/div><\/div>
+      <\/div>
 
       <div class="card">
         <div class="card-title">Воронка <span class="info" data-info="funnel">i</span></div>
@@ -279,7 +289,7 @@ document.addEventListener('click', (e)=>{
     if(INLINE_KEYS.includes(key)){
       toggleInlineInfo(e.target, key);
     } else if(key==='funnel'){ openFunnelDetails(); }
-    else if(key==='dynamics'){ openDynamicsModal(); }
+    else if(key==='dynamics'){ toggleInlineInfo(e.target, key); }
     else if(key==='quality'){ openQualityModal(); }
     else { openModal({ title:'Что означает блок', sub: INFO[key] }); }
     e.preventDefault();
@@ -424,21 +434,38 @@ function spark(canvasId, arr, color){
   const dataArr = arr; // мини‑спарклайны всегда после getSeries (уже агрегировано при all)
   const {labels, values} = toXY(dataArr);
   const shortLabels = labelize(labels, labels);
-  return new Chart(ctx, {
+  return const chart = new Chart(ctx, {
     type:'line',
-    data:{labels:shortLabels, datasets:[{data:values, tension:.35, borderWidth:2, borderColor:color, pointRadius:0, fill:true, backgroundColor:grad(ctx, color.replace('.95', '.22'))}]},
+    data:{labels:xlabels, datasets:[
+      {label:'Открытия', data:v1, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(113,164,255,.95)', backgroundColor:grad(ctx,'rgba(113,164,255,.22)'), fill:true},
+      {label:'Ответы', data:v2, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(235,182,87,.95)', backgroundColor:grad(ctx,'rgba(235,182,87,.22)'), fill:true},
+    ]},
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{mode:'index', intersect:false, backgroundColor:'#111827',
-          callbacks:{title:(it)=> dateTooltip.format(new Date(dataArr[it[0].dataIndex].date))}},
-        decimation:{enabled: MODE==='all', algorithm:'lttb', samples:60}
-      },
-      scales:{x:{display:false},y:{display:false}}
-    }
+      plugins:{ legend:{display:false}, tooltip:{mode:'index', intersect:false, callbacks:{
+        title:(it)=> dateTooltip.format(new Date(open[it[0].dataIndex].date))
+      }},
+      decimation:{enabled: MODE==='all', algorithm:'lttb', samples:80}
+    },
+    scales:{ x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}, grid:{color:'rgba(255,255,255,.05)'}} }
   });
-}
+  // кастомная легенда
+  const root = document.getElementById('dyn-legend');
+  root.innerHTML = '';
+  const mk = (idx, cls, name)=>{
+    const el = document.createElement('button');
+    el.className = 'chip '+cls;
+    el.innerHTML = `<span class="dot"></span>${name}`;
+    el.addEventListener('click', ()=>{
+      const meta = chart.getDatasetMeta(idx);
+      meta.hidden = meta.hidden === null ? !chart.isDatasetVisible(idx) : null;
+      el.classList.toggle('off', !chart.isDatasetVisible(idx));
+      chart.update();
+    });
+    return el;
+  };
+  root.appendChild(mk(0,'blue','Открытия'));
+  root.appendChild(mk(1,'yellow','Ответы'));}
 
 function axisOptsX(labels){
   const step = tickStep(labels.length);
