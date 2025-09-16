@@ -97,7 +97,7 @@ th{color:#cfd7e6;font-weight:600}
 /* Modal */
 .modal{position:fixed;inset:0;background:rgba(5,8,12,.7);display:none;align-items:center;justify-content:center;z-index:50}
 .modal.open{display:flex}
-.modal .box{width:min(980px,92vw);background:linear-gradient(180deg,#141c28,#0f1620);border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);padding:18px 18px 14px}
+.modal .box{width:min(980px,92vw);max-height:92vh;display:flex;flex-direction:column;background:linear-gradient(180deg,#141c28,#0f1620);border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);padding:18px 18px 14px}
 .modal .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .modal .title{font-size:18px;font-weight:800}
 .modal .close{background:#182131;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 10px;color:#cfd5e1;cursor:pointer}
@@ -232,6 +232,7 @@ th{color:#cfd7e6;font-weight:600}
         <div class="card-title">Динамика: открытия vs ответы <span class="info" data-info="dynamics">i</span></div>
         <div class="card-sub" id="dyn-sub">Компактные даты — без перегруза.</div>
         <div class="chart-box tall"><canvas id="dynamics"></canvas></div>
+        <div class="inline-info" data-inline="dynamics"><div class="box"><div class="ttl">О чём график «Открытия vs ответы»</div><p>Две линии по дням: <b>открытия</b> показывают интерес к письму, <b>ответы</b> — подтверждённый отклик ЛПР. Следите за лагом между пиками: если ответы запаздывают, проверьте призыв к действию и релевантность оффера.</p><p class="muted" style="margin-top:6px">Подсказка: при выборе режима «За всё время» шкала времени автоматически агрегируется по неделям/месяцам.</p></div></div>
       </div>
 
       <div class="card">
@@ -266,7 +267,7 @@ th{color:#cfd7e6;font-weight:600}
       </div>
       <div class="sub" id="modal-sub"></div>
       <div class="sep"></div>
-      <div id="modal-body"></div>
+      <div id="modal-body" style="flex:1; overflow:auto;"></div>
       <div class="legend" id="modal-legend"></div>
       <div class="foot" id="modal-foot"></div>
     </div>
@@ -665,17 +666,20 @@ function openSectorsModal(){
       const topReplies = [...arr].sort((a,b)=>b.reply_rate-a.reply_rate).slice(0,5);
       const topOpens = [...arr].sort((a,b)=>b.open_rate-a.open_rate).slice(0,5);
       const drawBars = (id, data, valKey)=>{
-        const ctx = document.getElementById(id).getContext('2d');
-        new Chart(ctx, {
+        const c = document.getElementById(id);
+        c.height = 180; // фиксируем высоту, чтобы не было бесконечного ресайза
+        const ctx = c.getContext('2d');
+        const ch = new Chart(ctx, {
           type:'bar',
           data:{ labels: data.map(x=>x.name),
                  datasets:[{ data:data.map(x=>x[valKey]*100), borderWidth:1 }] },
           options:{
-            responsive:true, maintainAspectRatio:false,
+            responsive:false, maintainAspectRatio:false,
             plugins:{ legend:{display:false}, tooltip:{callbacks:{ label:(it)=> it.raw.toFixed(1)+'%' }} },
             scales:{ x:{ ticks:{ color:'#9aa3b2' }}, y:{ ticks:{ color:'#9aa3b2', callback:(v)=>v+'%' } } }
           }
         });
+        modalCharts.push(ch);
       };
       drawBars('sectors-top-replies', topReplies, 'reply_rate');
       drawBars('sectors-top-opens', topOpens, 'open_rate');
@@ -712,7 +716,7 @@ function openQualityModal(){
     sub:'Доля доставленных',
     builder:(canvas)=>{
       const ctx = canvas.getContext('2d');
-      if(modalChart) modalChart.destroy();
+      if(modalChart) try{modalChart.destroy()}catch(e){};
       modalChart = new Chart(ctx, {
         type:'doughnut',
         data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]},
@@ -736,8 +740,10 @@ function openFunnelDetails(){
     const draw = (id, arr, color)=>{
       const {labels, values} = toXY(arr);
       const xlabels = labelize(labels, arr.map(p=>p.date));
-      const ctx = document.getElementById(id).getContext('2d');
-      new Chart(ctx, {
+      const c = document.getElementById(id);
+      c.height = 170;
+      const ctx = c.getContext('2d');
+      const ch = new Chart(ctx, {
         type:'line',
         data:{labels:xlabels, datasets:[{data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]},
         options:{
@@ -746,6 +752,7 @@ function openFunnelDetails(){
           scales:{x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}}}
         }
       });
+      modalCharts.push(ch);
     };
     draw('c1', S.sent, 'rgba(113,164,255,.95)');
     draw('c2', S.opens, 'rgba(113,164,255,.95)');
@@ -755,6 +762,15 @@ function openFunnelDetails(){
 
 // Single line for metric modal
 let modalChart = null;
+let modalCharts = []; // для нескольких графиков в модалке (сферы)
+function destroyModalCharts(){
+  if(modalChart){ try{modalChart.destroy()}catch(e){} modalChart=null; }
+  if(Array.isArray(modalCharts)){
+    modalCharts.forEach(ch=>{ try{ch.destroy()}catch(e){} });
+  }
+  modalCharts = [];
+}
+
 function singleLineChart(canvas, title, color, arr){
   const {labels, values} = toXY(arr);
   const xlabels = labelize(labels, arr.map(p=>p.date));
@@ -769,6 +785,7 @@ function singleLineChart(canvas, title, color, arr){
 
 // Universal modal
 function openModal({title, sub, builder, foot=[]}){
+  destroyModalCharts();
   const m = document.getElementById('modal');
   document.getElementById('modal-title').textContent = title || '';
   document.getElementById('modal-sub').textContent = sub || '';
@@ -787,8 +804,8 @@ function openModal({title, sub, builder, foot=[]}){
   m.classList.add('open');
 }
 
-document.getElementById('modal-close').addEventListener('click', ()=> document.getElementById('modal').classList.remove('open'));
-document.getElementById('modal').addEventListener('click', (e)=>{ if(e.target.id==='modal') e.currentTarget.classList.remove('open'); });
+document.getElementById('modal-close').addEventListener('click', ()=> { destroyModalCharts(); document.getElementById('modal').classList.remove('open'); });
+document.getElementById('modal').addEventListener('click', (e)=>{ if(e.target.id==='modal'){ destroyModalCharts(); e.currentTarget.classList.remove('open'); } });
 
 // Icons for arrows
 function arrow(diff){
