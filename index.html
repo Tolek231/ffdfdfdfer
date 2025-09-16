@@ -301,7 +301,15 @@ const toXY=(arr)=>({labels:arr.map(p=>p.date), values:arr.map(p=>p.value)});
 const sum=(a)=>a.reduce((x,y)=>x+y,0); const avg=(a)=>sum(a)/a.length; const last=(a)=>a[a.length-1];
 const forecast7=(arr)=>{const sl=arr.slice(-7).map(x=>x.value); return Math.round(avg(sl)*7)};
 const grad=(ctx,color)=>{const g=ctx.createLinearGradient(0,0,0,300); g.addColorStop(0,color); g.addColorStop(1,'rgba(0,0,0,0)'); return g};
-function resetCanvas(id){ const el=document.getElementById(id); const p=el.parentNode; p.innerHTML=`<canvas id="${id}"></canvas>`; return document.getElementById(id); }
+function resetCanvas(id){
+  const el=document.getElementById(id);
+  const parent=el.parentNode;
+  // Полностью пересоздаём canvas без template-строк, чтобы не ловить SyntaxError из-за сломанных бэктиков
+  const newCanvas=document.createElement('canvas');
+  newCanvas.setAttribute('id', id);
+  parent.replaceChild(newCanvas, el);
+  return newCanvas;
+}"></canvas>`; return document.getElementById(id); }
 function groupByWeek(arr){ const m=new Map(); arr.forEach(p=>{ const d=new Date(p.date); const tmp=new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day=(tmp.getUTCDay()+6)%7; tmp.setUTCDate(tmp.getUTCDate()-day+3); const w1=new Date(Date.UTC(tmp.getUTCFullYear(),0,4)); const w=1+Math.round(((tmp-w1)/86400000-3+((w1.getUTCDay()+6)%7))/7); const key=tmp.getUTCFullYear()+"-W"+String(w).padStart(2,'0'); const curr=m.get(key)||{date:key,value:0}; curr.value+=p.value; m.set(key,curr); }); return [...m.values()] }
 function groupByMonth(arr){ const m=new Map(); arr.forEach(p=>{ const d=new Date(p.date); const key=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0'); const curr=m.get(key)||{date:key+'-01',value:0}; curr.value+=p.value; m.set(key,curr); }); return [...m.values()] }
 const maybeAggregate=(arr)=>{ const n=arr.length; if(MODE!=='all') return arr; if(n>360) return groupByMonth(arr); if(n>90) return groupByWeek(arr); return arr };
