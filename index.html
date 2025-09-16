@@ -3,33 +3,60 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>WandLead · Личный кабинет</title>
+<title>WandLead · Личный кабинет (v6 · умные шкалы времени)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root{
-  --bg:#0a0d12; --text:#e9eef6; --muted:#9aa3b2; --accent:#71a4ff; --accent2:#8a5cf6;
-  --good:#1fce7a; --bad:#ff6b6b; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35)
+  --bg:#0a0d12;
+  --text:#e9eef6;
+  --muted:#9aa3b2;
+  --accent:#71a4ff;
+  --accent2:#8a5cf6;
+  --good:#1fce7a;
+  --bad:#ff6b6b;
+  --radius:16px;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial;color:var(--text);background:
-  radial-gradient(1200px 500px at 10% -10%, rgba(113,164,255,.15), transparent),
-  radial-gradient(900px 480px at 90% -10%, rgba(138,92,246,.12), transparent), var(--bg)}
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(113,164,255,.15), transparent),
+    radial-gradient(900px 480px at 90% -10%, rgba(138,92,246,.12), transparent),
+    var(--bg);
+}
 .header{position:sticky;top:0;z-index:40;background:linear-gradient(180deg, rgba(10,13,18,.9), rgba(10,13,18,.6), transparent);backdrop-filter: blur(6px);border-bottom:1px solid rgba(255,255,255,.06)}
 .container{max-width:1200px;margin:0 auto;padding:18px 18px 0}
 .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
 .brand .logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 0 8px rgba(113,164,255,.12)}
 .sub{color:var(--muted);font-size:12px}
+
+/* Tabs */
 .tabs{display:flex;gap:8px;margin:12px 0 16px}
 .tab{padding:10px 14px;border-radius:12px;background:linear-gradient(180deg,#141b25,#0f151d);border:1px solid rgba(255,255,255,.07); color:#cfd5e1; cursor:pointer; transition:.15s}
 .tab:hover{box-shadow:0 0 0 6px rgba(113,164,255,.08)}
 .tab.active{background:linear-gradient(180deg,#1a2230,#121923); color:var(--text); box-shadow:var(--shadow)}
-.toggle{display:flex; gap:6px; align-items:center;background:linear-gradient(180deg,#141b25,#0f151d);border:1px solid rgba(255,255,255,.07);padding:4px; border-radius:12px}
-.tbtn{padding:6px 10px; border-radius:8px; font-size:12px; color:#cfd5e1; cursor:pointer;background:transparent; border:none}
-.tbtn.active{background:linear-gradient(180deg,#1a2230,#121923); color:#fff; box-shadow:0 0 0 2px rgba(113,164,255,.18) inset}
+
+/* Toggle */
+.toggle{
+  display:flex; gap:6px; align-items:center;
+  background:linear-gradient(180deg,#141b25,#0f151d);
+  border:1px solid rgba(255,255,255,.07);
+  padding:4px; border-radius:12px;
+}
+.tbtn{
+  padding:6px 10px; border-radius:8px; font-size:12px; color:#cfd5e1; cursor:pointer;
+  background:transparent; border:none;
+}
+.tbtn.active{background:linear-gradient(180deg,#1a2230,#121923); color:#fff; box-shadow:0 0 0 2px rgba(113,164,255,.18) inset;}
+
+/* Layout */
 .main{max-width:1200px;margin:0 auto;padding:6px 18px 48px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
 .card{grid-column:span 6;background:linear-gradient(180deg,#121a25,#0e151f);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);box-shadow: var(--shadow);padding:14px; position:relative; overflow:hidden}
@@ -43,25 +70,31 @@ body{margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial;
 .muted{color:var(--muted);font-size:12px}
 .info{width:18px;height:18px;border-radius:999px;display:grid;place-items:center;font-size:12px;cursor:pointer;background:linear-gradient(180deg,#1a2330,#121922);border:1px solid rgba(255,255,255,.08);color:#aeb9c9}
 .info:hover{box-shadow:0 0 0 6px rgba(113,164,255,.08); color:#fff}
+
+/* Chart wrappers */
 .chart-box{height:180px;position:relative}
 .chart-box.tall{height:320px}
 .chart-box.pie{height:260px}
 .chart-box canvas{width:100%!important;height:100%!important}
+
+/* Funnel */
 .funnel{display:flex;flex-direction:column;gap:12px;height:100%;padding-top:6px}
 .funnel .row{height:58px;display:flex;align-items:center;justify-content:center}
 .funnel .bar{height:100%;position:relative;margin:0 auto;border-radius:16px}
 .funnel .shape{position:absolute;inset:0;border-radius:16px;background:linear-gradient(135deg, rgba(113,164,255,.35), rgba(138,92,246,.25));border:1px solid rgba(255,255,255,.08);box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 18px rgba(0,0,0,.25)}
-.funnel .row:nth-child(2) .shape{ background:linear-gradient(135deg, rgba(113,164,255,.28), rgba(138,92,246,.18)) }
-.funnel .row:nth-child(3) .shape{ background:linear-gradient(135deg, rgba(235,182,87,.35), rgba(138,92,246,.18)) }
+.funnel .row:nth-child(2) .shape{ background:linear-gradient(135deg, rgba(113,164,255,.28), rgba(138,92,246,.18)); }
+.funnel .row:nth-child(3) .shape{ background:linear-gradient(135deg, rgba(235,182,87,.35), rgba(138,92,246,.18)); }
 .funnel .label{position:absolute;inset:0;display:grid;grid-template-columns:1fr auto;align-items:center;padding:0 14px;font-weight:700;font-size:13px;color:#e9eef6;white-space:nowrap;overflow:hidden}
 .funnel .label .name{overflow:hidden;text-overflow:ellipsis}
 .funnel .label .val{display:flex;gap:8px;align-items:center}
 @media (max-width:560px){.funnel .row{height:50px}.funnel .label{font-size:12px}}
-/* Таблицы */
+
+/* Table */
 table{width:100%;border-collapse:collapse;margin-top:8px}
 th,td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left}
 th{color:#cfd7e6;font-weight:600}
-/* Модалка */
+
+/* Modal */
 .modal{position:fixed;inset:0;background:rgba(5,8,12,.7);display:none;align-items:center;justify-content:center;z-index:50}
 .modal.open{display:flex}
 .modal .box{width:min(980px,92vw);background:linear-gradient(180deg,#141c28,#0f1620);border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);padding:18px 18px 14px}
@@ -69,46 +102,36 @@ th{color:#cfd7e6;font-weight:600}
 .modal .title{font-size:18px;font-weight:800}
 .modal .close{background:#182131;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 10px;color:#cfd5e1;cursor:pointer}
 .legend{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:8px 0 2px}
+/* Чёткие кликабельные чипы (вместо мыльных) */
 .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.14);user-select:none;cursor:pointer;-webkit-font-smoothing: antialiased;text-shadow:none}
 .chip .dot{width:10px;height:10px;border-radius:999px;border:1px solid rgba(0,0,0,.25)}
-.chip.blue{background:#0f1a2a;color:#dbe7ff}.chip.blue .dot{background:#71a4ff}
-.chip.yellow{background:#2a2210;color:#ffe6b8}.chip.yellow .dot{background:#ebb657}
+.chip.blue{background:#0f1a2a;color:#dbe7ff}
+.chip.blue .dot{background:#71a4ff}
+.chip.yellow{background:#2a2210;color:#ffe6b8}
+.chip.yellow .dot{background:#ebb657}
 .chip.off{opacity:.6}
 .foot{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
 .foot div{background:#0f161f;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 12px}
 .hidden{display:none}
 .sep{height:1px;background:rgba(255,255,255,.06);margin:10px 0}
+
+/* three charts in modal */
 .grid3{display:grid;grid-template-columns:1fr;gap:14px}
 @media (min-width: 840px){.grid3{grid-template-columns:1fr 1fr 1fr}}
 .grid3 .mini{height:220px;border:1px solid rgba(255,255,255,.06);border-radius:14px;background:#0f161f;padding:10px}
 .grid3 .mini canvas{width:100%!important;height:170px!important}
 .grid3 .title{font-size:13px;font-weight:700;margin:2px 0 8px}
+
+/* Helper for tiny hints */
 .hint{color:var(--muted); font-size:11px; margin-top:4px}
-/* INLINE INFO */
-.inline-info{overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px); transition:max-height .28s ease, opacity .2s ease, transform .28s ease}
+
+/* INLINE INFO: выдвижная плашка под мини‑графиком */
+.inline-info{overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px); transition:max-height .28s ease, opacity .2s ease, transform .28s ease;}
 .card.show-inline .inline-info{max-height:240px; opacity:1; transform:translateY(0)}
 .inline-info .box{margin-top:10px; padding:10px 12px; border-radius:12px; background:linear-gradient(180deg,#0f161f,#0b1219); border:1px solid rgba(255,255,255,.06); box-shadow:0 8px 20px rgba(0,0,0,.25)}
 .inline-info .ttl{font-size:12px; font-weight:800; color:#dce4f1; margin-bottom:6px}
 .inline-info p{margin:0; font-size:12px; color:#c7d0df}
 .inline-info .muted{font-size:11px}
-/* —— СТИЛИ ДЛЯ ВКЛАДКИ «СФЕРЫ» —— */
-#sectors .card.full{padding-top:18px}
-#sectors-ctrls{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 12px}
-#sectors-ctrls input[type="text"]{flex:1 1 220px;min-width:220px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#0f161f;color:#e9eef6}
-#sectors-ctrls select{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#0f161f;color:#e9eef6}
-#sectors-ctrls .chk{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:#0f161f;color:#d6deea}
-#sectors-ctrls .chk input{accent-color:#71a4ff}
-#sector-summary{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:10px}
-@media (min-width: 760px){#sector-summary{grid-template-columns:1fr 1fr 1fr}}
-#sector-summary .tile{background:#0f161f;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px}
-#sector-summary .tile .ttl{font-size:12px;font-weight:800;color:#dce4f1;margin-bottom:6px}
-#sector-summary .tile .item{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
-#sector-summary .tile .item:last-child{border-bottom:none}
-.arrow{display:inline-flex;align-items:center;gap:6px;font-weight:700}
-.arrow.up{color:var(--good)}
-.arrow.down{color:var(--bad)}
-.arrow .ic{width:8px;height:8px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg)}
-.arrow.down .ic{transform:rotate(-135deg)}
 </style>
 </head>
 <body>
@@ -137,28 +160,28 @@ th{color:#cfd7e6;font-weight:600}
         <div class="card-title">Отправлено <span class="info" data-info="sent">i</span></div>
         <div class="kpi"><div class="big" id="sent-total">—</div><span class="muted" id="lbl-range-1">за 7 дней</span></div>
         <div class="chart-box"><canvas id="sent-mini"></canvas></div>
-        <div class="inline-info" data-inline="sent"><div class="box"><div class="ttl">Что такое «Отправлено»</div><p>Количество исходящих писем за период. Включает все попытки отправки.</p></div></div>
+        <div class="inline-info" data-inline="sent"><div class="box"><div class="ttl">Что такое «Отправлено»</div><p>Количество исходящих писем, которые система попыталась отправить за выбранный период. Показатель включает все попытки отправки; качество доставки отражено в блоке «Доставлено», а возвраты — в «Ошибки доставки».</p><p class="muted" style="margin-top:6px">Подсказка: сравнивайте «Отправлено» с «Доставлено», чтобы видеть, какая доля реально дошла до адресатов.</p></div></div>
         <div class="hint">Сколько писем отправили за выбранный период.</div>
       </div>
       <div class="card small clickable" data-metric="delivered">
         <div class="card-title">Доставлено <span class="info" data-info="delivered">i</span></div>
         <div class="kpi"><div class="big" id="delivered-total">—</div><span class="muted" id="lbl-range-2">за 7 дней</span></div>
         <div class="chart-box"><canvas id="delivered-mini"></canvas></div>
-        <div class="inline-info" data-inline="delivered"><div class="box"><div class="ttl">Что такое «Доставлено»</div><p>Письма, которые почтовые серверы приняли без ошибок (без bounce).</p></div></div>
+        <div class="inline-info" data-inline="delivered"><div class="box"><div class="ttl">Что такое «Доставлено»</div><p>Письма, которые почтовые серверы приняли без ошибок (без bounce). Это «реальные попадания в ящики», даже если получатель ещё не открыл письмо.</p><p class="muted" style="margin-top:6px">Формула качества: <b>Доставлено / Отправлено</b> — см. также блок «Качество доставки».</p></div></div>
         <div class="hint">Письма, дошедшие без ошибок (bounce).</div>
       </div>
       <div class="card small clickable" data-metric="replies">
         <div class="card-title">Ответы ЛПР <span class="info" data-info="replies">i</span></div>
         <div class="kpi"><div class="big" id="replies-total">—</div><span class="muted" id="lbl-range-3">за 7 дней</span></div>
         <div class="chart-box"><canvas id="replies-mini"></canvas></div>
-        <div class="inline-info" data-inline="replies"><div class="box"><div class="ttl">Что такое «Ответы ЛПР»</div><p>Количество ответов от лиц, принимающих решения.</p></div></div>
+        <div class="inline-info" data-inline="replies"><div class="box"><div class="ttl">Что такое «Ответы ЛПР»</div><p>Количество ответов от лиц, принимающих решения. Метрика отражает интерес: чем выше, тем больше потенциальных диалогов и сделок.</p><p class="muted" style="margin-top:6px">Совет: сопоставляйте ответы с открываемостью, чтобы понять качество базы и сообщений.</p></div></div>
         <div class="hint">Уникальные ответы от лиц, принимающих решения.</div>
       </div>
       <div class="card small clickable" data-metric="bounces">
         <div class="card-title">Ошибки доставки <span class="info" data-info="bounces">i</span></div>
         <div class="kpi"><div class="big" id="bounces-total">—</div><span class="muted" id="lbl-range-4">за 7 дней</span></div>
         <div class="chart-box"><canvas id="bounces-mini"></canvas></div>
-        <div class="inline-info" data-inline="bounces"><div class="box"><div class="ttl">Что такое «Ошибки доставки»</div><p>Письма, вернувшиеся с ошибками (bounce).</p></div></div>
+        <div class="inline-info" data-inline="bounces"><div class="box"><div class="ttl">Что такое «Ошибки доставки»</div><p>Письма, вернувшиеся с ошибками (bounce): несуществующий адрес, переполненный ящик, блокировка сервера и т. п. Высокие ошибки — сигнал к очистке базы и настройке доменов/тепловки.</p><p class="muted" style="margin-top:6px">Цель — снижать bounce‑rate и повышать «Доставлено».</p></div></div>
         <div class="hint">Сколько писем вернулось с ошибками.</div>
       </div>
 
@@ -182,18 +205,7 @@ th{color:#cfd7e6;font-weight:600}
     <section id="sectors" class="hidden">
       <div class="card full">
         <div class="card-title">Сферы и их эффективность <span class="info" data-info="sectors">i</span></div>
-        <div class="controls" id="sectors-ctrls">
-          <input id="sector-search" type="text" placeholder="Поиск по сферам..." />
-          <select id="sector-sort">
-            <option value="reply_rate" selected>Сортировать: по ответам</option>
-            <option value="open_rate">по открываемости</option>
-            <option value="sent">по отправленным</option>
-            <option value="name">по названию</option>
-          </select>
-          <label class="chk"><input type="checkbox" id="sector-aboveavg" /> только выше среднего</label>
-        </div>
-        <div class="sector-summary" id="sector-summary"></div>
-        <table id="sectors-table">
+        <div class="controls" id="sectors-ctrls"><input id="sector-search" type="text" placeholder="Поиск по сферам..." /><select id="sector-sort"><option value="reply_rate" selected>Сортировать: по ответам</option><option value="open_rate">по открываемости</option><option value="sent">по отправленным</option><option value="name">по названию</option></select><label class="chk"><input type="checkbox" id="sector-aboveavg" /> только выше среднего</label></div><div class="sector-summary" id="sector-summary"></div><table id="sectors-table">
           <thead><tr><th>Сфера</th><th>Отправлено</th><th>Открытия</th><th>Ответы</th><th>К открываемости</th><th>К ответам</th></tr></thead>
           <tbody></tbody>
         </table>
@@ -202,6 +214,7 @@ th{color:#cfd7e6;font-weight:600}
     </section>
   </main>
 
+  <!-- Modal -->
   <div class="modal" id="modal">
     <div class="box">
       <div class="head">
@@ -217,20 +230,33 @@ th{color:#cfd7e6;font-weight:600}
   </div>
 
 <script>
-// --- Безопасная инициализация, чтобы клики работали даже если данные не загрузились
-document.addEventListener('DOMContentLoaded',()=>{ 'use strict';
+/* === Ключевые правки ===
+1) При клике по «i» у 4 верхних блоков не открывается модалка. Вместо этого
+   внутри карточки выдвигается плашка с описанием блока (slide‑down).
+2) Данные берём из data.txt (fallback: data (5).txt), как и просили.
+3) Остальная логика графиков сохранена. Клик по самой карточке — по‑прежнему модалка c графиком.
+*/
+
 const INFO = {
-  sent:"Исходящие письма.", delivered:"Успешно доставленные письма (без bounce).",
-  replies:"Уникальные ответы ЛПР.", bounces:"Ошибки доставки.", dynamics:"Открытия и ответы по дням.",
-  funnel:"Отправлено → Открыто → Ответы ЛПР.", quality:"Доля доставленных: Доставлено / Отправлено.",
-  sectors:"Сферы. Стрелки показывают отклонение от среднего."
+  sent: "Исходящие письма.",
+  delivered: "Успешно доставленные письма (без bounce).",
+  replies: "Уникальные ответы ЛПР.",
+  bounces: "Ошибки доставки.",
+  dynamics: "Открытия и ответы по дням.",
+  funnel: "Отправлено → Открыто → Ответы ЛПР. Ширина — доля от отправленных.",
+  quality: "Доля доставленных: Доставлено / Отправлено.",
+  sectors: "Сферы. Стрелки показывают отклонение от среднего."
 };
+
 const fmt = new Intl.NumberFormat('ru-RU');
 const dateShort = new Intl.DateTimeFormat('ru-RU',{day:'2-digit', month:'2-digit'});
 const dateTooltip = new Intl.DateTimeFormat('ru-RU',{day:'2-digit', month:'short'});
 const dateFull = new Intl.DateTimeFormat('ru-RU',{day:'2-digit', month:'short', year:'numeric'});
 const monthShort = new Intl.DateTimeFormat('ru-RU',{month:'short'});
-let ORIGINAL=null, MODE='week', modalChart=null;
+
+let ORIGINAL = null; // неизменённые данные
+let MODE = 'week';   // 'week' | 'all'
+
 // Tabs
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
@@ -238,151 +264,519 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('main > section').forEach(s=>s.classList.add('hidden'));
   document.getElementById(t.dataset.tab).classList.remove('hidden');
 }));
+
 // Toggle
-addEventListener('click',(e)=>{ if(e.target.classList.contains('tbtn')){ const m=e.target.dataset.mode; if(m&&MODE!==m){ MODE=m; document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('active', b.dataset.mode===MODE)); renderAll(); } } });
-// Info clicks: inline for mini‑карточек; модалки — для остального
-const INLINE_KEYS=['sent','delivered','replies','bounces','dynamics'];
-document.addEventListener('click',(e)=>{
-  if(!e.target.classList.contains('info')) return;
-  const key=e.target.dataset.info;
-  if(INLINE_KEYS.includes(key)){ toggleInlineInfo(e.target,key); }
-  else if(key==='funnel'){ openFunnelDetails(); }
-  else if(key==='quality'){ openQualityModal(); }
-  else if(key==='sectors'){ openSectorsModal(); }
-  else { openModal({title:'Что означает блок', sub:INFO[key]}); }
-  e.preventDefault(); e.stopImmediatePropagation();
+document.addEventListener('click', (e)=>{
+  if(e.target.classList.contains('tbtn')){
+    const mode = e.target.dataset.mode;
+    if(mode && MODE!==mode){
+      MODE = mode;
+      document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('active', b.dataset.mode===MODE));
+      renderAll();
+    }
+  }
 });
-function toggleInlineInfo(btn,key){
-  const card=btn.closest('.card');
+
+// Info clicks routing
+// ВАЖНО: для sent/delivered/replies/bounces делаем inline‑плашку, а не модалку
+const INLINE_KEYS = ['sent','delivered','replies','bounces','dynamics'];
+
+document.addEventListener('click', (e)=>{
+  if(e.target.classList.contains('info')){
+    const key = e.target.dataset.info;
+    if(INLINE_KEYS.includes(key)){
+      toggleInlineInfo(e.target, key);
+    } else if(key==='funnel'){ openFunnelDetails(); }
+    else if(key==='dynamics'){ toggleInlineInfo(e.target, key); }
+    else if(key==='quality'){ openQualityModal(); } else if(key==='sectors'){ openSectorsModal(); }
+    else { openModal({ title:'Что означает блок', sub: INFO[key] }); }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    return false;
+  }
+});
+
+function toggleInlineInfo(btn, key){
+  const card = btn.closest('.card');
+  const panel = card.querySelector('.inline-info[data-inline="'+key+'"]');
+  // закрываем все открытые в этой строке (чтобы не было лесенки)
   document.querySelectorAll('#overview .card.small').forEach(c=>{ if(c!==card){ c.classList.remove('show-inline'); }});
+  // переключаем текущую
   card.classList.toggle('show-inline');
 }
-// ─── ЗАГРУЗКА ДАННЫХ (фикс для GitHub Pages) ───
-async function loadData(){
-  const cacheBust = `?v=${Date.now()}`;
-  const tryRead = async (name) => {
-    const res = await fetch(name + cacheBust, {cache:'no-store'});
-    if(!res.ok) throw new Error('HTTP '+res.status+' for '+name);
-    // Некоторые GH Pages отдают text/plain — всё равно пробуем как JSON
-    const text = await res.text();
-    try { return JSON.parse(text); } catch(parseErr){
-      console.error('Невалидный JSON в', name, parseErr, text?.slice(0,120));
-      throw parseErr;
-    }
-  };
-  const candidates=['./data.txt','./data (5) (1).txt','./data (5).txt'];
-  for(const name of candidates){
-    try { return await tryRead(name); } catch(err){ console.log('Пробуем следующий источник данных…', name, err.message);}
-  }
-  throw new Error('NO_DATA');
-}`,{cache:'no-store'});
-      if(!res.ok) throw new Error('HTTP '+res.status);
-      const json=await res.json();
-      return json;
-    }catch(err){ /* пробуем следующий */ }
-  }
-  throw new Error('NO_DATA');
+
+function loadData(){
+  // основной источник — data.txt, резерв — загруженный файл с именем по умолчанию
+  return fetch('data.txt').then(r=>{
+    if(!r.ok) throw new Error('no data.txt');
+    return r.json();
+  }).catch(()=> fetch('data (5).txt').then(r=>r.json()));
 }
 loadData().then(json=>{
-  ORIGINAL=json;
-  try{ renderAll(); }catch(err){ console.error('Render error:', err); }
-  // Клики по мини‑карточкам (открытие модалок)
+  ORIGINAL = json; // не мутируем
+  renderAll();
+  // card clicks -> single modal
   document.querySelectorAll('.card.clickable').forEach(c=>{
-    c.addEventListener('click',(ev)=>{ if(ev.target.closest('.inline-info')||ev.target.closest('.info')) return; openMetricModal(c.dataset.metric); });
+    c.addEventListener('click', (ev)=>{
+      if(ev.target.closest('.inline-info') || ev.target.closest('.info')) return;
+      openMetricModal(c.dataset.metric);
+    });
   });
-}).catch((e)=>{
-  console.warn('Не удалось загрузить data.txt/резервные — работаем без данных. Причина:', e);
-  // Показать дружелюбное сообщение, но не ломать клики/табы
-  try{ alert('Не удалось загрузить данные. Поместите файл «data.txt» рядом с index.html (в корне репозитория/Pages).'); }catch(_){}
-});
-// Helpers
-const cloneSeries=(s)=>JSON.parse(JSON.stringify(s));
-const toXY=(arr)=>({labels:arr.map(p=>p.date), values:arr.map(p=>p.value)});
-const sum=(a)=>a.reduce((x,y)=>x+y,0); const avg=(a)=>sum(a)/a.length; const last=(a)=>a[a.length-1];
-const forecast7=(arr)=>{const sl=arr.slice(-7).map(x=>x.value); return Math.round(avg(sl)*7)};
-const grad=(ctx,color)=>{const g=ctx.createLinearGradient(0,0,0,300); g.addColorStop(0,color); g.addColorStop(1,'rgba(0,0,0,0)'); return g};
-function resetCanvas(id){
-  const el=document.getElementById(id);
-  const parent=el.parentNode;
-  // Полностью пересоздаём canvas без template-строк, чтобы не ловить SyntaxError из-за сломанных бэктиков
-  const newCanvas=document.createElement('canvas');
-  newCanvas.setAttribute('id', id);
-  parent.replaceChild(newCanvas, el);
-  return newCanvas;
-}"></canvas>`; return document.getElementById(id); }
-function groupByWeek(arr){ const m=new Map(); arr.forEach(p=>{ const d=new Date(p.date); const tmp=new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day=(tmp.getUTCDay()+6)%7; tmp.setUTCDate(tmp.getUTCDate()-day+3); const w1=new Date(Date.UTC(tmp.getUTCFullYear(),0,4)); const w=1+Math.round(((tmp-w1)/86400000-3+((w1.getUTCDay()+6)%7))/7); const key=tmp.getUTCFullYear()+"-W"+String(w).padStart(2,'0'); const curr=m.get(key)||{date:key,value:0}; curr.value+=p.value; m.set(key,curr); }); return [...m.values()] }
-function groupByMonth(arr){ const m=new Map(); arr.forEach(p=>{ const d=new Date(p.date); const key=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0'); const curr=m.get(key)||{date:key+'-01',value:0}; curr.value+=p.value; m.set(key,curr); }); return [...m.values()] }
-const maybeAggregate=(arr)=>{ const n=arr.length; if(MODE!=='all') return arr; if(n>360) return groupByMonth(arr); if(n>90) return groupByWeek(arr); return arr };
-const tickStep=(n)=>Math.max(1, Math.ceil(n/12));
-function labelize(labels, raw){ if(MODE==='all' && raw[0] && raw[0].includes('-W')) return labels.map(k=>{ const [y,w]=k.split('-W'); return 'W'+w+'/'+String(y).slice(2)}); if(MODE==='all' && raw[0] && raw[0].length<=7) return labels.map(k=>{ const [y,m]=k.split('-'); const d=new Date(Number(y), Number(m)-1, 1); return monthShort.format(d)+' '+String(y).slice(2) }); return labels.map(d=>dateShort.format(new Date(d))) }
-function getSeries(){ const S=cloneSeries(ORIGINAL.series); if(MODE==='week'){ Object.keys(S).forEach(k=>S[k]=S[k].slice(-7)); } else { Object.keys(S).forEach(k=>S[k]=maybeAggregate(S[k])); } return S }
-function renderAll(){ renderPeriodLabel(); renderOverview(); renderDynamics(); renderFunnel(); renderQuality(); renderSectors(); }
-function renderPeriodLabel(){ const arr=ORIGINAL.series.sent; const start=new Date(arr[0].date), end=new Date(arr.at(-1).date); const label= MODE==='week'? `${start.getDate()}–${end.getDate()} ${monthShort.format(end)}`:`с ${dateFull.format(start)} по ${dateFull.format(end)}`; document.getElementById('period').textContent='Период: '+label; document.querySelectorAll('[id^="lbl-range-"]').forEach(el=>el.textContent= MODE==='week'?'за 7 дней':'за всё время'); document.getElementById('dyn-sub').textContent = MODE==='week' ? 'Последние 7 дней.' : 'За всё время (умные метки времени).'; }
-function spark(canvasId, arr, color){ const ctx=resetCanvas(canvasId).getContext('2d'); const dataArr=arr; const {labels,values}=toXY(dataArr); const short=labelize(labels, labels); return new Chart(ctx,{ type:'line', data:{labels:short, datasets:[{data:values, tension:.35, borderWidth:2, borderColor:color, pointRadius:0, fill:true, backgroundColor:grad(ctx,color.replace('.95','.22'))}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{mode:'index',intersect:false, backgroundColor:'#111827', callbacks:{title:(it)=> dateTooltip.format(new Date(dataArr[it[0].dataIndex].date))}}, decimation:{enabled:MODE==='all', algorithm:'lttb', samples:60}}, scales:{x:{display:false}, y:{display:false}} }) }
-function axisOptsX(labels){ const step=tickStep(labels.length); return {ticks:{color:'#9aa3b2',autoSkip:false,callback:(v,i)=> (i%step===0?labels[i]:'')}, grid:{color:'rgba(255,255,255,.05)'}} }
-function renderOverview(){ const S=getSeries(); document.getElementById('sent-total').textContent=fmt.format(sum(S.sent.map(x=>x.value))); document.getElementById('delivered-total').textContent=fmt.format(sum(S.delivered.map(x=>x.value))); document.getElementById('replies-total').textContent=fmt.format(sum(S.replies.map(x=>x.value))); document.getElementById('bounces-total').textContent=fmt.format(sum(S.bounces.map(x=>x.value))); spark('sent-mini', S.sent,'rgba(113,164,255,.95)'); spark('delivered-mini', S.delivered,'rgba(31,206,122,.95)'); spark('replies-mini', S.replies,'rgba(235,182,87,.95)'); spark('bounces-mini', S.bounces,'rgba(255,107,107,.95)') }
-function renderDynamics(){ const S=getSeries(); const open=S.opens, rep=S.replies; const {labels,values:v1}=toXY(open); const {values:v2}=toXY(rep); const x=labelize(labels, open.map(p=>p.date)); const ctx=resetCanvas('dynamics').getContext('2d'); new Chart(ctx,{ type:'line', data:{labels:x, datasets:[ {label:'Открытия', data:v1, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(113,164,255,.95)', backgroundColor:grad(ctx,'rgba(113,164,255,.22)'), fill:true}, {label:'Ответы', data:v2, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(235,182,87,.95)', backgroundColor:grad(ctx,'rgba(235,182,87,.22)'), fill:true} ]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#d6deea'}}, tooltip:{mode:'index',intersect:false, callbacks:{title:(it)=> dateTooltip.format(new Date(open[it[0].dataIndex].date))}}, decimation:{enabled:MODE==='all', algorithm:'lttb', samples:80}}, scales:{x:axisOptsX(x), y:{ticks:{color:'#9aa3b2'}, grid:{color:'rgba(255,255,255,.05)'}}} }) }
-function renderFunnel(){ const S=getSeries(); const s=sum(S.sent.map(x=>x.value)), o=sum(S.opens.map(x=>x.value)), r=sum(S.replies.map(x=>x.value)); const openRate=s?(o/s):0; const replyRate=s?(r/s):0; const w=(val)=>{ if(!s) return 35; const pct=(val/s)*100; return Math.max(35, Math.min(100, pct)) };
-  const box=document.getElementById('funnel-box'); box.innerHTML=`<div class="funnel">
-    <div class="row"><div class="bar" style="width:100%"><div class="shape"></div><div class="label"><span class="name">Отправлено</span><span class="val">${fmt.format(s)} <span class="muted">(100%)</span></span></div></div></div>
-    <div class="row"><div class="bar" style="width:${w(o).toFixed(1)}%"><div class="shape"></div><div class="label"><span class="name">Открыто</span><span class="val">${fmt.format(o)} <span class="muted">(${(openRate*100).toFixed(1)}%)</span></span></div></div></div>
-    <div class="row"><div class="bar" style="width:${w(r).toFixed(1)}%"><div class="shape"></div><div class="label"><span class="name">Ответы ЛПР</span><span class="val">${fmt.format(r)} <span class="muted">(${(replyRate*100).toFixed(1)}%)</span></span></div></div></div>
-  </div>` }
-function renderQuality(){ const S=getSeries(); const sent=sum(S.sent.map(x=>x.value)); const delivered=sum(S.delivered.map(x=>x.value)); const rate=sent?(delivered/sent):0; document.getElementById('quality-val').textContent=(rate*100).toFixed(1)+'%'; const ctx=resetCanvas('quality').getContext('2d'); new Chart(ctx,{ type:'doughnut', data:{labels:['Успешно','Ошибки'], datasets:[{data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)']}]}, options:{plugins:{legend:{position:'bottom', labels:{color:'#d6deea'}}}, responsive:true, maintainAspectRatio:false} }) }
-function arrow(diff){ const up=diff>=0; const cls=up?'up':'down'; const pct=Math.abs(diff*100).toFixed(0)+'%'; return `<span class="arrow ${cls}"><span class="ic"></span>${pct}</span>` }
-function renderSectors(){ const tbody=document.querySelector('#sectors-table tbody'); const arr=[...ORIGINAL.industries]; const avgOpen=arr.reduce((a,b)=>a+b.open_rate,0)/arr.length; const avgReply=arr.reduce((a,b)=>a+b.reply_rate,0)/arr.length; const q=(document.getElementById('sector-search')?.value||'').toLowerCase().trim(); const sort=document.getElementById('sector-sort')?.value||'reply_rate'; const onlyAbove=document.getElementById('sector-aboveavg')?.checked||false; let filtered=arr.filter(it=>it.name.toLowerCase().includes(q)); if(onlyAbove){ filtered=filtered.filter(it=>it.reply_rate>=avgReply || it.open_rate>=avgOpen) }
-  const cmp={ name:(a,b)=>a.name.localeCompare(b.name), sent:(a,b)=>b.sent-a.sent, open_rate:(a,b)=>b.open_rate-a.open_rate, reply_rate:(a,b)=>b.reply_rate-a.reply_rate }[sort]; filtered.sort(cmp);
-  tbody.innerHTML=''; filtered.forEach(it=>{ const diffOpen=(it.open_rate-avgOpen)/avgOpen; const diffReply=(it.reply_rate-avgReply)/avgReply; const tr=document.createElement('tr'); tr.innerHTML=`<td>${it.name}</td><td>${fmt.format(it.sent)}</td><td>${(it.open_rate*100).toFixed(1)}%</td><td>${(it.reply_rate*100).toFixed(1)}%</td><td>${arrow(diffOpen)}</td><td>${arrow(diffReply)}</td>`; tbody.appendChild(tr) });
-  const topOpens=[...arr].sort((a,b)=>b.open_rate-a.open_rate).slice(0,3); const topReplies=[...arr].sort((a,b)=>b.reply_rate-a.reply_rate).slice(0,3); const mostVolume=[...arr].sort((a,b)=>b.sent-a.sent).slice(0,3); const sumBox=document.getElementById('sector-summary'); if(sumBox){ sumBox.innerHTML=`
-    <div class="tile"><div class="ttl">Топ по открываемости</div>${ topOpens.map(x=>`<div class="item"><span>${x.name}</span><b>${(x.open_rate*100).toFixed(1)}%</b></div>`).join('') }</div>
-    <div class="tile"><div class="ttl">Топ по ответам</div>${ topReplies.map(x=>`<div class="item"><span>${x.name}</span><b>${(x.reply_rate*100).toFixed(1)}%</b></div>`).join('') }</div>
-    <div class="tile"><div class="ttl">Больше всего писем</div>${ mostVolume.map(x=>`<div class="item"><span>${x.name}</span><b>${fmt.format(x.sent)}</b></div>`).join('') }</div>` }
+}).catch(()=> alert('Не удалось загрузить данные'));
+
+// --- Helpers ---
+function cloneSeries(s){ return JSON.parse(JSON.stringify(s)); }
+function toXY(arr){ return { labels: arr.map(p=>p.date), values: arr.map(p=>p.value) }; }
+function sum(arr){ return arr.reduce((a,b)=>a+b,0); }
+function avg(arr){ return sum(arr)/arr.length; }
+function last(arr){ return arr[arr.length-1]; }
+function forecast7(arr){ const sl = arr.slice(-7).map(x=>x.value); return Math.round(avg(sl)*7); }
+function grad(ctx, color){ const g = ctx.createLinearGradient(0,0,0,300); g.addColorStop(0,color); g.addColorStop(1,'rgba(0,0,0,0)'); return g; }
+function resetCanvas(id){ const el=document.getElementById(id); const p=el.parentNode; p.innerHTML=`<canvas id="${id}"></canvas>`; return document.getElementById(id); }
+
+// Агрегация для длинных периодов
+function groupByWeek(arr){
+  const map = new Map();
+  arr.forEach(p=>{
+    const d = new Date(p.date);
+    // номер ISO‑недели: год-неделя (приближённо, достаточно для визуализации)
+    const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = (tmp.getUTCDay() + 6) % 7;
+    tmp.setUTCDate(tmp.getUTCDate() - dayNum + 3);
+    const week1 = new Date(Date.UTC(tmp.getUTCFullYear(),0,4));
+    const weekNo = 1 + Math.round(((tmp - week1)/86400000 - 3 + ((week1.getUTCDay()+6)%7))/7);
+    const key = tmp.getUTCFullYear() + '-W' + String(weekNo).padStart(2,'0');
+    const curr = map.get(key) || {date:key, value:0};
+    curr.value += p.value;
+    map.set(key, curr);
+  });
+  return Array.from(map.values());
 }
-addEventListener('input',(e)=>{ if(e.target && e.target.id==='sector-search') renderSectors() });
-addEventListener('change',(e)=>{ if(e.target && (e.target.id==='sector-sort'||e.target.id==='sector-aboveavg')) renderSectors() });
+function groupByMonth(arr){
+  const map = new Map();
+  arr.forEach(p=>{
+    const d = new Date(p.date);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    const curr = map.get(key) || {date:key+'-01', value:0};
+    curr.value += p.value;
+    map.set(key, curr);
+  });
+  return Array.from(map.values());
+}
+function maybeAggregate(arr){
+  const n = arr.length;
+  if(MODE!=='all') return arr;
+  if(n > 360) return groupByMonth(arr);
+  if(n > 90)  return groupByWeek(arr);
+  return arr;
+}
+// шаг для подписей по X, чтобы не более ~12 меток
+function tickStep(n){ return Math.max(1, Math.ceil(n / 12)); }
+function labelize(labels, rawDates){
+  // для “all” с агрегацией по месяцам показываем «МММ YYYY»,
+  // по неделям — «Wxx/YY», иначе dd.mm
+  if(MODE==='all' && rawDates[0] && rawDates[0].includes('-W')){
+    return labels.map((k)=>{
+      const [y,w] = k.split('-W');
+      return 'W'+w+'/'+String(y).slice(2);
+    });
+  }
+  if(MODE==='all' && rawDates[0] && rawDates[0].length<=7){
+    // ключ вида YYYY-MM
+    return labels.map((k)=>{
+      const [y,m] = k.split('-'); const d = new Date(Number(y), Number(m)-1, 1);
+      return monthShort.format(d)+' '+String(y).slice(2);
+    });
+  }
+  return labels.map(d=> dateShort.format(new Date(d)));
+}
+
+function getSeries(){
+  const S = cloneSeries(ORIGINAL.series);
+  if(MODE==='week'){
+    Object.keys(S).forEach(k=>{ S[k] = S[k].slice(-7); });
+  }else{
+    Object.keys(S).forEach(k=>{ S[k] = maybeAggregate(S[k]); });
+  }
+  return S;
+}
+
+function renderAll(){
+  renderPeriodLabel();
+  renderOverview();
+  renderDynamics();
+  renderFunnel();
+  renderQuality();
+  renderSectors();
+}
+
+function renderPeriodLabel(){
+  const arr = ORIGINAL.series.sent;
+  const start = new Date(arr[0].date);
+  const end = new Date(arr.at(-1).date);
+  let label = '';
+  if(MODE==='week'){
+    label = `${start.getDate()}–${end.getDate()} ${monthShort.format(end)}`;
+  }else{
+    label = `с ${dateFull.format(start)} по ${dateFull.format(end)}`;
+  }
+  document.getElementById('period').textContent = 'Период: ' + label;
+  document.querySelectorAll('[id^="lbl-range-"]').forEach((el)=>{
+    el.textContent = MODE==='week' ? 'за 7 дней' : 'за всё время';
+  });
+  document.getElementById('dyn-sub').textContent = MODE==='week' ? 'Последние 7 дней.' : 'За всё время (умные метки времени).';
+}
+
+function spark(canvasId, arr, color){
+  const ctx = resetCanvas(canvasId).getContext('2d');
+  const dataArr = arr; // мини‑спарклайны всегда после getSeries (уже агрегировано при all)
+  const {labels, values} = toXY(dataArr);
+  const shortLabels = labelize(labels, labels);
+  return new Chart(ctx, {
+    type:'line',
+    data:{labels:shortLabels, datasets:[{data:values, tension:.35, borderWidth:2, borderColor:color, pointRadius:0, fill:true, backgroundColor:grad(ctx, color.replace('.95', '.22'))}]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{mode:'index', intersect:false, backgroundColor:'#111827',
+          callbacks:{title:(it)=> dateTooltip.format(new Date(dataArr[it[0].dataIndex].date))}},
+        decimation:{enabled: MODE==='all', algorithm:'lttb', samples:60}
+      },
+      scales:{x:{display:false},y:{display:false}}
+    }
+  });
+}
+
+function axisOptsX(labels){
+  const step = tickStep(labels.length);
+  return {
+    ticks:{
+      color:'#9aa3b2',
+      autoSkip:false,
+      callback:(val, idx)=> (idx % step === 0 ? labels[idx] : '')
+    },
+    grid:{color:'rgba(255,255,255,.05)'}
+  };
+}
+
+function renderOverview(){
+  const S = getSeries();
+  document.getElementById('sent-total').textContent = fmt.format(sum(S.sent.map(x=>x.value)));
+  document.getElementById('delivered-total').textContent = fmt.format(sum(S.delivered.map(x=>x.value)));
+  document.getElementById('replies-total').textContent = fmt.format(sum(S.replies.map(x=>x.value)));
+  document.getElementById('bounces-total').textContent = fmt.format(sum(S.bounces.map(x=>x.value)));
+  spark('sent-mini', S.sent, 'rgba(113,164,255,.95)');
+  spark('delivered-mini', S.delivered, 'rgba(31,206,122,.95)');
+  spark('replies-mini', S.replies, 'rgba(235,182,87,.95)');
+  spark('bounces-mini', S.bounces, 'rgba(255,107,107,.95)');
+}
+
+function renderDynamics(){
+  const S = getSeries();
+  const open = S.opens;
+  const rep = S.replies;
+  const {labels, values: v1} = toXY(open);
+  const {values: v2} = toXY(rep);
+  const xlabels = labelize(labels, open.map(p=>p.date));
+  const ctx = resetCanvas('dynamics').getContext('2d');
+  new Chart(ctx, {
+    type:'line',
+    data:{labels:xlabels, datasets:[
+      {label:'Открытия', data:v1, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(113,164,255,.95)', backgroundColor:grad(ctx,'rgba(113,164,255,.22)'), fill:true},
+      {label:'Ответы', data:v2, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(235,182,87,.95)', backgroundColor:grad(ctx,'rgba(235,182,87,.22)'), fill:true},
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'#d6deea'}},
+        tooltip:{mode:'index', intersect:false, callbacks:{
+          title:(it)=> dateTooltip.format(new Date(open[it[0].dataIndex].date))
+        }},
+        decimation:{enabled: MODE==='all', algorithm:'lttb', samples:80}
+      },
+      scales:{ x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}, grid:{color:'rgba(255,255,255,.05)'}} }
+    }
+  });
+}
+
+function renderFunnel(){
+  const S = getSeries();
+  const s = sum(S.sent.map(x=>x.value));
+  const o = sum(S.opens.map(x=>x.value));
+  const r = sum(S.replies.map(x=>x.value));
+  const openRate = s ? (o/s) : 0;
+  const replyRate = s ? (r/s) : 0;
+
+  const calcWidth = (val)=>{
+    if(!s) return 35;
+    const pct = (val/s)*100;
+    return Math.max(35, Math.min(100, pct));
+  };
+
+  const box = document.getElementById('funnel-box');
+  box.innerHTML = `
+    <div class="funnel">
+      <div class="row"><div class="bar" style="width:100%"><div class="shape"></div><div class="label"><span class="name">Отправлено</span><span class="val">${fmt.format(s)} <span class="muted">(100%)</span></span></div></div></div>
+      <div class="row"><div class="bar" style="width:${calcWidth(o).toFixed(1)}%"><div class="shape"></div><div class="label"><span class="name">Открыто</span><span class="val">${fmt.format(o)} <span class="muted">(${(openRate*100).toFixed(1)}%)</span></span></div></div></div>
+      <div class="row"><div class="bar" style="width:${calcWidth(r).toFixed(1)}%"><div class="shape"></div><div class="label"><span class="name">Ответы ЛПР</span><span class="val">${fmt.format(r)} <span class="muted">(${(replyRate*100).toFixed(1)}%)</span></span></div></div></div>
+    </div>
+  `;
+}
+
+function renderQuality(){
+  const S = getSeries();
+  const sent = sum(S.sent.map(x=>x.value));
+  const delivered = sum(S.delivered.map(x=>x.value));
+  const rate = sent ? (delivered/sent) : 0;
+  document.getElementById('quality-val').textContent = (rate*100).toFixed(1)+'%';
+  const ctx = resetCanvas('quality').getContext('2d');
+  new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]},
+    options:{ plugins:{legend:{position:'bottom', labels:{color:'#d6deea'}}}, responsive:true, maintainAspectRatio:false }
+  });
+}
+
+
+function renderSectors(){
+  const tbody = document.querySelector('#sectors-table tbody');
+  const arr = [...ORIGINAL.industries];
+  const avgOpen = arr.reduce((a,b)=>a+b.open_rate,0)/arr.length;
+  const avgReply = arr.reduce((a,b)=>a+b.reply_rate,0)/arr.length;
+
+  // Controls
+  const q = (document.getElementById('sector-search')?.value || '').toLowerCase().trim();
+  const sort = document.getElementById('sector-sort')?.value || 'reply_rate';
+  const onlyAbove = document.getElementById('sector-aboveavg')?.checked || false;
+
+  let filtered = arr.filter(it => it.name.toLowerCase().includes(q));
+  if(onlyAbove){
+    filtered = filtered.filter(it => it.reply_rate>=avgReply || it.open_rate>=avgOpen);
+  }
+
+  const cmp = {
+    name:(a,b)=>a.name.localeCompare(b.name),
+    sent:(a,b)=>b.sent - a.sent,
+    open_rate:(a,b)=>b.open_rate - a.open_rate,
+    reply_rate:(a,b)=>b.reply_rate - a.reply_rate,
+  }[sort];
+  filtered.sort(cmp);
+
+  tbody.innerHTML = '';
+  filtered.forEach(it=>{
+    const diffOpen = (it.open_rate-avgOpen)/avgOpen;
+    const diffReply = (it.reply_rate-avgReply)/avgReply;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${it.name}</td>
+      <td>${fmt.format(it.sent)}</td>
+      <td>${(it.open_rate*100).toFixed(1)}%</td>
+      <td>${(it.reply_rate*100).toFixed(1)}%</td>
+      <td>${arrow(diffOpen)}</td>
+      <td>${arrow(diffReply)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Summary top 3
+  const topOpens = [...arr].sort((a,b)=>b.open_rate-a.open_rate).slice(0,3);
+  const topReplies = [...arr].sort((a,b)=>b.reply_rate-a.reply_rate).slice(0,3);
+  const mostVolume = [...arr].sort((a,b)=>b.sent-a.sent).slice(0,3);
+  const sumBox = document.getElementById('sector-summary');
+  if(sumBox){
+    sumBox.innerHTML = `
+      <div class="tile"><div class="ttl">Топ по открываемости</div>${
+        topOpens.map(x=>`<div class="item"><span>${x.name}</span><b>${(x.open_rate*100).toFixed(1)}%</b></div>`).join('')
+      }</div>
+      <div class="tile"><div class="ttl">Топ по ответам</div>${
+        topReplies.map(x=>`<div class="item"><span>${x.name}</span><b>${(x.reply_rate*100).toFixed(1)}%</b></div>`).join('')
+      }</div>
+      <div class="tile"><div class="ttl">Больше всего писем</div>${
+        mostVolume.map(x=>`<div class="item"><span>${x.name}</span><b>${fmt.format(x.sent)}</b></div>`).join('')
+      }</div>
+    `;
+  }
+}
+
+// Bind controls
+document.addEventListener('input', (e)=>{
+  if(e.target && (e.target.id==='sector-search')) renderSectors();
+});
+document.addEventListener('change', (e)=>{
+  if(e.target && (e.target.id==='sector-sort' || e.target.id==='sector-aboveavg')) renderSectors();
+});
+
 function openSectorsModal(){
-  const arr=ORIGINAL.industries; const avgOpen=arr.reduce((a,b)=>a+b.open_rate,0)/arr.length; const avgReply=arr.reduce((a,b)=>a+b.reply_rate,0)/arr.length;
-  openModal({ title:'Сферы · как читать и что делать', sub:'Сравниваем сферы по открываемости и ответам относительно среднего.', builder:()=>{
-    const body=document.getElementById('modal-body'); body.innerHTML=`
-      <div class="box" style="margin-bottom:12px; padding:12px; border-radius:12px; background:linear-gradient(180deg,#0f161f,#0b1219); border:1px solid rgba(255,255,255,.06)">
-        <div class="ttl" style="font-size:12px; font-weight:800; color:#dce4f1; margin-bottom:6px">Пояснение</div>
-        <ul style="margin:0; padding-left:16px; line-height:1.5; color:#c7d0df; font-size:12px">
-          <li><b>Открываемость</b> — среднее по сферам: <b>${(avgOpen*100).toFixed(1)}%</b>.</li>
-          <li><b>Ответы</b> — среднее по сферам: <b>${(avgReply*100).toFixed(1)}%</b>.</li>
-        </ul>
+  const arr = ORIGINAL.industries;
+  const avgOpen = arr.reduce((a,b)=>a+b.open_rate,0)/arr.length;
+  const avgReply = arr.reduce((a,b)=>a+b.reply_rate,0)/arr.length;
+  openModal({
+    title:'Сферы · как читать и что делать',
+    sub:'Точка входа для приоритизации ниш. Сравниваем сферы по открываемости и ответам относительно среднего.',
+    builder: ()=>{
+      const body = document.getElementById('modal-body');
+      body.innerHTML = `
+        <div class="box" style="margin-bottom:12px; padding:12px; border-radius:12px; background:linear-gradient(180deg,#0f161f,#0b1219); border:1px solid rgba(255,255,255,.06)">
+          <div class="ttl" style="font-size:12px; font-weight:800; color:#dce4f1; margin-bottom:6px">Пояснение</div>
+          <ul style="margin:0; padding-left:16px; line-height:1.5; color:#c7d0df; font-size:12px">
+            <li><b>Открываемость</b> — доля открытых писем в сфере. Среднее по всем сферам: <b>${(avgOpen*100).toFixed(1)}%</b>.</li>
+            <li><b>Ответы</b> — доля писем с ответом ЛПР. Среднее по всем сферам: <b>${(avgReply*100).toFixed(1)}%</b>.</li>
+            <li>Стрелки в таблице показывают отклонение от среднего: зелёная ↑ — лучше среднего, красная ↓ — хуже.</li>
+            <li>Ищите сферы с одновременно высокой открываемостью и ответами — они первыe в очереди на масштабирование.</li>
+          </ul>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <div class="tile"><div class="ttl">Лидеры по ответам</div><canvas id="sectors-top-replies" style="height:180px"></canvas></div>
+          <div class="tile"><div class="ttl">Лидеры по открываемости</div><canvas id="sectors-top-opens" style="height:180px"></canvas></div>
+        </div>
+      `;
+      const topReplies = [...arr].sort((a,b)=>b.reply_rate-a.reply_rate).slice(0,5);
+      const topOpens = [...arr].sort((a,b)=>b.open_rate-a.open_rate).slice(0,5);
+      const drawBars = (id, data, valKey)=>{
+        const ctx = document.getElementById(id).getContext('2d');
+        new Chart(ctx, {
+          type:'bar',
+          data:{ labels: data.map(x=>x.name),
+                 datasets:[{ data:data.map(x=>x[valKey]*100), borderWidth:1 }] },
+          options:{
+            responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{display:false}, tooltip:{callbacks:{ label:(it)=> it.raw.toFixed(1)+'%' }} },
+            scales:{ x:{ ticks:{ color:'#9aa3b2' }}, y:{ ticks:{ color:'#9aa3b2', callback:(v)=>v+'%' } } }
+          }
+        });
+      };
+      drawBars('sectors-top-replies', topReplies, 'reply_rate');
+      drawBars('sectors-top-opens', topOpens, 'open_rate');
+    }
+  });
+}
+function openMetricModal(key){
+  const conf = {
+    sent: {title:'Отправлено', color:'rgba(113,164,255,.95)'},
+    delivered: {title:'Доставлено', color:'rgba(31,206,122,.95)'},
+    replies: {title:'Ответы ЛПР', color:'rgba(235,182,87,.95)'},
+    bounces: {title:'Ошибки доставки', color:'rgba(255,107,107,.95)'},
+  }[key];
+  const arr = getSeries()[key];
+  openModal({
+    title: conf.title + (MODE==='week'?' (7 дней)':' (за всё время)'),
+    sub: INFO[key],
+    mode: 'single',
+    builder: (canvas)=> singleLineChart(canvas, conf.title, conf.color, arr),
+    foot:[
+      {label:'Текущее (последний день)', value: fmt.format(last(arr).value)},
+      {label: MODE==='week' ? 'Среднее/день (7 дн.)' : 'Среднее/день', value: fmt.format(Math.round(avg(arr.map(x=>x.value))))},
+      {label:'Прогноз на неделю (темп сохранится)', value: fmt.format(forecast7(arr))}
+    ]
+  });
+}
+
+function openDynamicsModal(){
+  const S = getSeries();
+  const open = S.opens;
+  const rep = S.replies;
+  const {labels, values: v1} = toXY(open);
+  const {values: v2} = toXY(rep);
+  const xlabels = labelize(labels, open.map(p=>p.date));
+  openModal({
+    title:'Динамика ' + (MODE==='week'?'(7 дней)':'(за всё время)'),
+    sub:'Открытия и ответы по дням',
+    mode:'single',
+    builder:(canvas)=>{
+      const ctx = canvas.getContext('2d');
+      if(modalChart) modalChart.destroy();
+      modalChart = new Chart(ctx,{
+        type:'line',
+        data:{labels:xlabels, datasets:[
+          {label:'Открытия', data:v1, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(113,164,255,.95)', backgroundColor:grad(ctx,'rgba(113,164,255,.22)'), fill:true},
+          {label:'Ответы', data:v2, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(235,182,87,.95)', backgroundColor:grad(ctx,'rgba(235,182,87,.22)'), fill:true},
+        ]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{tooltip:{mode:'index',intersect:false}, decimation:{enabled: MODE==='all', algorithm:'lttb', samples:80}},
+          scales:{x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}}}
+        }
+      });
+    }
+  });
+}
+
+function openQualityModal(){
+  const S = getSeries();
+  const sent = sum(S.sent.map(x=>x.value));
+  const delivered = sum(S.delivered.map(x=>x.value));
+  openModal({
+    title:'Качество доставки ' + (MODE==='week'?'(7 дней)':'(за всё время)'),
+    sub:'Доля доставленных',
+    mode:'single',
+    builder:(canvas)=>{
+      const ctx = canvas.getContext('2d');
+      if(modalChart) modalChart.destroy();
+      modalChart = new Chart(ctx, {
+        type:'doughnut',
+        data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]},
+        options:{ plugins:{legend:{position:'bottom', labels:{color:'#d6deea'}}}, responsive:true, maintainAspectRatio:false }
+      });
+    }
+  });
+}
+
+function openFunnelDetails(){
+  const S = getSeries();
+  openModal({title:'Воронка · детали ' + (MODE==='week'?'(7 дней)':'(за всё время)'), sub:'Три отдельных графика: отправлено, открытия, ответы ЛПР.', mode:'multi', builder: ()=>{
+    const body = document.getElementById('modal-body');
+    body.innerHTML = `
+      <div class="grid3">
+        <div class="mini"><div class="title">Отправлено</div><canvas id="c1"></canvas></div>
+        <div class="mini"><div class="title">Открытия</div><canvas id="c2"></canvas></div>
+        <div class="mini"><div class="title">Ответы ЛПР</div><canvas id="c3"></canvas></div>
       </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-        <div class="tile"><div class="ttl">Лидеры по ответам</div><canvas id="sectors-top-replies" style="height:180px"></canvas></div>
-        <div class="tile"><div class="ttl">Лидеры по открываемости</div><canvas id="sectors-top-opens" style="height:180px"></canvas></div>
-      </div>`;
-    const topReplies=[...arr].sort((a,b)=>b.reply_rate-a.reply_rate).slice(0,5);
-    const topOpens=[...arr].sort((a,b)=>b.open_rate-a.open_rate).slice(0,5);
-    const draw=(id,data,key)=>{ const ctx=document.getElementById(id).getContext('2d'); new Chart(ctx,{ type:'bar', data:{labels:data.map(x=>x.name), datasets:[{data:data.map(x=>x[key]*100), borderWidth:1}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(it)=> it.raw.toFixed(1)+'%'}}}, scales:{x:{ticks:{color:'#9aa3b2'}}, y:{ticks:{color:'#9aa3b2', callback:(v)=>v+'%'}}} }) };
-    draw('sectors-top-replies', topReplies, 'reply_rate');
-    draw('sectors-top-opens', topOpens, 'open_rate');
+    `;
+    const draw = (id, arr, color)=>{
+      const {labels, values} = toXY(arr);
+      const xlabels = labelize(labels, arr.map(p=>p.date));
+      const ctx = document.getElementById(id).getContext('2d');
+      new Chart(ctx, {
+        type:'line',
+        data:{labels:xlabels, datasets:[{data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}, tooltip:{callbacks:{title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))}}, decimation:{enabled: MODE==='all', algorithm:'lttb', samples:60}},
+          scales:{x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}}}
+        }
+      });
+    };
+    draw('c1', S.sent, 'rgba(113,164,255,.95)');
+    draw('c2', S.opens, 'rgba(113,164,255,.95)');
+    draw('c3', S.replies, 'rgba(235,182,87,.95)');
   }});
 }
-function openMetricModal(key){ const conf={ sent:{title:'Отправлено',color:'rgba(113,164,255,.95)'}, delivered:{title:'Доставлено',color:'rgba(31,206,122,.95)'}, replies:{title:'Ответы ЛПР',color:'rgba(235,182,87,.95)'}, bounces:{title:'Ошибки доставки',color:'rgba(255,107,107,.95)'} }[key]; const arr=getSeries()[key]; openModal({ title:conf.title + (MODE==='week'?' (7 дней)':' (за всё время)'), sub:INFO[key], mode:'single', builder:(canvas)=> singleLineChart(canvas, conf.title, conf.color, arr), foot:[ {label:'Текущее (последний день)', value: fmt.format(last(arr).value)}, {label: MODE==='week' ? 'Среднее/день (7 дн.)' : 'Среднее/день', value: fmt.format(Math.round(avg(arr.map(x=>x.value))))}, {label:'Прогноз на неделю (темп сохранится)', value: fmt.format(forecast7(arr))} ] }) }
-function singleLineChart(canvas, label, color, arr){ const ctx=canvas.getContext('2d'); if(modalChart) try{ modalChart.destroy() }catch{}; modalChart=new Chart(ctx,{ type:'line', data:{ labels: labelize(arr.map(p=>p.date), arr.map(p=>p.date)), datasets:[{ label, data:arr.map(p=>p.value), tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx,color.replace('.95','.22')), fill:true }]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#d6deea'}}, tooltip:{mode:'index',intersect:false}, decimation:{enabled:MODE==='all', algorithm:'lttb', samples:80}}, scales:{x:axisOptsX(labelize(arr.map(p=>p.date), arr.map(p=>p.date))), y:{ticks:{color:'#9aa3b2'}}} }) }
-function openQualityModal(){ const S=getSeries(); const sent=sum(S.sent.map(x=>x.value)); const delivered=sum(S.delivered.map(x=>x.value)); openModal({ title:'Качество доставки ' + (MODE==='week'?'(7 дней)':'(за всё время)'), sub:'Доля доставленных', mode:'single', builder:(canvas)=>{ const ctx=canvas.getContext('2d'); if(modalChart) try{ modalChart.destroy() }catch{}; modalChart=new Chart(ctx,{ type:'doughnut', data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]}, options:{ plugins:{legend:{position:'bottom', labels:{color:'#d6deea'}}}, responsive:true, maintainAspectRatio:false } }) } }) }
-function openFunnelDetails(){ const S=getSeries(); openModal({ title:'Воронка · детали ' + (MODE==='week'?'(7 дней)':'(за всё время)'), sub:'Три отдельных графика: отправлено, открытия, ответы ЛПР.', mode:'multi', builder:()=>{ const body=document.getElementById('modal-body'); body.innerHTML=`<div class="grid3"><div class="mini"><div class="title">Отправлено</div><canvas id="c1"></canvas></div><div class="mini"><div class="title">Открытия</div><canvas id="c2"></canvas></div><div class="mini"><div class="title">Ответы ЛПР</div><canvas id="c3"></canvas></div></div>`; const draw=(id,arr,color)=>{ const {labels,values}=toXY(arr); const x=labelize(labels, arr.map(p=>p.date)); const ctx=document.getElementById(id).getContext('2d'); new Chart(ctx,{ type:'line', data:{labels:x, datasets:[{data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx,color.replace('.95','.22')), fill:true}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))}}, decimation:{enabled:MODE==='all', algorithm:'lttb', samples:60}}, scales:{x:axisOptsX(x), y:{ticks:{color:'#9aa3b2'}}} }) };
-    draw('c1', S.sent, 'rgba(113,164,255,.95)'); draw('c2', S.opens, 'rgba(113,164,255,.95)'); draw('c3', S.replies, 'rgba(235,182,87,.95)'); } }) }
+
+// Universal modal
 function openModal({title, sub, builder, foot=[], mode='single'}){
-  const m=document.getElementById('modal'); document.getElementById('modal-title').textContent=title||''; document.getElementById('modal-sub').textContent=sub||''; const body=document.getElementById('modal-body');
-  if(mode==='single'){ body.innerHTML='<div class="chart-box tall"><canvas id="modal-chart"></canvas></div>'; const canvas=document.getElementById('modal-chart'); if(builder) builder(canvas) }
-  else if(mode==='multi'){ body.innerHTML=''; if(builder) builder() }
-  const footBox=document.getElementById('modal-foot'); footBox.innerHTML=''; foot.forEach(f=>{ const el=document.createElement('div'); el.innerHTML=`<div class="sub" style="font-size:11px">${f.label}</div><div style="font-weight:800">${f.value}</div>`; footBox.appendChild(el) });
-  m.classList.add('open')
+  const m = document.getElementById('modal');
+  document.getElementById('modal-title').textContent = title || '';
+  document.getElementById('modal-sub').textContent = sub || '';
+  const body = document.getElementById('modal-body');
+
+  if(mode === 'single'){
+    body.innerHTML = '<div class="chart-box tall"><canvas id="modal-chart"></canvas></div>';
+    const canvas = document.getElementById('modal-chart');
+    if(builder) builder(canvas);
+  }else if(mode === 'multi'){
+    body.innerHTML = '';
+    if(builder) builder();
+  }
+
+  const footBox = document.getElementById('modal-foot'); footBox.innerHTML='';
+  foot.forEach(f=>{ const el = document.createElement('div'); el.innerHTML = `<div class="sub" style="font-size:11px">${f.label}</div><div style="font-weight:800">${f.value}</div>`; footBox.appendChild(el); });
+
+  m.classList.add('open');
 }
-document.getElementById('modal-close').addEventListener('click',()=> document.getElementById('modal').classList.remove('open'));
-document.getElementById('modal').addEventListener('click',(e)=>{ if(e.target.id==='modal') e.currentTarget.classList.remove('open') });
-// Защитные обёртки вокруг Chart.js, чтобы отсутствие CDN не ломало клики
-function hasChart(){ return typeof Chart !== 'undefined' }
-const safeChart = (cb) => { try{ if(hasChart()) cb(); } catch(e){ console.error('Chart error', e) } }
 
-// Переопределяем места, где создаются графики, через safeChart — уже учтено в функциях вызовом new Chart внутри try/catch выше.
-
-})();// IIFE end
+document.getElementById('modal-close').addEventListener('click', ()=> document.getElementById('modal').classList.remove('open'));
+document.getElementById('modal').addEventListener('click', (e)=>{ if(e.target.id==='modal') e.currentTarget.classList.remove('open'); });
 </script>
 </body>
 </html>
