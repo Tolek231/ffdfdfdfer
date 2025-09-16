@@ -8,9 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
-const DEMO_DATA = {sent:[], delivered:[], opens:[], replies:[], bounces:[], industries:[{name:'IT', sent:1200, open_rate:0.44, reply_rate:0.09},{name:'E-commerce', sent:900, open_rate:0.38, reply_rate:0.07},{name:'Real Estate', sent:700, open_rate:0.41, reply_rate:0.05}]};
-</script>
 <style>
 :root{
   --bg:#0a0d12;
@@ -308,50 +305,13 @@ function toggleInlineInfo(btn, key){
   card.classList.toggle('show-inline');
 }
 
-
 function loadData(){
-  const params = new URLSearchParams(location.search);
-  const source = params.get('src') || 'data.txt';
-  const useMock = params.get('mock')==='1';
-
-  const apply = (data)=>{
-    ORIGINAL = data;
-    renderAll();
-    document.getElementById('load-error')?.remove();
-  };
-
-  if(useMock){
-    apply(DEMO_DATA);
-    return;
-  }
-
-  fetch(source, {cache:'no-store'})
-    .then(r=>{
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      return r.text();
-    })
-    .then(txt=>{
-      const data = JSON.parse(txt);
-      apply(data);
-    })
-    .catch(err=>{
-      console.warn('Не удалось загрузить данные:', err);
-      const banner = document.getElementById('load-error') || document.createElement('div');
-      banner.id = 'load-error';
-      banner.style.cssText = 'margin:12px 0;padding:10px;border-radius:12px;background:#1a222e;border:1px solid rgba(255,255,255,.08);color:#e9eef6';
-      banner.innerHTML = `<b>Не удалось загрузить данные.</b> Проверьте доступ к <code>${source}</code>.<br>
-        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="chip blue" id="retry-load">Повторить</button>
-          <a class="chip" id="use-mock" href="?mock=1">Показать демо</a>
-        </div>`;
-      document.querySelector('.container')?.prepend(banner);
-      document.getElementById('retry-load')?.addEventListener('click', ()=>{
-        banner.remove();
-        loadData();
-      });
-    });
+  // основной источник — data.txt, резерв — загруженный файл с именем по умолчанию
+  return fetch('data.txt').then(r=>{
+    if(!r.ok) throw new Error('no data.txt');
+    return r.json();
+  }).catch(()=> fetch('data (5).txt').then(r=>r.json()));
 }
-
 loadData().then(json=>{
   ORIGINAL = json; // не мутируем
   renderAll();
@@ -472,7 +432,7 @@ function spark(canvasId, arr, color){
   const dataArr = arr; // мини‑спарклайны всегда после getSeries (уже агрегировано при all)
   const {labels, values} = toXY(dataArr);
   const shortLabels = labelize(labels, labels);
-  return (function(){ const ch = new Chart(ctx, {
+  return new Chart(ctx, {
     type:'line',
     data:{labels:shortLabels, datasets:[{data:values, tension:.35, borderWidth:2, borderColor:color, pointRadius:0, fill:true, backgroundColor:grad(ctx, color.replace('.95', '.22'))}]},
     options:{
@@ -520,7 +480,7 @@ function renderDynamics(){
   const {values: v2} = toXY(rep);
   const xlabels = labelize(labels, open.map(p=>p.date));
   const ctx = resetCanvas('dynamics').getContext('2d');
-  (function(){ const ch = new Chart(ctx, {
+  new Chart(ctx, {
     type:'line',
     data:{labels:xlabels, datasets:[
       {label:'Открытия', data:v1, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(113,164,255,.95)', backgroundColor:grad(ctx,'rgba(113,164,255,.22)'), fill:true},
@@ -571,7 +531,7 @@ function renderQuality(){
   const rate = sent ? (delivered/sent) : 0;
   document.getElementById('quality-val').textContent = (rate*100).toFixed(1)+'%';
   const ctx = resetCanvas('quality').getContext('2d');
-  (function(){ const ch = new Chart(ctx, {
+  new Chart(ctx, {
     type:'doughnut',
     data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]},
     options:{ plugins:{legend:{position:'bottom', labels:{color:'#d6deea'}}}, responsive:true, maintainAspectRatio:false }
@@ -647,7 +607,6 @@ document.addEventListener('change', (e)=>{
   if(e.target && (e.target.id==='sector-sort' || e.target.id==='sector-aboveavg')) renderSectors();
 });
 
-let SECTORS_CHARTS = [];
 function openSectorsModal(){
   const arr = ORIGINAL.industries;
   const avgOpen = arr.reduce((a,b)=>a+b.open_rate,0)/arr.length;
@@ -672,13 +631,11 @@ function openSectorsModal(){
           <div class="tile"><div class="ttl">Лидеры по открываемости</div><canvas id="sectors-top-opens" style="height:180px"></canvas></div>
         </div>
       `;
-      // destroy previous modal charts if any
-      if (Array.isArray(SECTORS_CHARTS)) { SECTORS_CHARTS.forEach(ch=>{ try{ ch.destroy(); }catch(e){} }); SECTORS_CHARTS = []; }
       const topReplies = [...arr].sort((a,b)=>b.reply_rate-a.reply_rate).slice(0,5);
       const topOpens = [...arr].sort((a,b)=>b.open_rate-a.open_rate).slice(0,5);
       const drawBars = (id, data, valKey)=>{
         const ctx = document.getElementById(id).getContext('2d');
-        (function(){ const ch = new Chart(ctx, {
+        new Chart(ctx, {
           type:'bar',
           data:{ labels: data.map(x=>x.name),
                  datasets:[{ data:data.map(x=>x[valKey]*100), borderWidth:1 }] },
@@ -687,7 +644,7 @@ function openSectorsModal(){
             plugins:{ legend:{display:false}, tooltip:{callbacks:{ label:(it)=> it.raw.toFixed(1)+'%' }} },
             scales:{ x:{ ticks:{ color:'#9aa3b2' }}, y:{ ticks:{ color:'#9aa3b2', callback:(v)=>v+'%' } } }
           }
-        }); SECTORS_CHARTS.push(ch); })();
+        });
       };
       drawBars('sectors-top-replies', topReplies, 'reply_rate');
       drawBars('sectors-top-opens', topOpens, 'open_rate');
@@ -756,7 +713,7 @@ function openQualityModal(){
     builder:(canvas)=>{
       const ctx = canvas.getContext('2d');
       if(modalChart) modalChart.destroy();
-      modalChart = (function(){ const ch = new Chart(ctx, {
+      modalChart = new Chart(ctx, {
         type:'doughnut',
         data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]},
         options:{ plugins:{legend:{position:'bottom', labels:{color:'#d6deea'}}}, responsive:true, maintainAspectRatio:false }
@@ -780,7 +737,7 @@ function openFunnelDetails(){
       const {labels, values} = toXY(arr);
       const xlabels = labelize(labels, arr.map(p=>p.date));
       const ctx = document.getElementById(id).getContext('2d');
-      (function(){ const ch = new Chart(ctx, {
+      new Chart(ctx, {
         type:'line',
         data:{labels:xlabels, datasets:[{data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]},
         options:{
