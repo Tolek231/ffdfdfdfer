@@ -282,7 +282,9 @@ document.addEventListener('click', (e)=>{
     else if(key==='dynamics'){ openDynamicsModal(); }
     else if(key==='quality'){ openQualityModal(); }
     else { openModal({ title:'Что означает блок', sub: INFO[key] }); }
-    e.stopPropagation();
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    return false;
   }
 });
 
@@ -308,8 +310,7 @@ loadData().then(json=>{
   // card clicks -> single modal
   document.querySelectorAll('.card.clickable').forEach(c=>{
     c.addEventListener('click', (ev)=>{
-      // если открыт inline‑блок, и клик был по самой плашке — игнорируем
-      if(ev.target.closest('.inline-info')) return;
+      if(ev.target.closest('.inline-info') || ev.target.closest('.info')) return;
       openMetricModal(c.dataset.metric);
     });
   });
