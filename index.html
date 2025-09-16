@@ -218,7 +218,7 @@ th{color:#cfd7e6;font-weight:600}
 
 <script>
 // --- Безопасная инициализация, чтобы клики работали даже если данные не загрузились
-(() => { 'use strict';
+document.addEventListener('DOMContentLoaded',()=>{ 'use strict';
 const INFO = {
   sent:"Исходящие письма.", delivered:"Успешно доставленные письма (без bounce).",
   replies:"Уникальные ответы ЛПР.", bounces:"Ошибки доставки.", dynamics:"Открытия и ответы по дням.",
