@@ -103,7 +103,7 @@ th{color:#cfd7e6;font-weight:600}
 .modal .close{background:#182131;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 10px;color:#cfd5e1;cursor:pointer}
 .legend{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:8px 0 2px}
 /* Чёткие кликабельные чипы (вместо мыльных) */
-.chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.14);user-select:none;cursor:pointer;-webkit-font-smoothing: antialiased;text-shadow:none}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.22);user-select:none;cursor:pointer;-webkit-font-smoothing: antialiased;text-shadow:none;backdrop-filter:saturate(120%) blur(0.2px)}
 .chip .dot{width:10px;height:10px;border-radius:999px;border:1px solid rgba(0,0,0,.25)}
 .chip.blue{background:#0f1a2a;color:#dbe7ff}
 .chip.blue .dot{background:#71a4ff}
@@ -188,7 +188,8 @@ th{color:#cfd7e6;font-weight:600}
       <div class="card full">
         <div class="card-title">Динамика: открытия vs ответы <span class="info" data-info="dynamics">i</span></div>
         <div class="card-sub" id="dyn-sub">Компактные даты — без перегруза.</div>
-        <div class="chart-box tall"><canvas id="dynamics"></canvas></div>
+        <div class="legend" id="dyn-legend"></div><div class="chart-box tall"><canvas id="dynamics"></canvas></div>
+        <div class="inline-info" data-inline="dynamics"><div class="box"><div class="ttl">Что показывают графики</div><p>Синяя линия — <b>открытия писем</b>, жёлтая — <b>ответы ЛПР</b>. Используйте кнопки‑чипы выше, чтобы включать/выключать серии и смотреть зависимости.</p><p class="muted" style="margin-top:6px">Подсказка: при большом периоде подписи по оси времени автоматически упрощаются (недели/месяцы), чтобы сохранить читаемость.</p></div></div>
       </div>
 
       <div class="card">
@@ -279,7 +280,7 @@ document.addEventListener('click', (e)=>{
 
 // Info clicks routing
 // ВАЖНО: для sent/delivered/replies/bounces делаем inline‑плашку, а не модалку
-const INLINE_KEYS = ['sent','delivered','replies','bounces'];
+const INLINE_KEYS = ['sent','delivered','replies','bounces','dynamics'];
 
 document.addEventListener('click', (e)=>{
   if(e.target.classList.contains('info')){
@@ -472,6 +473,7 @@ function renderOverview(){
   spark('bounces-mini', S.bounces, 'rgba(255,107,107,.95)');
 }
 
+
 function renderDynamics(){
   const S = getSeries();
   const open = S.opens;
@@ -480,7 +482,8 @@ function renderDynamics(){
   const {values: v2} = toXY(rep);
   const xlabels = labelize(labels, open.map(p=>p.date));
   const ctx = resetCanvas('dynamics').getContext('2d');
-  new Chart(ctx, {
+
+  const chart = new Chart(ctx, {
     type:'line',
     data:{labels:xlabels, datasets:[
       {label:'Открытия', data:v1, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(113,164,255,.95)', backgroundColor:grad(ctx,'rgba(113,164,255,.22)'), fill:true},
@@ -489,7 +492,7 @@ function renderDynamics(){
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{
-        legend:{labels:{color:'#d6deea'}},
+        legend:{display:false},
         tooltip:{mode:'index', intersect:false, callbacks:{
           title:(it)=> dateTooltip.format(new Date(open[it[0].dataIndex].date))
         }},
@@ -498,7 +501,28 @@ function renderDynamics(){
       scales:{ x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}, grid:{color:'rgba(255,255,255,.05)'}} }
     }
   });
+
+  // Build crisp clickable chips
+  const box = document.getElementById('dyn-legend');
+  if(box){
+    box.innerHTML = '';
+    const mk = (name, colorClass, idx)=>{
+      const el = document.createElement('div');
+      el.className = 'chip ' + colorClass;
+      el.innerHTML = `<span class="dot"></span>${name}`;
+      el.addEventListener('click', ()=>{
+        const visible = chart.isDatasetVisible(idx);
+        chart.setDatasetVisibility(idx, !visible);
+        el.classList.toggle('off', visible);
+        chart.update();
+      });
+      return el;
+    };
+    box.appendChild(mk('Открытия', 'blue', 0));
+    box.appendChild(mk('Ответы', 'yellow', 1));
+  }
 }
+
 
 function renderFunnel(){
   const S = getSeries();
@@ -654,36 +678,57 @@ function openQualityModal(){
   });
 }
 
+
 function openFunnelDetails(){
   const S = getSeries();
-  openModal({title:'Воронка · детали ' + (MODE==='week'?'(7 дней)':'(за всё время)'), sub:'Три отдельных графика: отправлено, открытия, ответы ЛПР.', mode:'multi', builder: ()=>{
-    const body = document.getElementById('modal-body');
-    body.innerHTML = `
-      <div class="grid3">
-        <div class="mini"><div class="title">Отправлено</div><canvas id="c1"></canvas></div>
-        <div class="mini"><div class="title">Открытия</div><canvas id="c2"></canvas></div>
-        <div class="mini"><div class="title">Ответы ЛПР</div><canvas id="c3"></canvas></div>
-      </div>
-    `;
-    const draw = (id, arr, color)=>{
-      const {labels, values} = toXY(arr);
-      const xlabels = labelize(labels, arr.map(p=>p.date));
-      const ctx = document.getElementById(id).getContext('2d');
-      new Chart(ctx, {
-        type:'line',
-        data:{labels:xlabels, datasets:[{data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]},
-        options:{
-          responsive:true, maintainAspectRatio:false,
-          plugins:{legend:{display:false}, tooltip:{callbacks:{title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))}}, decimation:{enabled: MODE==='all', algorithm:'lttb', samples:60}},
-          scales:{x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}}}
-        }
-      });
-    };
-    draw('c1', S.sent, 'rgba(113,164,255,.95)');
-    draw('c2', S.opens, 'rgba(113,164,255,.95)');
-    draw('c3', S.replies, 'rgba(235,182,87,.95)');
-  }});
+  const s = sum(S.sent.map(x=>x.value));
+  const o = sum(S.opens.map(x=>x.value));
+  const r = sum(S.replies.map(x=>x.value));
+  const openRate = s ? (o/s) : 0;
+  const replyRate = s ? (r/s) : 0;
+
+  openModal({
+    title:'Воронка · детали ' + (MODE==='week'?'(7 дней)':'(за всё время)'),
+    sub:'Как читать воронку: ширина каждого уровня — доля от «Отправлено».',
+    mode:'multi',
+    builder: ()=>{
+      const body = document.getElementById('modal-body');
+      body.innerHTML = `
+        <div class="box" style="margin-bottom:10px; padding:10px 12px; border-radius:12px; background:linear-gradient(180deg,#0f161f,#0b1219); border:1px solid rgba(255,255,255,.06)">
+          <div class="ttl" style="font-size:12px; font-weight:800; color:#dce4f1; margin-bottom:6px">Пояснение</div>
+          <p style="margin:0; font-size:12px; color:#c7d0df">
+            <b>Отправлено</b> — все исходящие письма. <b>Открыто</b> — сколько из них открыли (<b>${(openRate*100).toFixed(1)}%</b> от отправленных).
+            <b>Ответы ЛПР</b> — ответы от лиц, принимающих решения (<b>${(replyRate*100).toFixed(1)}%</b> от отправленных).
+          </p>
+          <p class="muted" style="margin-top:6px; font-size:11px">Совет: если «Открыто» высоко, а «Ответы» низкие — поработайте с оффером и первыми 2–3 предложениями письма.</p>
+        </div>
+        <div class="grid3">
+          <div class="mini"><div class="title">Отправлено</div><canvas id="c1"></canvas></div>
+          <div class="mini"><div class="title">Открытия</div><canvas id="c2"></canvas></div>
+          <div class="mini"><div class="title">Ответы ЛПР</div><canvas id="c3"></canvas></div>
+        </div>
+      `;
+      const draw = (id, arr, color)=>{
+        const {labels, values} = toXY(arr);
+        const xlabels = labelize(labels, arr.map(p=>p.date));
+        const ctx = document.getElementById(id).getContext('2d');
+        new Chart(ctx, {
+          type:'line',
+          data:{labels:xlabels, datasets:[{data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]},
+          options:{
+            responsive:true, maintainAspectRatio:false,
+            plugins:{legend:{display:false}, tooltip:{callbacks:{title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))}}, decimation:{enabled: MODE==='all', algorithm:'lttb', samples:60}},
+            scales:{x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}}}
+          }
+        });
+      };
+      draw('c1', S.sent, 'rgba(113,164,255,.95)');
+      draw('c2', S.opens, 'rgba(113,164,255,.95)');
+      draw('c3', S.replies, 'rgba(235,182,87,.95)');
+    }
+  });
 }
+
 
 // Universal modal
 function openModal({title, sub, builder, foot=[], mode='single'}){
