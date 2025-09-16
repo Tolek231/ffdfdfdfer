@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>WandLead · Личный кабинет (v5 · переключатель периодов)</title>
+<title>WandLead · Личный кабинет (v6 · умные шкалы времени)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -113,6 +113,9 @@ th{color:#cfd7e6;font-weight:600}
 .grid3 .mini{height:220px;border:1px solid rgba(255,255,255,.06);border-radius:14px;background:#0f161f;padding:10px}
 .grid3 .mini canvas{width:100%!important;height:170px!important}
 .grid3 .title{font-size:13px;font-weight:700;margin:2px 0 8px}
+
+/* Helper for tiny hints */
+.hint{color:var(--muted); font-size:11px; margin-top:4px}
 </style>
 </head>
 <body>
@@ -141,26 +144,30 @@ th{color:#cfd7e6;font-weight:600}
         <div class="card-title">Отправлено <span class="info" data-info="sent">i</span></div>
         <div class="kpi"><div class="big" id="sent-total">—</div><span class="muted" id="lbl-range-1">за 7 дней</span></div>
         <div class="chart-box"><canvas id="sent-mini"></canvas></div>
+        <div class="hint">Сколько писем отправили за выбранный период.</div>
       </div>
       <div class="card small clickable" data-metric="delivered">
         <div class="card-title">Доставлено <span class="info" data-info="delivered">i</span></div>
         <div class="kpi"><div class="big" id="delivered-total">—</div><span class="muted" id="lbl-range-2">за 7 дней</span></div>
         <div class="chart-box"><canvas id="delivered-mini"></canvas></div>
+        <div class="hint">Письма, дошедшие без ошибок (bounce).</div>
       </div>
       <div class="card small clickable" data-metric="replies">
         <div class="card-title">Ответы ЛПР <span class="info" data-info="replies">i</span></div>
         <div class="kpi"><div class="big" id="replies-total">—</div><span class="muted" id="lbl-range-3">за 7 дней</span></div>
         <div class="chart-box"><canvas id="replies-mini"></canvas></div>
+        <div class="hint">Уникальные ответы от лиц, принимающих решения.</div>
       </div>
       <div class="card small clickable" data-metric="bounces">
         <div class="card-title">Ошибки доставки <span class="info" data-info="bounces">i</span></div>
         <div class="kpi"><div class="big" id="bounces-total">—</div><span class="muted" id="lbl-range-4">за 7 дней</span></div>
         <div class="chart-box"><canvas id="bounces-mini"></canvas></div>
+        <div class="hint">Сколько писем вернулось с ошибками.</div>
       </div>
 
       <div class="card full">
         <div class="card-title">Динамика: открытия vs ответы <span class="info" data-info="dynamics">i</span></div>
-        <div class="card-sub" id="dyn-sub">Компактные даты и аккуратные подсказки — без лишнего текста.</div>
+        <div class="card-sub" id="dyn-sub">Компактные даты — без перегруза.</div>
         <div class="chart-box tall"><canvas id="dynamics"></canvas></div>
       </div>
 
@@ -182,6 +189,7 @@ th{color:#cfd7e6;font-weight:600}
           <thead><tr><th>Сфера</th><th>Отправлено</th><th>Открытия</th><th>Ответы</th><th>К открываемости</th><th>К ответам</th></tr></thead>
           <tbody></tbody>
         </table>
+        <div class="hint">Стрелки показывают, насколько метрика выше/ниже среднего по всем сферам.</div>
       </div>
     </section>
   </main>
@@ -202,6 +210,15 @@ th{color:#cfd7e6;font-weight:600}
   </div>
 
 <script>
+/* === Ключевые правки ===
+1) "За всё время": умная агрегация и downsampling, чтобы ось X оставалась читабельной.
+   - если точек > 90: агрегируем по неделям;
+   - если точек > 360: агрегируем по месяцам;
+   - иначе включаем decimation (LTTB) до ~60 точек.
+2) X‑ось: показываем не более 10–12 меток, с шагом по данным.
+3) Объяснения блоков аккуратно добавлены (hint), без перегруза.
+*/
+
 const INFO = {
   sent: "Исходящие письма.",
   delivered: "Успешно доставленные письма (без bounce).",
@@ -217,6 +234,7 @@ const fmt = new Intl.NumberFormat('ru-RU');
 const dateShort = new Intl.DateTimeFormat('ru-RU',{day:'2-digit', month:'2-digit'});
 const dateTooltip = new Intl.DateTimeFormat('ru-RU',{day:'2-digit', month:'short'});
 const dateFull = new Intl.DateTimeFormat('ru-RU',{day:'2-digit', month:'short', year:'numeric'});
+const monthShort = new Intl.DateTimeFormat('ru-RU',{month:'short'});
 
 let ORIGINAL = null; // неизменённые данные
 let MODE = 'week';   // 'week' | 'all'
@@ -255,10 +273,11 @@ document.addEventListener('click', (e)=>{
 });
 
 function loadData(){
+  // основной источник — data.txt, резерв — загруженный файл с именем по умолчанию
   return fetch('data.txt').then(r=>{
     if(!r.ok) throw new Error('no data.txt');
     return r.json();
-  }).catch(()=> fetch('data (4).txt').then(r=>r.json()));
+  }).catch(()=> fetch('data (5).txt').then(r=>r.json()));
 }
 loadData().then(json=>{
   ORIGINAL = json; // не мутируем
@@ -271,13 +290,6 @@ loadData().then(json=>{
 
 // --- Helpers ---
 function cloneSeries(s){ return JSON.parse(JSON.stringify(s)); }
-function getSeries(){
-  const S = cloneSeries(ORIGINAL.series);
-  if(MODE==='week'){
-    Object.keys(S).forEach(k=>{ S[k] = S[k].slice(-7); });
-  }
-  return S;
-}
 function toXY(arr){ return { labels: arr.map(p=>p.date), values: arr.map(p=>p.value) }; }
 function sum(arr){ return arr.reduce((a,b)=>a+b,0); }
 function avg(arr){ return sum(arr)/arr.length; }
@@ -285,6 +297,73 @@ function last(arr){ return arr[arr.length-1]; }
 function forecast7(arr){ const sl = arr.slice(-7).map(x=>x.value); return Math.round(avg(sl)*7); }
 function grad(ctx, color){ const g = ctx.createLinearGradient(0,0,0,300); g.addColorStop(0,color); g.addColorStop(1,'rgba(0,0,0,0)'); return g; }
 function resetCanvas(id){ const el=document.getElementById(id); const p=el.parentNode; p.innerHTML=`<canvas id="${id}"></canvas>`; return document.getElementById(id); }
+
+// Агрегация для длинных периодов
+function groupByWeek(arr){
+  const map = new Map();
+  arr.forEach(p=>{
+    const d = new Date(p.date);
+    // номер ISO‑недели: год-неделя (приближённо, достаточно для визуализации)
+    const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = (tmp.getUTCDay() + 6) % 7;
+    tmp.setUTCDate(tmp.getUTCDate() - dayNum + 3);
+    const week1 = new Date(Date.UTC(tmp.getUTCFullYear(),0,4));
+    const weekNo = 1 + Math.round(((tmp - week1)/86400000 - 3 + ((week1.getUTCDay()+6)%7))/7);
+    const key = tmp.getUTCFullYear() + '-W' + String(weekNo).padStart(2,'0');
+    const curr = map.get(key) || {date:key, value:0};
+    curr.value += p.value;
+    map.set(key, curr);
+  });
+  return Array.from(map.values());
+}
+function groupByMonth(arr){
+  const map = new Map();
+  arr.forEach(p=>{
+    const d = new Date(p.date);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    const curr = map.get(key) || {date:key+'-01', value:0};
+    curr.value += p.value;
+    map.set(key, curr);
+  });
+  return Array.from(map.values());
+}
+function maybeAggregate(arr){
+  const n = arr.length;
+  if(MODE!=='all') return arr;
+  if(n > 360) return groupByMonth(arr);
+  if(n > 90)  return groupByWeek(arr);
+  return arr;
+}
+// шаг для подписей по X, чтобы не более ~12 меток
+function tickStep(n){ return Math.max(1, Math.ceil(n / 12)); }
+function labelize(labels, rawDates){
+  // для “all” с агрегацией по месяцам показываем «МММ YYYY»,
+  // по неделям — «Wxx/YY», иначе dd.mm
+  if(MODE==='all' && rawDates[0] && rawDates[0].includes('-W')){
+    return labels.map((k)=>{
+      const [y,w] = k.split('-W');
+      return 'W'+w+'/'+String(y).slice(2);
+    });
+  }
+  if(MODE==='all' && rawDates[0] && rawDates[0].length<=7){
+    // ключ вида YYYY-MM
+    return labels.map((k)=>{
+      const [y,m] = k.split('-'); const d = new Date(Number(y), Number(m)-1, 1);
+      return monthShort.format(d)+' '+String(y).slice(2);
+    });
+  }
+  return labels.map(d=> dateShort.format(new Date(d)));
+}
+
+function getSeries(){
+  const S = cloneSeries(ORIGINAL.series);
+  if(MODE==='week'){
+    Object.keys(S).forEach(k=>{ S[k] = S[k].slice(-7); });
+  }else{
+    Object.keys(S).forEach(k=>{ S[k] = maybeAggregate(S[k]); });
+  }
+  return S;
+}
 
 function renderAll(){
   renderPeriodLabel();
@@ -297,12 +376,12 @@ function renderAll(){
 
 function renderPeriodLabel(){
   const S = getSeries();
-  const arr = S.sent;
+  // для подписи периода используем исходные даты (без агрегации)
+  const arr = ORIGINAL.series.sent;
   const start = new Date(arr[0].date);
   const end = new Date(arr.at(-1).date);
   let label = '';
   if(MODE==='week'){
-    const monthShort = new Intl.DateTimeFormat('ru-RU',{month:'short'});
     label = `${start.getDate()}–${end.getDate()} ${monthShort.format(end)}`;
   }else{
     label = `с ${dateFull.format(start)} по ${dateFull.format(end)}`;
@@ -311,23 +390,40 @@ function renderPeriodLabel(){
   document.querySelectorAll('[id^="lbl-range-"]').forEach((el)=>{
     el.textContent = MODE==='week' ? 'за 7 дней' : 'за всё время';
   });
-  document.getElementById('dyn-sub').textContent = MODE==='week' ? 'Последние 7 дней.' : 'За всё время.';
+  document.getElementById('dyn-sub').textContent = MODE==='week' ? 'Последние 7 дней.' : 'За всё время (умные метки времени).';
 }
 
 function spark(canvasId, arr, color){
-  const {labels, values} = toXY(arr);
-  const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
   const ctx = resetCanvas(canvasId).getContext('2d');
+  const dataArr = arr; // мини‑спарклайны всегда после getSeries (уже агрегировано при all)
+  const {labels, values} = toXY(dataArr);
+  const shortLabels = labelize(labels, labels);
   return new Chart(ctx, {
     type:'line',
     data:{labels:shortLabels, datasets:[{data:values, tension:.35, borderWidth:2, borderColor:color, pointRadius:0, fill:true, backgroundColor:grad(ctx, color.replace('.95', '.22'))}]},
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}, tooltip:{mode:'index', intersect:false, backgroundColor:'#111827',
-        callbacks:{title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))}}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{mode:'index', intersect:false, backgroundColor:'#111827',
+          callbacks:{title:(it)=> dateTooltip.format(new Date(dataArr[it[0].dataIndex].date))}},
+        decimation:{enabled: MODE==='all', algorithm:'lttb', samples:60}
+      },
       scales:{x:{display:false},y:{display:false}}
     }
   });
+}
+
+function axisOptsX(labels){
+  const step = tickStep(labels.length);
+  return {
+    ticks:{
+      color:'#9aa3b2',
+      autoSkip:false,
+      callback:(val, idx)=> (idx % step === 0 ? labels[idx] : '')
+    },
+    grid:{color:'rgba(255,255,255,.05)'}
+  };
 }
 
 function renderOverview(){
@@ -348,21 +444,24 @@ function renderDynamics(){
   const rep = S.replies;
   const {labels, values: v1} = toXY(open);
   const {values: v2} = toXY(rep);
-  const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
+  const xlabels = labelize(labels, open.map(p=>p.date));
   const ctx = resetCanvas('dynamics').getContext('2d');
   new Chart(ctx, {
     type:'line',
-    data:{labels:shortLabels, datasets:[
+    data:{labels:xlabels, datasets:[
       {label:'Открытия', data:v1, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(113,164,255,.95)', backgroundColor:grad(ctx,'rgba(113,164,255,.22)'), fill:true},
       {label:'Ответы', data:v2, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(235,182,87,.95)', backgroundColor:grad(ctx,'rgba(235,182,87,.22)'), fill:true},
     ]},
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#d6deea'}}, tooltip:{mode:'index', intersect:false, callbacks:{
-        title:(it)=> dateTooltip.format(new Date(open[it[0].dataIndex].date))
-      }}},
-      scales:{ x:{ticks:{color:'#9aa3b2', maxRotation:0, autoSkip:true, maxTicksLimit:MODE==='week'?7:12}, grid:{color:'rgba(255,255,255,.05)'}},
-               y:{ticks:{color:'#9aa3b2'}, grid:{color:'rgba(255,255,255,.05)'}} }
+      plugins:{
+        legend:{labels:{color:'#d6deea'}},
+        tooltip:{mode:'index', intersect:false, callbacks:{
+          title:(it)=> dateTooltip.format(new Date(open[it[0].dataIndex].date))
+        }},
+        decimation:{enabled: MODE==='all', algorithm:'lttb', samples:80}
+      },
+      scales:{ x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}, grid:{color:'rgba(255,255,255,.05)'}} }
     }
   });
 }
@@ -429,6 +528,27 @@ function arrow(diff){ const cls = diff>=0 ? 'up' : 'down'; const sign = diff>=0 
 
 // --- Modals (respect MODE) ---
 let modalChart=null;
+function singleLineChart(canvas, label, color, arr){
+  const {labels, values} = toXY(arr);
+  const xlabels = labelize(labels, arr.map(p=>p.date));
+  const ctx = canvas.getContext('2d');
+  if(modalChart) modalChart.destroy();
+  modalChart = new Chart(ctx,{
+    type:'line',
+    data:{labels:xlabels, datasets:[{label, data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{mode:'index', intersect:false, callbacks:{
+          title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))
+        }},
+        decimation:{enabled: MODE==='all', algorithm:'lttb', samples:80}
+      },
+      scales:{ x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}} }
+    }
+  });
+}
 function openMetricModal(key){
   const conf = {
     sent: {title:'Отправлено', color:'rgba(113,164,255,.95)'},
@@ -437,31 +557,15 @@ function openMetricModal(key){
     bounces: {title:'Ошибки доставки', color:'rgba(255,107,107,.95)'},
   }[key];
   const arr = getSeries()[key];
-  const {labels, values} = toXY(arr);
-  const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
   openModal({
     title: conf.title + (MODE==='week'?' (7 дней)':' (за всё время)'),
     sub: INFO[key],
     mode: 'single',
-    builder: (canvas)=>{
-      const ctx = canvas.getContext('2d');
-      if(modalChart) modalChart.destroy();
-      modalChart = new Chart(ctx,{
-        type:'line',
-        data:{labels:shortLabels, datasets:[{label:conf.title, data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:conf.color, backgroundColor:grad(ctx, conf.color.replace('.95','.22')), fill:true}]},
-        options:{
-          responsive:true, maintainAspectRatio:false,
-          plugins:{legend:{display:false}, tooltip:{mode:'index', intersect:false, callbacks:{
-            title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))
-          }}},
-          scales:{ x:{ticks:{color:'#9aa3b2'}}, y:{ticks:{color:'#9aa3b2'}} }
-        }
-      });
-    },
+    builder: (canvas)=> singleLineChart(canvas, conf.title, conf.color, arr),
     foot:[
       {label:'Текущее (последний день)', value: fmt.format(last(arr).value)},
-      {label: MODE==='week' ? 'Среднее за день (7 дней)' : 'Среднее за день (всё время)', value: fmt.format(Math.round(avg(arr.map(x=>x.value))))},
-      {label:'Прогноз на неделю при сохранении текущего темпа', value: fmt.format(forecast7(arr))}
+      {label: MODE==='week' ? 'Среднее/день (7 дн.)' : 'Среднее/день', value: fmt.format(Math.round(avg(arr.map(x=>x.value))))},
+      {label:'Прогноз на неделю (темп сохранится)', value: fmt.format(forecast7(arr))}
     ]
   });
 }
@@ -472,7 +576,7 @@ function openDynamicsModal(){
   const rep = S.replies;
   const {labels, values: v1} = toXY(open);
   const {values: v2} = toXY(rep);
-  const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
+  const xlabels = labelize(labels, open.map(p=>p.date));
   openModal({
     title:'Динамика ' + (MODE==='week'?'(7 дней)':'(за всё время)'),
     sub:'Открытия и ответы по дням',
@@ -482,11 +586,15 @@ function openDynamicsModal(){
       if(modalChart) modalChart.destroy();
       modalChart = new Chart(ctx,{
         type:'line',
-        data:{labels:shortLabels, datasets:[
+        data:{labels:xlabels, datasets:[
           {label:'Открытия', data:v1, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(113,164,255,.95)', backgroundColor:grad(ctx,'rgba(113,164,255,.22)'), fill:true},
           {label:'Ответы', data:v2, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(235,182,87,.95)', backgroundColor:grad(ctx,'rgba(235,182,87,.22)'), fill:true},
         ]},
-        options:{responsive:true, maintainAspectRatio:false, plugins:{tooltip:{mode:'index',intersect:false}}, scales:{x:{ticks:{color:'#9aa3b2'}},y:{ticks:{color:'#9aa3b2'}}}}
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{tooltip:{mode:'index',intersect:false}, decimation:{enabled: MODE==='all', algorithm:'lttb', samples:80}},
+          scales:{x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}}}
+        }
       });
     }
   });
@@ -525,13 +633,16 @@ function openFunnelDetails(){
     `;
     const draw = (id, arr, color)=>{
       const {labels, values} = toXY(arr);
-      const shortLabels = labels.map(d=> dateShort.format(new Date(d)));
+      const xlabels = labelize(labels, arr.map(p=>p.date));
       const ctx = document.getElementById(id).getContext('2d');
       new Chart(ctx, {
         type:'line',
-        data:{labels:shortLabels, datasets:[{data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]},
-        options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))}}},
-                 scales:{x:{ticks:{color:'#9aa3b2'}}, y:{ticks:{color:'#9aa3b2'}}}}
+        data:{labels:xlabels, datasets:[{data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}, tooltip:{callbacks:{title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))}}, decimation:{enabled: MODE==='all', algorithm:'lttb', samples:60}},
+          scales:{x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}}}
+        }
       });
     };
     draw('c1', S.sent, 'rgba(113,164,255,.95)');
