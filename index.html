@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>WandLead · Личный кабинет (v6 · умные шкалы времени)</title>
+<title>WandLead · Личный кабинет (fixed dynamics)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -22,41 +22,23 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{
-  margin:0;
-  font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial;
-  color:var(--text);
-  background:
-    radial-gradient(1200px 500px at 10% -10%, rgba(113,164,255,.15), transparent),
-    radial-gradient(900px 480px at 90% -10%, rgba(138,92,246,.12), transparent),
-    var(--bg);
+body{margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial;color:var(--text);background:
+  radial-gradient(1200px 500px at 10% -10%, rgba(113,164,255,.15), transparent),
+  radial-gradient(900px 480px at 90% -10%, rgba(138,92,246,.12), transparent),
+  var(--bg);
 }
 .header{position:sticky;top:0;z-index:40;background:linear-gradient(180deg, rgba(10,13,18,.9), rgba(10,13,18,.6), transparent);backdrop-filter: blur(6px);border-bottom:1px solid rgba(255,255,255,.06)}
 .container{max-width:1200px;margin:0 auto;padding:18px 18px 0}
 .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
 .brand .logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 0 8px rgba(113,164,255,.12)}
 .sub{color:var(--muted);font-size:12px}
-
-/* Tabs */
 .tabs{display:flex;gap:8px;margin:12px 0 16px}
 .tab{padding:10px 14px;border-radius:12px;background:linear-gradient(180deg,#141b25,#0f151d);border:1px solid rgba(255,255,255,.07); color:#cfd5e1; cursor:pointer; transition:.15s}
 .tab:hover{box-shadow:0 0 0 6px rgba(113,164,255,.08)}
 .tab.active{background:linear-gradient(180deg,#1a2230,#121923); color:var(--text); box-shadow:var(--shadow)}
-
-/* Toggle */
-.toggle{
-  display:flex; gap:6px; align-items:center;
-  background:linear-gradient(180deg,#141b25,#0f151d);
-  border:1px solid rgba(255,255,255,.07);
-  padding:4px; border-radius:12px;
-}
-.tbtn{
-  padding:6px 10px; border-radius:8px; font-size:12px; color:#cfd5e1; cursor:pointer;
-  background:transparent; border:none;
-}
+.toggle{display:flex; gap:6px; align-items:center;background:linear-gradient(180deg,#141b25,#0f151d);border:1px solid rgba(255,255,255,.07);padding:4px; border-radius:12px;}
+.tbtn{padding:6px 10px; border-radius:8px; font-size:12px; color:#cfd5e1; cursor:pointer;background:transparent; border:none;}
 .tbtn.active{background:linear-gradient(180deg,#1a2230,#121923); color:#fff; box-shadow:0 0 0 2px rgba(113,164,255,.18) inset;}
-
-/* Layout */
 .main{max-width:1200px;margin:0 auto;padding:6px 18px 48px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
 .card{grid-column:span 6;background:linear-gradient(180deg,#121a25,#0e151f);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);box-shadow: var(--shadow);padding:14px; position:relative; overflow:hidden}
@@ -70,14 +52,10 @@ body{
 .muted{color:var(--muted);font-size:12px}
 .info{width:18px;height:18px;border-radius:999px;display:grid;place-items:center;font-size:12px;cursor:pointer;background:linear-gradient(180deg,#1a2330,#121922);border:1px solid rgba(255,255,255,.08);color:#aeb9c9}
 .info:hover{box-shadow:0 0 0 6px rgba(113,164,255,.08); color:#fff}
-
-/* Chart wrappers */
 .chart-box{height:180px;position:relative}
 .chart-box.tall{height:320px}
 .chart-box.pie{height:260px}
 .chart-box canvas{width:100%!important;height:100%!important}
-
-/* Funnel */
 .funnel{display:flex;flex-direction:column;gap:12px;height:100%;padding-top:6px}
 .funnel .row{height:58px;display:flex;align-items:center;justify-content:center}
 .funnel .bar{height:100%;position:relative;margin:0 auto;border-radius:16px}
@@ -89,12 +67,9 @@ body{
 .funnel .label .val{display:flex;gap:8px;align-items:center}
 @media (max-width:560px){.funnel .row{height:50px}.funnel .label{font-size:12px}}
 
-/* Table */
 table{width:100%;border-collapse:collapse;margin-top:8px}
 th,td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left}
 th{color:#cfd7e6;font-weight:600}
-
-/* Modal */
 .modal{position:fixed;inset:0;background:rgba(5,8,12,.7);display:none;align-items:center;justify-content:center;z-index:50}
 .modal.open{display:flex}
 .modal .box{width:min(980px,92vw);background:linear-gradient(180deg,#141c28,#0f1620);border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);padding:18px 18px 14px}
@@ -102,7 +77,24 @@ th{color:#cfd7e6;font-weight:600}
 .modal .title{font-size:18px;font-weight:800}
 .modal .close{background:#182131;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 10px;color:#cfd5e1;cursor:pointer}
 .legend{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:8px 0 2px}
-/* Чёткие кликабельные чипы (вместо мыльных) */
+.foot{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
+.foot div{background:#0f161f;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 12px}
+.hidden{display:none}
+.sep{height:1px;background:rgba(255,255,255,.06);margin:10px 0}
+.grid3{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width: 840px){.grid3{grid-template-columns:1fr 1fr 1fr}}
+.grid3 .mini{height:220px;border:1px solid rgba(255,255,255,.06);border-radius:14px;background:#0f161f;padding:10px}
+.grid3 .mini canvas{width:100%!important;height:170px!important}
+.grid3 .title{font-size:13px;font-weight:700;margin:2px 0 8px}
+.hint{color:var(--muted); font-size:11px; margin-top:4px}
+.inline-info{overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px); transition:max-height .28s ease, opacity .2s ease, transform .28s ease;}
+.card.show-inline .inline-info{max-height:240px; opacity:1; transform:translateY(0)}
+.inline-info .box{margin-top:10px; padding:10px 12px; border-radius:12px; background:linear-gradient(180deg,#0f161f,#0b1219); border:1px solid rgba(255,255,255,.06); box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.inline-info .ttl{font-size:12px; font-weight:800; color:#dce4f1; margin-bottom:6px}
+.inline-info p{margin:0; font-size:12px; color:#c7d0df}
+.inline-info .muted{font-size:11px}
+/* Чёткие кликабельные чипы для динамики */
+#dyn-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.14);user-select:none;cursor:pointer;-webkit-font-smoothing: antialiased;text-shadow:none}
 .chip .dot{width:10px;height:10px;border-radius:999px;border:1px solid rgba(0,0,0,.25)}
 .chip.blue{background:#0f1a2a;color:#dbe7ff}
@@ -110,28 +102,6 @@ th{color:#cfd7e6;font-weight:600}
 .chip.yellow{background:#2a2210;color:#ffe6b8}
 .chip.yellow .dot{background:#ebb657}
 .chip.off{opacity:.6}
-.foot{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
-.foot div{background:#0f161f;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 12px}
-.hidden{display:none}
-.sep{height:1px;background:rgba(255,255,255,.06);margin:10px 0}
-
-/* three charts in modal */
-.grid3{display:grid;grid-template-columns:1fr;gap:14px}
-@media (min-width: 840px){.grid3{grid-template-columns:1fr 1fr 1fr}}
-.grid3 .mini{height:220px;border:1px solid rgba(255,255,255,.06);border-radius:14px;background:#0f161f;padding:10px}
-.grid3 .mini canvas{width:100%!important;height:170px!important}
-.grid3 .title{font-size:13px;font-weight:700;margin:2px 0 8px}
-
-/* Helper for tiny hints */
-.hint{color:var(--muted); font-size:11px; margin-top:4px}
-
-/* INLINE INFO: выдвижная плашка под мини‑графиком */
-.inline-info{overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px); transition:max-height .28s ease, opacity .2s ease, transform .28s ease;}
-.card.show-inline .inline-info{max-height:240px; opacity:1; transform:translateY(0)}
-.inline-info .box{margin-top:10px; padding:10px 12px; border-radius:12px; background:linear-gradient(180deg,#0f161f,#0b1219); border:1px solid rgba(255,255,255,.06); box-shadow:0 8px 20px rgba(0,0,0,.25)}
-.inline-info .ttl{font-size:12px; font-weight:800; color:#dce4f1; margin-bottom:6px}
-.inline-info p{margin:0; font-size:12px; color:#c7d0df}
-.inline-info .muted{font-size:11px}
 </style>
 </head>
 <body>
@@ -185,13 +155,13 @@ th{color:#cfd7e6;font-weight:600}
         <div class="hint">Сколько писем вернулось с ошибками.</div>
       </div>
 
-      <div class=\"card full\">
-        <div class=\"card-title\">Динамика: открытия vs ответы <span class=\"info\" data-info=\"dynamics\">i<\/span><\/div>
-        <div class=\"card-sub\" id=\"dyn-sub\">Компактные даты — без перегруза.<\/div>
-        <div class=\"chart-box tall\"><canvas id=\"dynamics\"><\/canvas><\/div>
-        <div id=\"dyn-legend\" style=\"display:flex;gap:8px;flex-wrap:wrap;margin-top:8px\"><\/div>
-        <div class=\"inline-info\" data-inline=\"dynamics\"><div class=\"box\"><div class=\"ttl\">Что такое «Динамика: открытия vs ответы»<\/div><p>Сравнение двух рядов по дням: <b>Открытия<\/b> показывают интерес к письмам, <b>Ответы<\/b> — вовлечение ЛПР в диалог. Оба показателя важны: рост открытий без ответов намекает на заголовок/оффер, ответы без открытий — на качество базы.<\/p><p class=\"muted\" style=\"margin-top:6px\">Подсказка: используйте кнопки ниже, чтобы временно скрывать ряд и рассматривать каждый в отдельности.<\/p><\/div><\/div>
-      <\/div>
+      <div class="card full">
+        <div class="card-title">Динамика: открытия vs ответы <span class="info" data-info="dynamics">i</span></div>
+        <div class="card-sub" id="dyn-sub">Компактные даты — без перегруза.</div>
+        <div class="chart-box tall"><canvas id="dynamics"></canvas></div>
+        <div id="dyn-legend"></div>
+        <div class="inline-info" data-inline="dynamics"><div class="box"><div class="ttl">Что такое «Динамика: открытия vs ответы»</div><p>Сравнение двух рядов по дням: <b>Открытия</b> показывают интерес к письмам, <b>Ответы</b> — вовлечение ЛПР в диалог. Оба показателя важны: рост открытий без ответов намекает на заголовок/оффер, ответы без открытий — на качество базы.</p><p class="muted" style="margin-top:6px">Подсказка: используйте кнопки ниже, чтобы временно скрывать ряд и рассматривать каждый в отдельности.</p></div></div>
+      </div>
 
       <div class="card">
         <div class="card-title">Воронка <span class="info" data-info="funnel">i</span></div>
@@ -216,7 +186,6 @@ th{color:#cfd7e6;font-weight:600}
     </section>
   </main>
 
-  <!-- Modal -->
   <div class="modal" id="modal">
     <div class="box">
       <div class="head">
@@ -232,13 +201,6 @@ th{color:#cfd7e6;font-weight:600}
   </div>
 
 <script>
-/* === Ключевые правки ===
-1) При клике по «i» у 4 верхних блоков не открывается модалка. Вместо этого
-   внутри карточки выдвигается плашка с описанием блока (slide‑down).
-2) Данные берём из data.txt (fallback: data (5).txt), как и просили.
-3) Остальная логика графиков сохранена. Клик по самой карточке — по‑прежнему модалка c графиком.
-*/
-
 const INFO = {
   sent: "Исходящие письма.",
   delivered: "Успешно доставленные письма (без bounce).",
@@ -249,17 +211,13 @@ const INFO = {
   quality: "Доля доставленных: Доставлено / Отправлено.",
   sectors: "Сферы. Стрелки показывают отклонение от среднего."
 };
-
 const fmt = new Intl.NumberFormat('ru-RU');
 const dateShort = new Intl.DateTimeFormat('ru-RU',{day:'2-digit', month:'2-digit'});
 const dateTooltip = new Intl.DateTimeFormat('ru-RU',{day:'2-digit', month:'short'});
 const dateFull = new Intl.DateTimeFormat('ru-RU',{day:'2-digit', month:'short', year:'numeric'});
 const monthShort = new Intl.DateTimeFormat('ru-RU',{month:'short'});
+let ORIGINAL = null; let MODE = 'week';
 
-let ORIGINAL = null; // неизменённые данные
-let MODE = 'week';   // 'week' | 'all'
-
-// Tabs
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');
@@ -267,21 +225,13 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.getElementById(t.dataset.tab).classList.remove('hidden');
 }));
 
-// Toggle
 document.addEventListener('click', (e)=>{
   if(e.target.classList.contains('tbtn')){
-    const mode = e.target.dataset.mode;
-    if(mode && MODE!==mode){
-      MODE = mode;
-      document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('active', b.dataset.mode===MODE));
-      renderAll();
-    }
+    const mode = e.target.dataset.mode; if(mode && MODE!==mode){ MODE=mode; document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('active', b.dataset.mode===MODE)); renderAll(); }
   }
 });
 
-// Info clicks routing
-// ВАЖНО: для sent/delivered/replies/bounces делаем inline‑плашку, а не модалку
-const INLINE_KEYS = ['sent','delivered','replies','bounces'];
+const INLINE_KEYS = ['sent','delivered','replies','bounces','dynamics'];
 
 document.addEventListener('click', (e)=>{
   if(e.target.classList.contains('info')){
@@ -292,41 +242,26 @@ document.addEventListener('click', (e)=>{
     else if(key==='dynamics'){ toggleInlineInfo(e.target, key); }
     else if(key==='quality'){ openQualityModal(); }
     else { openModal({ title:'Что означает блок', sub: INFO[key] }); }
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    return false;
+    e.preventDefault(); e.stopImmediatePropagation(); return false;
   }
 });
 
 function toggleInlineInfo(btn, key){
   const card = btn.closest('.card');
-  const panel = card.querySelector('.inline-info[data-inline="'+key+'"]');
-  // закрываем все открытые в этой строке (чтобы не было лесенки)
-  document.querySelectorAll('#overview .card.small').forEach(c=>{ if(c!==card){ c.classList.remove('show-inline'); }});
-  // переключаем текущую
+  document.querySelectorAll('#overview .card').forEach(c=>{ if(c!==card) c.classList.remove('show-inline'); });
   card.classList.toggle('show-inline');
 }
 
 function loadData(){
-  // основной источник — data.txt, резерв — загруженный файл с именем по умолчанию
-  return fetch('data.txt').then(r=>{
-    if(!r.ok) throw new Error('no data.txt');
-    return r.json();
-  }).catch(()=> fetch('data (5).txt').then(r=>r.json()));
+  return fetch('data.txt').then(r=>{ if(!r.ok) throw new Error('no data.txt'); return r.json(); }).catch(()=> fetch('data (5).txt').then(r=>r.json()));
 }
 loadData().then(json=>{
-  ORIGINAL = json; // не мутируем
-  renderAll();
-  // card clicks -> single modal
+  ORIGINAL = json; renderAll();
   document.querySelectorAll('.card.clickable').forEach(c=>{
-    c.addEventListener('click', (ev)=>{
-      if(ev.target.closest('.inline-info') || ev.target.closest('.info')) return;
-      openMetricModal(c.dataset.metric);
-    });
+    c.addEventListener('click', (ev)=>{ if(ev.target.closest('.inline-info') || ev.target.closest('.info')) return; openMetricModal(c.dataset.metric); });
   });
 }).catch(()=> alert('Не удалось загрузить данные'));
 
-// --- Helpers ---
 function cloneSeries(s){ return JSON.parse(JSON.stringify(s)); }
 function toXY(arr){ return { labels: arr.map(p=>p.date), values: arr.map(p=>p.value) }; }
 function sum(arr){ return arr.reduce((a,b)=>a+b,0); }
@@ -336,151 +271,53 @@ function forecast7(arr){ const sl = arr.slice(-7).map(x=>x.value); return Math.r
 function grad(ctx, color){ const g = ctx.createLinearGradient(0,0,0,300); g.addColorStop(0,color); g.addColorStop(1,'rgba(0,0,0,0)'); return g; }
 function resetCanvas(id){ const el=document.getElementById(id); const p=el.parentNode; p.innerHTML=`<canvas id="${id}"></canvas>`; return document.getElementById(id); }
 
-// Агрегация для длинных периодов
 function groupByWeek(arr){
   const map = new Map();
   arr.forEach(p=>{
     const d = new Date(p.date);
-    // номер ISO‑недели: год-неделя (приближённо, достаточно для визуализации)
     const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    const dayNum = (tmp.getUTCDay() + 6) % 7;
-    tmp.setUTCDate(tmp.getUTCDate() - dayNum + 3);
+    const dayNum = (tmp.getUTCDay() + 6) % 7; tmp.setUTCDate(tmp.getUTCDate() - dayNum + 3);
     const week1 = new Date(Date.UTC(tmp.getUTCFullYear(),0,4));
     const weekNo = 1 + Math.round(((tmp - week1)/86400000 - 3 + ((week1.getUTCDay()+6)%7))/7);
     const key = tmp.getUTCFullYear() + '-W' + String(weekNo).padStart(2,'0');
-    const curr = map.get(key) || {date:key, value:0};
-    curr.value += p.value;
-    map.set(key, curr);
+    const curr = map.get(key) || {date:key, value:0}; curr.value += p.value; map.set(key, curr);
   });
   return Array.from(map.values());
 }
 function groupByMonth(arr){
   const map = new Map();
-  arr.forEach(p=>{
-    const d = new Date(p.date);
-    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-    const curr = map.get(key) || {date:key+'-01', value:0};
-    curr.value += p.value;
-    map.set(key, curr);
-  });
+  arr.forEach(p=>{ const d = new Date(p.date); const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); const curr = map.get(key) || {date:key+'-01', value:0}; curr.value += p.value; map.set(key, curr); });
   return Array.from(map.values());
 }
-function maybeAggregate(arr){
-  const n = arr.length;
-  if(MODE!=='all') return arr;
-  if(n > 360) return groupByMonth(arr);
-  if(n > 90)  return groupByWeek(arr);
-  return arr;
-}
-// шаг для подписей по X, чтобы не более ~12 меток
+function maybeAggregate(arr){ const n=arr.length; if(MODE!=='all') return arr; if(n>360) return groupByMonth(arr); if(n>90) return groupByWeek(arr); return arr; }
 function tickStep(n){ return Math.max(1, Math.ceil(n / 12)); }
 function labelize(labels, rawDates){
-  // для “all” с агрегацией по месяцам показываем «МММ YYYY»,
-  // по неделям — «Wxx/YY», иначе dd.mm
-  if(MODE==='all' && rawDates[0] && rawDates[0].includes('-W')){
-    return labels.map((k)=>{
-      const [y,w] = k.split('-W');
-      return 'W'+w+'/'+String(y).slice(2);
-    });
-  }
-  if(MODE==='all' && rawDates[0] && rawDates[0].length<=7){
-    // ключ вида YYYY-MM
-    return labels.map((k)=>{
-      const [y,m] = k.split('-'); const d = new Date(Number(y), Number(m)-1, 1);
-      return monthShort.format(d)+' '+String(y).slice(2);
-    });
-  }
+  if(MODE==='all' && rawDates[0] && rawDates[0].includes('-W')){ return labels.map(k=>{ const [y,w]=k.split('-W'); return 'W'+w+'/'+String(y).slice(2); }); }
+  if(MODE==='all' && rawDates[0] && rawDates[0].length<=7){ return labels.map(k=>{ const [y,m]=k.split('-'); const d=new Date(Number(y), Number(m)-1, 1); return monthShort.format(d)+' '+String(y).slice(2); }); }
   return labels.map(d=> dateShort.format(new Date(d)));
 }
+function getSeries(){ const S = cloneSeries(ORIGINAL.series); if(MODE==='week'){ Object.keys(S).forEach(k=>{ S[k] = S[k].slice(-7); }); } else { Object.keys(S).forEach(k=>{ S[k] = maybeAggregate(S[k]); }); } return S; }
 
-function getSeries(){
-  const S = cloneSeries(ORIGINAL.series);
-  if(MODE==='week'){
-    Object.keys(S).forEach(k=>{ S[k] = S[k].slice(-7); });
-  }else{
-    Object.keys(S).forEach(k=>{ S[k] = maybeAggregate(S[k]); });
-  }
-  return S;
-}
-
-function renderAll(){
-  renderPeriodLabel();
-  renderOverview();
-  renderDynamics();
-  renderFunnel();
-  renderQuality();
-  renderSectors();
-}
+function renderAll(){ renderPeriodLabel(); renderOverview(); renderDynamics(); renderFunnel(); renderQuality(); renderSectors(); }
 
 function renderPeriodLabel(){
-  const arr = ORIGINAL.series.sent;
-  const start = new Date(arr[0].date);
-  const end = new Date(arr.at(-1).date);
-  let label = '';
-  if(MODE==='week'){
-    label = `${start.getDate()}–${end.getDate()} ${monthShort.format(end)}`;
-  }else{
-    label = `с ${dateFull.format(start)} по ${dateFull.format(end)}`;
-  }
+  const arr = ORIGINAL.series.sent; const start = new Date(arr[0].date); const end = new Date(arr.at(-1).date);
+  let label = MODE==='week' ? `${start.getDate()}–${end.getDate()} ${monthShort.format(end)}` : `с ${dateFull.format(start)} по ${dateFull.format(end)}`;
   document.getElementById('period').textContent = 'Период: ' + label;
-  document.querySelectorAll('[id^="lbl-range-"]').forEach((el)=>{
-    el.textContent = MODE==='week' ? 'за 7 дней' : 'за всё время';
-  });
+  document.querySelectorAll('[id^="lbl-range-"]').forEach((el)=>{ el.textContent = MODE==='week' ? 'за 7 дней' : 'за всё время'; });
   document.getElementById('dyn-sub').textContent = MODE==='week' ? 'Последние 7 дней.' : 'За всё время (умные метки времени).';
 }
 
 function spark(canvasId, arr, color){
   const ctx = resetCanvas(canvasId).getContext('2d');
-  const dataArr = arr; // мини‑спарклайны всегда после getSeries (уже агрегировано при all)
-  const {labels, values} = toXY(dataArr);
-  const shortLabels = labelize(labels, labels);
-  return const chart = new Chart(ctx, {
-    type:'line',
-    data:{labels:xlabels, datasets:[
-      {label:'Открытия', data:v1, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(113,164,255,.95)', backgroundColor:grad(ctx,'rgba(113,164,255,.22)'), fill:true},
-      {label:'Ответы', data:v2, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(235,182,87,.95)', backgroundColor:grad(ctx,'rgba(235,182,87,.22)'), fill:true},
-    ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{mode:'index', intersect:false, callbacks:{
-        title:(it)=> dateTooltip.format(new Date(open[it[0].dataIndex].date))
-      }},
-      decimation:{enabled: MODE==='all', algorithm:'lttb', samples:80}
-    },
-    scales:{ x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}, grid:{color:'rgba(255,255,255,.05)'}} }
-  });
-  // кастомная легенда
-  const root = document.getElementById('dyn-legend');
-  root.innerHTML = '';
-  const mk = (idx, cls, name)=>{
-    const el = document.createElement('button');
-    el.className = 'chip '+cls;
-    el.innerHTML = `<span class="dot"></span>${name}`;
-    el.addEventListener('click', ()=>{
-      const meta = chart.getDatasetMeta(idx);
-      meta.hidden = meta.hidden === null ? !chart.isDatasetVisible(idx) : null;
-      el.classList.toggle('off', !chart.isDatasetVisible(idx));
-      chart.update();
-    });
-    return el;
-  };
-  root.appendChild(mk(0,'blue','Открытия'));
-  root.appendChild(mk(1,'yellow','Ответы'));}
-
-function axisOptsX(labels){
-  const step = tickStep(labels.length);
-  return {
-    ticks:{
-      color:'#9aa3b2',
-      autoSkip:false,
-      callback:(val, idx)=> (idx % step === 0 ? labels[idx] : '')
-    },
-    grid:{color:'rgba(255,255,255,.05)'}
-  };
+  const dataArr = arr; const {labels, values} = toXY(dataArr); const shortLabels = labelize(labels, labels);
+  return new Chart(ctx, { type:'line', data:{labels:shortLabels, datasets:[{data:values, tension:.35, borderWidth:2, borderColor:color, pointRadius:0, fill:true, backgroundColor:grad(ctx, color.replace('.95', '.22'))}]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{mode:'index', intersect:false, backgroundColor:'#111827', callbacks:{title:(it)=> dateTooltip.format(new Date(dataArr[it[0].dataIndex].date))}}, decimation:{enabled: MODE==='all', algorithm:'lttb', samples:60}}, scales:{x:{display:false},y:{display:false}} });
 }
 
+function axisOptsX(labels){ return { ticks:{ color:'#9aa3b2', autoSkip:false, callback:(val,idx)=> (idx % tickStep(labels.length)===0 ? labels[idx] : '') }, grid:{color:'rgba(255,255,255,.05)'} }; }
+
 function renderOverview(){
-  const S = getSeries();
+  const S=getSeries();
   document.getElementById('sent-total').textContent = fmt.format(sum(S.sent.map(x=>x.value)));
   document.getElementById('delivered-total').textContent = fmt.format(sum(S.delivered.map(x=>x.value)));
   document.getElementById('replies-total').textContent = fmt.format(sum(S.replies.map(x=>x.value)));
@@ -492,239 +329,46 @@ function renderOverview(){
 }
 
 function renderDynamics(){
-  const S = getSeries();
-  const open = S.opens;
-  const rep = S.replies;
-  const {labels, values: v1} = toXY(open);
-  const {values: v2} = toXY(rep);
-  const xlabels = labelize(labels, open.map(p=>p.date));
+  const S = getSeries(); const open=S.opens; const rep=S.replies;
+  const {labels, values:v1} = toXY(open); const {values:v2} = toXY(rep); const xlabels = labelize(labels, open.map(p=>p.date));
   const ctx = resetCanvas('dynamics').getContext('2d');
-  new Chart(ctx, {
-    type:'line',
-    data:{labels:xlabels, datasets:[
-      {label:'Открытия', data:v1, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(113,164,255,.95)', backgroundColor:grad(ctx,'rgba(113,164,255,.22)'), fill:true},
-      {label:'Ответы', data:v2, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(235,182,87,.95)', backgroundColor:grad(ctx,'rgba(235,182,87,.22)'), fill:true},
-    ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{
-        legend:{labels:{color:'#d6deea'}},
-        tooltip:{mode:'index', intersect:false, callbacks:{
-          title:(it)=> dateTooltip.format(new Date(open[it[0].dataIndex].date))
-        }},
-        decimation:{enabled: MODE==='all', algorithm:'lttb', samples:80}
-      },
-      scales:{ x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}, grid:{color:'rgba(255,255,255,.05)'}} }
-    }
-  });
+  const chart = new Chart(ctx, { type:'line', data:{labels:xlabels, datasets:[ {label:'Открытия', data:v1, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(113,164,255,.95)', backgroundColor:grad(ctx,'rgba(113,164,255,.22)'), fill:true}, {label:'Ответы', data:v2, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(235,182,87,.95)', backgroundColor:grad(ctx,'rgba(235,182,87,.22)'), fill:true} ]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{mode:'index', intersect:false, callbacks:{ title:(it)=> dateTooltip.format(new Date(open[it[0].dataIndex].date)) }}, decimation:{enabled: MODE==='all', algorithm:'lttb', samples:80} }, scales:{ x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}, grid:{color:'rgba(255,255,255,.05)'}} } });
+  const root=document.getElementById('dyn-legend'); root.innerHTML='';
+  const mk=(idx,cls,name)=>{ const el=document.createElement('button'); el.className='chip '+cls; el.innerHTML='<span class="dot"></span>'+name; el.addEventListener('click',()=>{ const meta=chart.getDatasetMeta(idx); meta.hidden = meta.hidden===null ? !chart.isDatasetVisible(idx) : null; el.classList.toggle('off', !chart.isDatasetVisible(idx)); chart.update(); }); return el; };
+  root.appendChild(mk(0,'blue','Открытия'));
+  root.appendChild(mk(1,'yellow','Ответы'));
 }
 
 function renderFunnel(){
-  const S = getSeries();
-  const s = sum(S.sent.map(x=>x.value));
-  const o = sum(S.opens.map(x=>x.value));
-  const r = sum(S.replies.map(x=>x.value));
-  const openRate = s ? (o/s) : 0;
-  const replyRate = s ? (r/s) : 0;
-
-  const calcWidth = (val)=>{
-    if(!s) return 35;
-    const pct = (val/s)*100;
-    return Math.max(35, Math.min(100, pct));
-  };
-
-  const box = document.getElementById('funnel-box');
-  box.innerHTML = `
-    <div class="funnel">
-      <div class="row"><div class="bar" style="width:100%"><div class="shape"></div><div class="label"><span class="name">Отправлено</span><span class="val">${fmt.format(s)} <span class="muted">(100%)</span></span></div></div></div>
-      <div class="row"><div class="bar" style="width:${calcWidth(o).toFixed(1)}%"><div class="shape"></div><div class="label"><span class="name">Открыто</span><span class="val">${fmt.format(o)} <span class="muted">(${(openRate*100).toFixed(1)}%)</span></span></div></div></div>
-      <div class="row"><div class="bar" style="width:${calcWidth(r).toFixed(1)}%"><div class="shape"></div><div class="label"><span class="name">Ответы ЛПР</span><span class="val">${fmt.format(r)} <span class="muted">(${(replyRate*100).toFixed(1)}%)</span></span></div></div></div>
-    </div>
-  `;
+  const S=getSeries(); const s=sum(S.sent.map(x=>x.value)); const o=sum(S.opens.map(x=>x.value)); const r=sum(S.replies.map(x=>x.value));
+  const openRate=s?(o/s):0; const replyRate=s?(r/s):0; const calcWidth=(val)=>{ if(!s) return 35; const pct=(val/s)*100; return Math.max(35, Math.min(100, pct)); };
+  const box=document.getElementById('funnel-box');
+  box.innerHTML=`<div class="funnel">
+    <div class="row"><div class="bar" style="width:100%"><div class="shape"></div><div class="label"><span class="name">Отправлено</span><span class="val">${fmt.format(s)} <span class="muted">(100%)</span></span></div></div></div>
+    <div class="row"><div class="bar" style="width:${calcWidth(o).toFixed(1)}%"><div class="shape"></div><div class="label"><span class="name">Открыто</span><span class="val">${fmt.format(o)} <span class="muted">(${(openRate*100).toFixed(1)}%)</span></span></div></div></div>
+    <div class="row"><div class="bar" style="width:${calcWidth(r).toFixed(1)}%"><div class="shape"></div><div class="label"><span class="name">Ответы ЛПР</span><span class="val">${fmt.format(r)} <span class="muted">(${(replyRate*100).toFixed(1)}%)</span></span></div></div></div>
+  </div>`;
 }
 
 function renderQuality(){
-  const S = getSeries();
-  const sent = sum(S.sent.map(x=>x.value));
-  const delivered = sum(S.delivered.map(x=>x.value));
-  const rate = sent ? (delivered/sent) : 0;
-  document.getElementById('quality-val').textContent = (rate*100).toFixed(1)+'%';
-  const ctx = resetCanvas('quality').getContext('2d');
-  new Chart(ctx, {
-    type:'doughnut',
-    data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]},
-    options:{ plugins:{legend:{position:'bottom', labels:{color:'#d6deea'}}}, responsive:true, maintainAspectRatio:false }
-  });
+  const S=getSeries(); const sent=sum(S.sent.map(x=>x.value)); const delivered=sum(S.delivered.map(x=>x.value)); const rate=sent?(delivered/sent):0; document.getElementById('quality-val').textContent=(rate*100).toFixed(1)+'%';
+  const ctx=resetCanvas('quality').getContext('2d'); new Chart(ctx,{ type:'doughnut', data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]}, options:{ plugins:{legend:{position:'bottom', labels:{color:'#d6deea'}}}, responsive:true, maintainAspectRatio:false } });
 }
 
 function renderSectors(){
-  const tbody = document.querySelector('#sectors-table tbody');
-  const arr = ORIGINAL.industries;
-  const avgOpen = arr.reduce((a,b)=>a+b.open_rate,0)/arr.length;
-  const avgReply = arr.reduce((a,b)=>a+b.reply_rate,0)/arr.length;
-  tbody.innerHTML = '';
-  arr.forEach(it=>{
-    const diffOpen = (it.open_rate-avgOpen)/avgOpen;
-    const diffReply = (it.reply_rate-avgReply)/avgReply;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${it.name}</td>
-      <td>${fmt.format(it.sent)}</td>
-      <td>${(it.open_rate*100).toFixed(1)}%</td>
-      <td>${(it.reply_rate*100).toFixed(1)}%</td>
-      <td>${arrow(diffOpen)}</td>
-      <td>${arrow(diffReply)}</td>`;
-    tbody.appendChild(tr);
-  });
+  const tbody=document.querySelector('#sectors-table tbody'); const arr=ORIGINAL.industries; const avgOpen=arr.reduce((a,b)=>a+b.open_rate,0)/arr.length; const avgReply=arr.reduce((a,b)=>a+b.reply_rate,0)/arr.length; tbody.innerHTML='';
+  arr.forEach(it=>{ const diffOpen=(it.open_rate-avgOpen)/avgOpen; const diffReply=(it.reply_rate-avgReply)/avgReply; const tr=document.createElement('tr'); tr.innerHTML=`<td>${it.name}</td><td>${fmt.format(it.sent)}</td><td>${(it.open_rate*100).toFixed(1)}%</td><td>${(it.reply_rate*100).toFixed(1)}%</td><td>${arrow(diffOpen)}</td><td>${arrow(diffReply)}</td>`; tbody.appendChild(tr); });
 }
-function arrow(diff){ const cls = diff>=0 ? 'up' : 'down'; const sign = diff>=0 ? '▲' : '▼'; return `<span class="arrow ${cls}">${sign} ${(Math.abs(diff)*100).toFixed(1)}%</span>`; }
+function arrow(diff){ const sign=diff>=0?'▲':'▼'; return `<span class="arrow ${diff>=0?'up':'down'}">${sign} ${(Math.abs(diff)*100).toFixed(1)}%</span>`; }
 
-// --- Modals (respect MODE) ---
 let modalChart=null;
-function singleLineChart(canvas, label, color, arr){
-  const {labels, values} = toXY(arr);
-  const xlabels = labelize(labels, arr.map(p=>p.date));
-  const ctx = canvas.getContext('2d');
-  if(modalChart) modalChart.destroy();
-  modalChart = new Chart(ctx,{
-    type:'line',
-    data:{labels:xlabels, datasets:[{label, data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{mode:'index', intersect:false, callbacks:{
-          title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))
-        }},
-        decimation:{enabled: MODE==='all', algorithm:'lttb', samples:80}
-      },
-      scales:{ x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}} }
-    }
-  });
-}
-function openMetricModal(key){
-  const conf = {
-    sent: {title:'Отправлено', color:'rgba(113,164,255,.95)'},
-    delivered: {title:'Доставлено', color:'rgba(31,206,122,.95)'},
-    replies: {title:'Ответы ЛПР', color:'rgba(235,182,87,.95)'},
-    bounces: {title:'Ошибки доставки', color:'rgba(255,107,107,.95)'},
-  }[key];
-  const arr = getSeries()[key];
-  openModal({
-    title: conf.title + (MODE==='week'?' (7 дней)':' (за всё время)'),
-    sub: INFO[key],
-    mode: 'single',
-    builder: (canvas)=> singleLineChart(canvas, conf.title, conf.color, arr),
-    foot:[
-      {label:'Текущее (последний день)', value: fmt.format(last(arr).value)},
-      {label: MODE==='week' ? 'Среднее/день (7 дн.)' : 'Среднее/день', value: fmt.format(Math.round(avg(arr.map(x=>x.value))))},
-      {label:'Прогноз на неделю (темп сохранится)', value: fmt.format(forecast7(arr))}
-    ]
-  });
-}
+function singleLineChart(canvas, label, color, arr){ const {labels, values}=toXY(arr); const xlabels=labelize(labels, arr.map(p=>p.date)); const ctx=canvas.getContext('2d'); if(modalChart) modalChart.destroy(); modalChart=new Chart(ctx,{ type:'line', data:{labels:xlabels, datasets:[{label, data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{mode:'index', intersect:false, callbacks:{ title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date)) }}, decimation:{enabled: MODE==='all', algorithm:'lttb', samples:80} }, scales:{ x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}} } }); }
+function openMetricModal(key){ const conf={ sent:{title:'Отправлено', color:'rgba(113,164,255,.95)'}, delivered:{title:'Доставлено', color:'rgba(31,206,122,.95)'}, replies:{title:'Ответы ЛПР', color:'rgba(235,182,87,.95)'}, bounces:{title:'Ошибки доставки', color:'rgba(255,107,107,.95)'} }[key]; const arr=getSeries()[key]; openModal({ title: conf.title + (MODE==='week'?' (7 дней)':' (за всё время)'), sub: INFO[key], mode:'single', builder:(canvas)=> singleLineChart(canvas, conf.title, conf.color, arr), foot:[ {label:'Текущее (последний день)', value: fmt.format(last(arr).value)}, {label: MODE==='week' ? 'Среднее/день (7 дн.)' : 'Среднее/день', value: fmt.format(Math.round(avg(arr.map(x=>x.value))))}, {label:'Прогноз на неделю (темп сохранится)', value: fmt.format(forecast7(arr))} ] }); }
+function openDynamicsModal(){}
+function openQualityModal(){ const S=getSeries(); const sent=sum(S.sent.map(x=>x.value)); const delivered=sum(S.delivered.map(x=>x.value)); openModal({ title:'Качество доставки ' + (MODE==='week'?'(7 дней)':'(за всё время)'), sub:'Доля доставленных', mode:'single', builder:(canvas)=>{ const ctx=canvas.getContext('2d'); if(modalChart) modalChart.destroy(); modalChart=new Chart(ctx,{ type:'doughnut', data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]}, options:{ plugins:{legend:{position:'bottom', labels:{color:'#d6deea'}}}, responsive:true, maintainAspectRatio:false } }); } }); }
+function openFunnelDetails(){ const S=getSeries(); openModal({title:'Воронка · детали ' + (MODE==='week'?'(7 дней)':'(за всё время)'), sub:'Три отдельных графика: отправлено, открытия, ответы ЛПР.', mode:'multi', builder: ()=>{ const body=document.getElementById('modal-body'); body.innerHTML=`<div class="grid3"><div class="mini"><div class="title">Отправлено</div><canvas id="c1"></canvas></div><div class="mini"><div class="title">Открытия</div><canvas id="c2"></canvas></div><div class="mini"><div class="title">Ответы ЛПР</div><canvas id="c3"></canvas></div></div>`; const draw=(id,arr,color)=>{ const {labels, values}=toXY(arr); const xlabels=labelize(labels, arr.map(p=>p.date)); const ctx=document.getElementById(id).getContext('2d'); new Chart(ctx,{ type:'line', data:{labels:xlabels, datasets:[{data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))}}, decimation:{enabled: MODE==='all', algorithm:'lttb', samples:60}}, scales:{x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}}} }); }; draw('c1', S.sent, 'rgba(113,164,255,.95)'); draw('c2', S.opens, 'rgba(113,164,255,.95)'); draw('c3', S.replies, 'rgba(235,182,87,.95)'); }}); }
 
-function openDynamicsModal(){
-  const S = getSeries();
-  const open = S.opens;
-  const rep = S.replies;
-  const {labels, values: v1} = toXY(open);
-  const {values: v2} = toXY(rep);
-  const xlabels = labelize(labels, open.map(p=>p.date));
-  openModal({
-    title:'Динамика ' + (MODE==='week'?'(7 дней)':'(за всё время)'),
-    sub:'Открытия и ответы по дням',
-    mode:'single',
-    builder:(canvas)=>{
-      const ctx = canvas.getContext('2d');
-      if(modalChart) modalChart.destroy();
-      modalChart = new Chart(ctx,{
-        type:'line',
-        data:{labels:xlabels, datasets:[
-          {label:'Открытия', data:v1, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(113,164,255,.95)', backgroundColor:grad(ctx,'rgba(113,164,255,.22)'), fill:true},
-          {label:'Ответы', data:v2, tension:.35, borderWidth:2, pointRadius:2, borderColor:'rgba(235,182,87,.95)', backgroundColor:grad(ctx,'rgba(235,182,87,.22)'), fill:true},
-        ]},
-        options:{
-          responsive:true, maintainAspectRatio:false,
-          plugins:{tooltip:{mode:'index',intersect:false}, decimation:{enabled: MODE==='all', algorithm:'lttb', samples:80}},
-          scales:{x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}}}
-        }
-      });
-    }
-  });
-}
-
-function openQualityModal(){
-  const S = getSeries();
-  const sent = sum(S.sent.map(x=>x.value));
-  const delivered = sum(S.delivered.map(x=>x.value));
-  openModal({
-    title:'Качество доставки ' + (MODE==='week'?'(7 дней)':'(за всё время)'),
-    sub:'Доля доставленных',
-    mode:'single',
-    builder:(canvas)=>{
-      const ctx = canvas.getContext('2d');
-      if(modalChart) modalChart.destroy();
-      modalChart = new Chart(ctx, {
-        type:'doughnut',
-        data:{ labels:['Успешно','Ошибки'], datasets:[{ data:[delivered, Math.max(0, sent-delivered)], cutout:'72%', borderWidth:0, backgroundColor:['rgba(31,206,122,.95)','rgba(255,107,107,.95)'] }]},
-        options:{ plugins:{legend:{position:'bottom', labels:{color:'#d6deea'}}}, responsive:true, maintainAspectRatio:false }
-      });
-    }
-  });
-}
-
-function openFunnelDetails(){
-  const S = getSeries();
-  openModal({title:'Воронка · детали ' + (MODE==='week'?'(7 дней)':'(за всё время)'), sub:'Три отдельных графика: отправлено, открытия, ответы ЛПР.', mode:'multi', builder: ()=>{
-    const body = document.getElementById('modal-body');
-    body.innerHTML = `
-      <div class="grid3">
-        <div class="mini"><div class="title">Отправлено</div><canvas id="c1"></canvas></div>
-        <div class="mini"><div class="title">Открытия</div><canvas id="c2"></canvas></div>
-        <div class="mini"><div class="title">Ответы ЛПР</div><canvas id="c3"></canvas></div>
-      </div>
-    `;
-    const draw = (id, arr, color)=>{
-      const {labels, values} = toXY(arr);
-      const xlabels = labelize(labels, arr.map(p=>p.date));
-      const ctx = document.getElementById(id).getContext('2d');
-      new Chart(ctx, {
-        type:'line',
-        data:{labels:xlabels, datasets:[{data:values, tension:.35, borderWidth:2, pointRadius:2, borderColor:color, backgroundColor:grad(ctx, color.replace('.95','.22')), fill:true}]},
-        options:{
-          responsive:true, maintainAspectRatio:false,
-          plugins:{legend:{display:false}, tooltip:{callbacks:{title:(it)=> dateTooltip.format(new Date(arr[it[0].dataIndex].date))}}, decimation:{enabled: MODE==='all', algorithm:'lttb', samples:60}},
-          scales:{x: axisOptsX(xlabels), y:{ticks:{color:'#9aa3b2'}}}
-        }
-      });
-    };
-    draw('c1', S.sent, 'rgba(113,164,255,.95)');
-    draw('c2', S.opens, 'rgba(113,164,255,.95)');
-    draw('c3', S.replies, 'rgba(235,182,87,.95)');
-  }});
-}
-
-// Universal modal
-function openModal({title, sub, builder, foot=[], mode='single'}){
-  const m = document.getElementById('modal');
-  document.getElementById('modal-title').textContent = title || '';
-  document.getElementById('modal-sub').textContent = sub || '';
-  const body = document.getElementById('modal-body');
-
-  if(mode === 'single'){
-    body.innerHTML = '<div class="chart-box tall"><canvas id="modal-chart"></canvas></div>';
-    const canvas = document.getElementById('modal-chart');
-    if(builder) builder(canvas);
-  }else if(mode === 'multi'){
-    body.innerHTML = '';
-    if(builder) builder();
-  }
-
-  const footBox = document.getElementById('modal-foot'); footBox.innerHTML='';
-  foot.forEach(f=>{ const el = document.createElement('div'); el.innerHTML = `<div class="sub" style="font-size:11px">${f.label}</div><div style="font-weight:800">${f.value}</div>`; footBox.appendChild(el); });
-
-  m.classList.add('open');
-}
+function openModal({title, sub, builder, foot=[], mode='single'}){ const m=document.getElementById('modal'); document.getElementById('modal-title').textContent=title||''; document.getElementById('modal-sub').textContent=sub||''; const body=document.getElementById('modal-body'); if(mode==='single'){ body.innerHTML='<div class="chart-box tall"><canvas id="modal-chart"></canvas></div>'; const canvas=document.getElementById('modal-chart'); if(builder) builder(canvas); } else if(mode==='multi'){ body.innerHTML=''; if(builder) builder(); } const footBox=document.getElementById('modal-foot'); footBox.innerHTML=''; foot.forEach(f=>{ const el=document.createElement('div'); el.innerHTML = `<div class="sub" style="font-size:11px">${f.label}</div><div style="font-weight:800">${f.value}</div>`; footBox.appendChild(el); }); m.classList.add('open'); }
 
 document.getElementById('modal-close').addEventListener('click', ()=> document.getElementById('modal').classList.remove('open'));
 document.getElementById('modal').addEventListener('click', (e)=>{ if(e.target.id==='modal') e.currentTarget.classList.remove('open'); });
