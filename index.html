@@ -116,6 +116,14 @@ th{color:#cfd7e6;font-weight:600}
 
 /* Helper for tiny hints */
 .hint{color:var(--muted); font-size:11px; margin-top:4px}
+
+/* INLINE INFO: выдвижная плашка под мини‑графиком */
+.inline-info{overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px); transition:max-height .28s ease, opacity .2s ease, transform .28s ease;}
+.card.show-inline .inline-info{max-height:240px; opacity:1; transform:translateY(0)}
+.inline-info .box{margin-top:10px; padding:10px 12px; border-radius:12px; background:linear-gradient(180deg,#0f161f,#0b1219); border:1px solid rgba(255,255,255,.06); box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.inline-info .ttl{font-size:12px; font-weight:800; color:#dce4f1; margin-bottom:6px}
+.inline-info p{margin:0; font-size:12px; color:#c7d0df}
+.inline-info .muted{font-size:11px}
 </style>
 </head>
 <body>
@@ -144,24 +152,28 @@ th{color:#cfd7e6;font-weight:600}
         <div class="card-title">Отправлено <span class="info" data-info="sent">i</span></div>
         <div class="kpi"><div class="big" id="sent-total">—</div><span class="muted" id="lbl-range-1">за 7 дней</span></div>
         <div class="chart-box"><canvas id="sent-mini"></canvas></div>
+        <div class="inline-info" data-inline="sent"><div class="box"><div class="ttl">Что такое «Отправлено»</div><p>Количество исходящих писем, которые система попыталась отправить за выбранный период. Показатель включает все попытки отправки; качество доставки отражено в блоке «Доставлено», а возвраты — в «Ошибки доставки».</p><p class="muted" style="margin-top:6px">Подсказка: сравнивайте «Отправлено» с «Доставлено», чтобы видеть, какая доля реально дошла до адресатов.</p></div></div>
         <div class="hint">Сколько писем отправили за выбранный период.</div>
       </div>
       <div class="card small clickable" data-metric="delivered">
         <div class="card-title">Доставлено <span class="info" data-info="delivered">i</span></div>
         <div class="kpi"><div class="big" id="delivered-total">—</div><span class="muted" id="lbl-range-2">за 7 дней</span></div>
         <div class="chart-box"><canvas id="delivered-mini"></canvas></div>
+        <div class="inline-info" data-inline="delivered"><div class="box"><div class="ttl">Что такое «Доставлено»</div><p>Письма, которые почтовые серверы приняли без ошибок (без bounce). Это «реальные попадания в ящики», даже если получатель ещё не открыл письмо.</p><p class="muted" style="margin-top:6px">Формула качества: <b>Доставлено / Отправлено</b> — см. также блок «Качество доставки».</p></div></div>
         <div class="hint">Письма, дошедшие без ошибок (bounce).</div>
       </div>
       <div class="card small clickable" data-metric="replies">
         <div class="card-title">Ответы ЛПР <span class="info" data-info="replies">i</span></div>
         <div class="kpi"><div class="big" id="replies-total">—</div><span class="muted" id="lbl-range-3">за 7 дней</span></div>
         <div class="chart-box"><canvas id="replies-mini"></canvas></div>
+        <div class="inline-info" data-inline="replies"><div class="box"><div class="ttl">Что такое «Ответы ЛПР»</div><p>Количество ответов от лиц, принимающих решения. Метрика отражает интерес: чем выше, тем больше потенциальных диалогов и сделок.</p><p class="muted" style="margin-top:6px">Совет: сопоставляйте ответы с открываемостью, чтобы понять качество базы и сообщений.</p></div></div>
         <div class="hint">Уникальные ответы от лиц, принимающих решения.</div>
       </div>
       <div class="card small clickable" data-metric="bounces">
         <div class="card-title">Ошибки доставки <span class="info" data-info="bounces">i</span></div>
         <div class="kpi"><div class="big" id="bounces-total">—</div><span class="muted" id="lbl-range-4">за 7 дней</span></div>
         <div class="chart-box"><canvas id="bounces-mini"></canvas></div>
+        <div class="inline-info" data-inline="bounces"><div class="box"><div class="ttl">Что такое «Ошибки доставки»</div><p>Письма, вернувшиеся с ошибками (bounce): несуществующий адрес, переполненный ящик, блокировка сервера и т. п. Высокие ошибки — сигнал к очистке базы и настройке доменов/тепловки.</p><p class="muted" style="margin-top:6px">Цель — снижать bounce‑rate и повышать «Доставлено».</p></div></div>
         <div class="hint">Сколько писем вернулось с ошибками.</div>
       </div>
 
@@ -211,12 +223,10 @@ th{color:#cfd7e6;font-weight:600}
 
 <script>
 /* === Ключевые правки ===
-1) "За всё время": умная агрегация и downsampling, чтобы ось X оставалась читабельной.
-   - если точек > 90: агрегируем по неделям;
-   - если точек > 360: агрегируем по месяцам;
-   - иначе включаем decimation (LTTB) до ~60 точек.
-2) X‑ось: показываем не более 10–12 меток, с шагом по данным.
-3) Объяснения блоков аккуратно добавлены (hint), без перегруза.
+1) При клике по «i» у 4 верхних блоков не открывается модалка. Вместо этого
+   внутри карточки выдвигается плашка с описанием блока (slide‑down).
+2) Данные берём из data.txt (fallback: data (5).txt), как и просили.
+3) Остальная логика графиков сохранена. Клик по самой карточке — по‑прежнему модалка c графиком.
 */
 
 const INFO = {
@@ -260,17 +270,30 @@ document.addEventListener('click', (e)=>{
 });
 
 // Info clicks routing
+// ВАЖНО: для sent/delivered/replies/bounces делаем inline‑плашку, а не модалку
+const INLINE_KEYS = ['sent','delivered','replies','bounces'];
+
 document.addEventListener('click', (e)=>{
   if(e.target.classList.contains('info')){
     const key = e.target.dataset.info;
-    if(key==='funnel'){ openFunnelDetails(); }
-    else if(['sent','delivered','replies','bounces'].includes(key)){ openMetricModal(key); }
+    if(INLINE_KEYS.includes(key)){
+      toggleInlineInfo(e.target, key);
+    } else if(key==='funnel'){ openFunnelDetails(); }
     else if(key==='dynamics'){ openDynamicsModal(); }
     else if(key==='quality'){ openQualityModal(); }
     else { openModal({ title:'Что означает блок', sub: INFO[key] }); }
     e.stopPropagation();
   }
 });
+
+function toggleInlineInfo(btn, key){
+  const card = btn.closest('.card');
+  const panel = card.querySelector('.inline-info[data-inline="'+key+'"]');
+  // закрываем все открытые в этой строке (чтобы не было лесенки)
+  document.querySelectorAll('#overview .card.small').forEach(c=>{ if(c!==card){ c.classList.remove('show-inline'); }});
+  // переключаем текущую
+  card.classList.toggle('show-inline');
+}
 
 function loadData(){
   // основной источник — data.txt, резерв — загруженный файл с именем по умолчанию
@@ -284,7 +307,11 @@ loadData().then(json=>{
   renderAll();
   // card clicks -> single modal
   document.querySelectorAll('.card.clickable').forEach(c=>{
-    c.addEventListener('click', ()=> openMetricModal(c.dataset.metric));
+    c.addEventListener('click', (ev)=>{
+      // если открыт inline‑блок, и клик был по самой плашке — игнорируем
+      if(ev.target.closest('.inline-info')) return;
+      openMetricModal(c.dataset.metric);
+    });
   });
 }).catch(()=> alert('Не удалось загрузить данные'));
 
@@ -375,8 +402,6 @@ function renderAll(){
 }
 
 function renderPeriodLabel(){
-  const S = getSeries();
-  // для подписи периода используем исходные даты (без агрегации)
   const arr = ORIGINAL.series.sent;
   const start = new Date(arr[0].date);
   const end = new Date(arr.at(-1).date);
@@ -672,6 +697,7 @@ function openModal({title, sub, builder, foot=[], mode='single'}){
 
   m.classList.add('open');
 }
+
 document.getElementById('modal-close').addEventListener('click', ()=> document.getElementById('modal').classList.remove('open'));
 document.getElementById('modal').addEventListener('click', (e)=>{ if(e.target.id==='modal') e.currentTarget.classList.remove('open'); });
 </script>
