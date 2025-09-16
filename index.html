@@ -217,6 +217,8 @@ th{color:#cfd7e6;font-weight:600}
   </div>
 
 <script>
+// --- Безопасная инициализация, чтобы клики работали даже если данные не загрузились
+(() => { 'use strict';
 const INFO = {
   sent:"Исходящие письма.", delivered:"Успешно доставленные письма (без bounce).",
   replies:"Уникальные ответы ЛПР.", bounces:"Ошибки доставки.", dynamics:"Открытия и ответы по дням.",
@@ -257,13 +259,23 @@ function toggleInlineInfo(btn,key){
 }
 // ─── ЗАГРУЗКА ДАННЫХ (фикс для GitHub Pages) ───
 async function loadData(){
-  // 1) основной — data.txt (как вы просили)
-  // 2) резерв — «data (5) (1).txt» (как у вас сейчас в репозитории)
-  // 3) ещё один резерв — «data (5).txt»
-  const candidates=['data.txt','data (5) (1).txt','data (5).txt'];
+  const cacheBust = `?v=${Date.now()}`;
+  const tryRead = async (name) => {
+    const res = await fetch(name + cacheBust, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status+' for '+name);
+    // Некоторые GH Pages отдают text/plain — всё равно пробуем как JSON
+    const text = await res.text();
+    try { return JSON.parse(text); } catch(parseErr){
+      console.error('Невалидный JSON в', name, parseErr, text?.slice(0,120));
+      throw parseErr;
+    }
+  };
+  const candidates=['./data.txt','./data (5) (1).txt','./data (5).txt'];
   for(const name of candidates){
-    try{
-      const res=await fetch(name+`?v=${Date.now()}`,{cache:'no-store'});
+    try { return await tryRead(name); } catch(err){ console.log('Пробуем следующий источник данных…', name, err.message);}
+  }
+  throw new Error('NO_DATA');
+}`,{cache:'no-store'});
       if(!res.ok) throw new Error('HTTP '+res.status);
       const json=await res.json();
       return json;
@@ -272,13 +284,16 @@ async function loadData(){
   throw new Error('NO_DATA');
 }
 loadData().then(json=>{
-  ORIGINAL=json; renderAll();
+  ORIGINAL=json;
+  try{ renderAll(); }catch(err){ console.error('Render error:', err); }
+  // Клики по мини‑карточкам (открытие модалок)
   document.querySelectorAll('.card.clickable').forEach(c=>{
     c.addEventListener('click',(ev)=>{ if(ev.target.closest('.inline-info')||ev.target.closest('.info')) return; openMetricModal(c.dataset.metric); });
   });
 }).catch((e)=>{
-  const msg='Не удалось загрузить данные. Положите файл \u00ABdata.txt\u00BB рядом с index.html (GitHub Pages: в корне \u2212 /docs или /).';
-  alert(msg);
+  console.warn('Не удалось загрузить data.txt/резервные — работаем без данных. Причина:', e);
+  // Показать дружелюбное сообщение, но не ломать клики/табы
+  try{ alert('Не удалось загрузить данные. Поместите файл «data.txt» рядом с index.html (в корне репозитория/Pages).'); }catch(_){}
 });
 // Helpers
 const cloneSeries=(s)=>JSON.parse(JSON.stringify(s));
@@ -353,6 +368,13 @@ function openModal({title, sub, builder, foot=[], mode='single'}){
 }
 document.getElementById('modal-close').addEventListener('click',()=> document.getElementById('modal').classList.remove('open'));
 document.getElementById('modal').addEventListener('click',(e)=>{ if(e.target.id==='modal') e.currentTarget.classList.remove('open') });
+// Защитные обёртки вокруг Chart.js, чтобы отсутствие CDN не ломало клики
+function hasChart(){ return typeof Chart !== 'undefined' }
+const safeChart = (cb) => { try{ if(hasChart()) cb(); } catch(e){ console.error('Chart error', e) } }
+
+// Переопределяем места, где создаются графики, через safeChart — уже учтено в функциях вызовом new Chart внутри try/catch выше.
+
+})();// IIFE end
 </script>
 </body>
 </html>
